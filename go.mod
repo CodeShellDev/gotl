@@ -1,13 +1,13 @@
 module github.com/codeshelldev/gotl
 
-go 1.25.3
+go 1.25.4
 
 require github.com/knadh/koanf/v2 v2.3.0
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 )
 
 require (
