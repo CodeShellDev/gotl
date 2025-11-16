@@ -19,11 +19,11 @@ var DELIM string = "."
 
 type Config struct {
 	Layer *koanf.Koanf
-	ReloadFunc func(*file.File)
+	ReloadFunc func(string)
 }
 
 // Create a New Config with Args
-func NewWith(delim string, reloadFunc func(*file.File)) *Config {
+func NewWith(delim string, reloadFunc func(string)) *Config {
 	return &Config{
 		Layer: koanf.New(delim),
 		ReloadFunc: reloadFunc,
@@ -38,14 +38,14 @@ func New() *Config {
 	}
 }
 
-// Add OnLoad func
-func (config *Config) OnLoad(reloadFunc func(*file.File)) {
+// Add OnReload func
+func (config *Config) OnReload(reloadFunc func(string)) {
 	config.ReloadFunc = reloadFunc
 }
 
 // Watch file with file provider
-func (config *Config) WatchFile(fileProvider *file.File) {
-	watchFile(fileProvider, config.ReloadFunc)
+func (config *Config) WatchFile(fileProvider *file.File, path string) {
+	watchFile(fileProvider, path, config.ReloadFunc)
 }
 
 // Load file with parser into Config
@@ -59,7 +59,7 @@ func (config *Config) LoadFile(path string, parser koanf.Parser) (*file.File, er
 	}
 
 	if config.ReloadFunc != nil {
-		config.WatchFile(f)
+		config.WatchFile(f, path)
 	}
 
 	return f, err
@@ -78,7 +78,7 @@ func (config *Config) LoadDir(path string, dir string, ext string, parser koanf.
 	for _, f := range files {
 		tmp := New()
 
-		tmp.OnLoad(config.ReloadFunc)
+		tmp.OnReload(config.ReloadFunc)
 
 		_, err := tmp.LoadFile(f, parser)
 
@@ -160,7 +160,7 @@ func (config *Config) MergeLayers(layers ...*koanf.Koanf) error {
 	return nil
 }
 
-func watchFile(f *file.File, loadFunc func(*file.File)) {
+func watchFile(f *file.File, path string, loadFunc func(string)) {
 	f.Watch(func(event any, err error) {
 		if err != nil {
 			return
@@ -171,6 +171,6 @@ func watchFile(f *file.File, loadFunc func(*file.File)) {
 
 		f.Unwatch()
 
-		loadFunc(f)
+		loadFunc(path)
 	})
 }
