@@ -94,6 +94,10 @@ func (config *Config) LoadDir(path string, dir string, ext string, parser koanf.
 
 // Load data into Config path
 func (config *Config) Load(data any, path string) error {
+	if path == "" {
+		config.Layer.Delete("")
+	}
+
 	parts := strings.Split(path, DELIM)
 
 	if len(parts) <= 0 {
