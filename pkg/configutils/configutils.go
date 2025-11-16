@@ -19,11 +19,11 @@ var DELIM string = "."
 
 type Config struct {
 	Layer *koanf.Koanf
-	ReloadFunc func()
+	ReloadFunc func(*file.File)
 }
 
 // Create a New Config with Args
-func NewWith(delim string, reloadFunc func()) *Config {
+func NewWith(delim string, reloadFunc func(*file.File)) *Config {
 	return &Config{
 		Layer: koanf.New(delim),
 		ReloadFunc: reloadFunc,
@@ -39,7 +39,7 @@ func New() *Config {
 }
 
 // Add OnLoad func
-func (config *Config) OnLoad(reloadFunc func()) {
+func (config *Config) OnLoad(reloadFunc func(*file.File)) {
 	config.ReloadFunc = reloadFunc
 }
 
@@ -160,7 +160,7 @@ func (config *Config) MergeLayers(layers ...*koanf.Koanf) error {
 	return nil
 }
 
-func watchFile(f *file.File, loadFunc func()) {
+func watchFile(f *file.File, loadFunc func(*file.File)) {
 	f.Watch(func(event any, err error) {
 		if err != nil {
 			return
@@ -171,6 +171,6 @@ func watchFile(f *file.File, loadFunc func()) {
 
 		f.Unwatch()
 
-		loadFunc()
+		loadFunc(f)
 	})
 }
