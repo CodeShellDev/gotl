@@ -73,7 +73,7 @@ func (config *Config) LoadDir(path string, dir string, ext string, parser koanf.
 		return nil
 	}
 
-	var array []map[string]any
+	var array []any
 
 	for _, f := range files {
 		tmp := New()
