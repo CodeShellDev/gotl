@@ -102,7 +102,21 @@ func (config *Config) Load(data any, path string) error {
 
 	res := map[string]any{}
 
+	if path == "" {
+		mapData, ok := data.(map[string]any)
+
+		if ok {
+			res = mapData
+		}
+
+		parts = []string{}
+	}
+
 	for i, key := range parts {
+		if key == "" {
+			continue
+		}
+
 		if i == 0 {
 			res[key] = data
 		} else {
