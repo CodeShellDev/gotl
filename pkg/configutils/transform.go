@@ -55,32 +55,40 @@ func getKeyToTransformMap(value any) map[string]TransformTarget {
 		field := t.Field(i)
 		fieldValue := v.Field(i)
 
-		key := field.Tag.Get("koanf")
-		if key == "" {
-			continue
-		}
+		keys := []string{}
 
-		lower := strings.ToLower(key)
+		keys = append(keys, field.Tag.Get("koanf"))
 
-		transformTag := field.Tag.Get("transform")
-		childTransformTag := field.Tag.Get("childtransform")
+		aliases := strings.Split(field.Tag.Get("aliases"), ",")
+		keys = append(keys, aliases...)
 
-		data[lower] = TransformTarget{
-			Key:               lower,
-			Transform:         transformTag,
-			ChildTransform: childTransformTag,
-			Value:             getValueSafe(fieldValue),
-		}
+		for _, key := range keys {
+			if key == "" {
+				continue
+			}
 
-		// Recursively walk nested structs
-		if fieldValue.Kind() == reflect.Struct || (fieldValue.Kind() == reflect.Ptr && fieldValue.Elem().Kind() == reflect.Struct) {
+			lower := strings.ToLower(key)
 
-			sub := getKeyToTransformMap(fieldValue.Interface())
+			transformTag := field.Tag.Get("transform")
+			childTransformTag := field.Tag.Get("childtransform")
 
-			for subKey, subValue := range sub {
-				fullKey := lower + "." + strings.ToLower(subKey)
+			data[lower] = TransformTarget{
+				Key:               lower,
+				Transform:         transformTag,
+				ChildTransform: childTransformTag,
+				Value:             getValueSafe(fieldValue),
+			}
 
-				data[fullKey] = subValue
+			// Recursively walk nested structs
+			if fieldValue.Kind() == reflect.Struct || (fieldValue.Kind() == reflect.Ptr && fieldValue.Elem().Kind() == reflect.Struct) {
+
+				sub := getKeyToTransformMap(fieldValue.Interface())
+
+				for subKey, subValue := range sub {
+					fullKey := lower + "." + strings.ToLower(subKey)
+
+					data[fullKey] = subValue
+				}
 			}
 		}
 	}
