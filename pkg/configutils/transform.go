@@ -185,16 +185,24 @@ func applyTransformToAny(key string, value any, transformTargets map[string]Tran
 		transformTarget.Transform = "default"
 	}
 
-	fn, ok := funcs[transformTarget.Transform]
-	if !ok {
-		fn = funcs["default"]
+	transformFuncs := strings.Split(transformTarget.Transform, ",")
+
+ 	resKey := key
+	resValue := value
+
+	for _, fnKey := range transformFuncs {
+		fn, ok := funcs[fnKey]
+
+		if !ok {
+			fn = funcs["default"]
+		}
+
+		keyParts := getKeyParts(resKey)
+
+		resKey, resValue = fn(keyParts[len(keyParts)-1], resValue)
 	}
 
-	keyParts := getKeyParts(key)
-
-	newKey, newValue := fn(keyParts[len(keyParts)-1], value)
-
-	return newKey, newValue
+	return resKey, resValue
 }
 
 func getKeyParts(fullKey string) []string {
