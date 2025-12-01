@@ -164,7 +164,7 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 
 			if !ok {
 				childTarget := TransformTarget{
-					OutputKey: k,
+					OutputKey: newKeyWithDot + k,
 					Transform: target.ChildTransform,
 					ChildTransform: target.ChildTransform,
 				}
@@ -192,7 +192,7 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 
 			if !ok {
 				childTarget := TransformTarget{
-					OutputKey: strconv.Itoa(i),
+					OutputKey: newKeyWithDot + strconv.Itoa(i),
 					Transform: target.ChildTransform,
 					ChildTransform: target.ChildTransform,
 				}
