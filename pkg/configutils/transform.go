@@ -158,7 +158,9 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 		for k, v := range asserted {
 			fullKey := newKeyWithDot + k
 
-			_, ok := targets[fullKey]
+			target, ok := targets[fullKey]
+
+			fullKey = newKeyWithDot + target.Key
 
 			if !ok {
 				childTarget := TransformTarget{
