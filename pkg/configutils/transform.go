@@ -15,8 +15,8 @@ type TransformTarget struct {
 }
 
 // Apply Transform funcs based on `transform` and `childtransform` in struct schema
-func (config Config) ApplyTransformFuncs(structSchema any, path string, funcs map[string]func(string, any) (string, any)) {
-	transformTargets := getKeyToTransformMap(structSchema)
+func (config Config) ApplyTransformFuncs(id string, structSchema any, path string, funcs map[string]func(string, any) (string, any)) {
+	transformTargets := getKeyToTransformMap(id, structSchema)
 
 	data := config.Layer.Get(path)
 
@@ -32,7 +32,7 @@ func (config Config) ApplyTransformFuncs(structSchema any, path string, funcs ma
 	config.Load(mapRes, path)
 }
 
-func getKeyToTransformMap(value any) map[string]TransformTarget {
+func getKeyToTransformMap(id string, value any) map[string]TransformTarget {
 	data := map[string]TransformTarget{}
 
 	if value == nil {
@@ -59,7 +59,7 @@ func getKeyToTransformMap(value any) map[string]TransformTarget {
 
 		keys = append(keys, field.Tag.Get("koanf"))
 
-		aliases := strings.Split(field.Tag.Get("aliases"), ",")
+		aliases := strings.Split(getFieldWithID(id, "aliases", field.Tag), ",")
 		keys = append(keys, aliases...)
 
 		for _, key := range keys {
@@ -69,20 +69,20 @@ func getKeyToTransformMap(value any) map[string]TransformTarget {
 
 			lower := strings.ToLower(key)
 
-			transformTag := field.Tag.Get("transform")
-			childTransformTag := field.Tag.Get("childtransform")
+			transformTag := getFieldWithID(id, "transform", field.Tag)
+			childTransformTag := getFieldWithID(id, "childtransform", field.Tag)
 
 			data[lower] = TransformTarget{
 				Key:               lower,
 				Transform:         transformTag,
-				ChildTransform: childTransformTag,
+				ChildTransform:    childTransformTag,
 				Value:             getValueSafe(fieldValue),
 			}
 
 			// Recursively walk nested structs
 			if fieldValue.Kind() == reflect.Struct || (fieldValue.Kind() == reflect.Ptr && fieldValue.Elem().Kind() == reflect.Struct) {
 
-				sub := getKeyToTransformMap(fieldValue.Interface())
+				sub := getKeyToTransformMap(id, fieldValue.Interface())
 
 				for subKey, subValue := range sub {
 					if subKey == "" {
@@ -116,6 +116,16 @@ func getValueSafe(value reflect.Value) any {
 		return getValueSafe(value.Elem())
 	}
 	return value.Interface()
+}
+
+func getFieldWithID(id string, key string, tag reflect.StructTag) string {
+	field, exists := tag.Lookup(id + ":" + key)
+
+	if !exists {
+		return tag.Get(key)
+	}
+
+	return field
 }
 
 func applyTransform(key string, value any, transformTargets map[string]TransformTarget, funcs map[string]func(string, any) (string, any)) (string, any) {
