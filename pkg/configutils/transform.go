@@ -31,36 +31,42 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, fun
 }
 
 func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, funcs map[string]func(string, any) (string, any)) map[string]any {
-
 	out := map[string]any{}
 
 	for key, val := range flat {
 		lower := strings.ToLower(key)
 
-		t, ok := targets[lower]
+		target, ok := targets[lower]
 		if !ok {
-			// no match found -> use default
-			t = TransformTarget{Transform: "default", OutputKey: key}
+			target = findChildTransform(lower, targets)
+
+			// fallback to default
+			if target.Transform == "" {
+				target.Transform = "default"
+			}
+
+			if target.OutputKey == "" {
+				target.OutputKey = key
+			}
 		}
 
-		newKey := t.OutputKey
-		if newKey == "" {
-			newKey = key
-		}
-
-		fnList := strings.Split(t.Transform, ",")
-		currentKey := newKey
+		currentKey := target.OutputKey
 		currentValue := val
 
+		fnList := strings.Split(target.Transform, ",")
 		for _, fnName := range fnList {
-			fn, ok := funcs[fnName]
+			fnName = strings.TrimSpace(fnName)
+			
+			if fnName == "" {
+				continue
+			}
 
+			fn, ok := funcs[fnName]
 			if !ok {
 				fn = funcs["default"]
 			}
 
 			_, last := splitPath(currentKey)
-
 			currentKey, currentValue = fn(last, currentValue)
 		}
 
@@ -69,6 +75,29 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 
 	return out
 }
+
+func findChildTransform(key string, targets map[string]TransformTarget) TransformTarget {
+	parts := strings.Split(key, DELIM)
+
+	for i := len(parts) - 1; i > 0; i-- {
+		parent := strings.Join(parts[:i], DELIM)
+
+		t, ok := targets[parent];
+
+		if ok {
+
+			if t.ChildTransform != "" {
+				return TransformTarget{
+					OutputKey: parent + DELIM + parts[i],
+					Transform: t.ChildTransform,
+				}
+			}
+		}
+	}
+
+	return TransformTarget{}
+}
+
 
 func BuildTransformMap(id string, schema any) map[string]TransformTarget {
 	out := map[string]TransformTarget{}
