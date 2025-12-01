@@ -1,9 +1,12 @@
 package configutils
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/codeshelldev/gotl/pkg/jsonutils"
 )
 
 type TransformTarget struct {
@@ -22,9 +25,15 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, fun
 
 	targets := BuildTransformMap(id, schema)
 
+	fmt.Println("Targets: ", jsonutils.Pretty(targets))
+
 	transformed := ApplyTransforms(flat, targets, funcs)
 
+	fmt.Println("Transformed: ", jsonutils.Pretty(transformed))
+
 	result := Unflatten(transformed)
+
+	fmt.Println("Unflattened: ", jsonutils.Pretty(result))
 
 	config.Layer.Delete("")
 	config.Load(result, path)
@@ -86,7 +95,7 @@ func findChildTransform(key string, targets map[string]TransformTarget) Transfor
 	for i := len(parts) - 1; i > 0; i-- {
 		parent := strings.Join(parts[:i], DELIM)
 
-		t, ok := targets[parent];
+		t, ok := targets[parent]
 
 		if ok {
 
@@ -217,10 +226,10 @@ func Unflatten(flat map[string]any) map[string]any {
 		parts := strings.Split(full, DELIM)
 		m := root
 
-		for i := 0; i < len(parts)-1; i++ {
+		for i := 0; i < len(parts) - 1; i++ {
 			part := parts[i]
 
-			_, ok := m[part]; 
+			_, ok := m[part] 
 
 			if !ok {
 				m[part] = map[string]any{}
@@ -260,7 +269,7 @@ func getValueSafe(v reflect.Value) any {
 
 func getFieldWithID(id string, key string, tag reflect.StructTag) string {
 	if id != "" {
-		value, ok := tag.Lookup(id + ">" + key);
+		value, ok := tag.Lookup(id + ">" + key)
 
 		if ok {
 			return value
