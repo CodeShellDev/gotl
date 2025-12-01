@@ -172,6 +172,8 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 				targets[fullKey] = childTarget
 			}
 
+			fmt.Println(fullKey, "=>", outputKey)
+
 			childKey, childValue := applyTransform(outputKey, v, targets, funcs)
 
 			keyParts := getKeyParts(childKey)
@@ -215,8 +217,6 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 
 func applyTransformToAny(key string, value any, transformTargets map[string]TransformTarget, funcs map[string]func(string, any) (string, any)) (string, any) {
 	lower := strings.ToLower(key)
-
-	fmt.Println(lower, ":", jsonutils.Pretty(value))
 
 	transformTarget, ok := transformTargets[lower]
 	if !ok {
