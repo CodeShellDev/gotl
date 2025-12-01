@@ -174,13 +174,16 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 				outputKey = fullKey
 			}
 
-			fmt.Println(fullKey, "=>", outputKey)
 
 			childKey, childValue := applyTransform(outputKey, v, targets, funcs)
 
 			keyParts := getKeyParts(childKey)
 
-			res[keyParts[len(keyParts)-1]] = childValue
+			lastKey := keyParts[len(keyParts)-1]
+
+			fmt.Println(fullKey, "=>", lastKey)
+
+			res[lastKey] = childValue
 		}
 
 		keyParts := getKeyParts(newKey)
