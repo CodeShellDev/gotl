@@ -170,6 +170,8 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 				}
 
 				targets[fullKey] = childTarget
+
+				outputKey = fullKey
 			}
 
 			fmt.Println(fullKey, "=>", outputKey)
