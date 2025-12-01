@@ -119,7 +119,7 @@ func getValueSafe(value reflect.Value) any {
 }
 
 func getFieldWithID(id string, key string, tag reflect.StructTag) string {
-	field, exists := tag.Lookup(id + ":" + key)
+	field, exists := tag.Lookup(id + ">" + key)
 
 	if !exists {
 		return tag.Get(key)
