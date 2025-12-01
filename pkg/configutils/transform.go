@@ -1,255 +1,239 @@
 package configutils
 
 import (
-	"fmt"
-	"maps"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/codeshelldev/gotl/pkg/jsonutils"
 )
 
 type TransformTarget struct {
-	OutputKey string
-	Transform string
+	OutputKey      string
+	Transform      string
 	ChildTransform string
-	Value any
+	Value          any
 }
 
-// Apply Transform funcs based on `transform` and `childtransform` in struct schema
-func (config Config) ApplyTransformFuncs(id string, structSchema any, path string, funcs map[string]func(string, any) (string, any)) {
-	transformTargets := getKeyToTransformMap(id, structSchema)
+// Apply Transform funcs based on `transform`, `childtransform` and `aliases` in struct schema
+func (config Config) ApplyTransformFuncs(id string, schema any, path string, funcs map[string]func(string, any) (string, any)) {
+	raw := config.Layer.Get(path)
 
-	fmt.Println(id + ":\n" + jsonutils.Pretty(transformTargets))
+	flat := map[string]any{}
+	Flatten("", raw, flat)
 
-	data := config.Layer.Get(path)
+	targets := BuildTransformMap(id, schema)
 
-	_, res := applyTransform("", data, transformTargets, funcs)
+	transformed := ApplyTransforms(flat, targets, funcs)
 
-	mapRes, ok := res.(map[string]any)
+	result := Unflatten(transformed)
 
-	if !ok {
+	config.Layer.Delete("")
+	config.Load(result, path)
+}
+
+func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, funcs map[string]func(string, any) (string, any)) map[string]any {
+
+	out := map[string]any{}
+
+	for key, val := range flat {
+		lower := strings.ToLower(key)
+
+		t, ok := targets[lower]
+		if !ok {
+			// no match found -> use default
+			t = TransformTarget{Transform: "default", OutputKey: key}
+		}
+
+		newKey := t.OutputKey
+		if newKey == "" {
+			newKey = key
+		}
+
+		fnList := strings.Split(t.Transform, ",")
+		currentKey := newKey
+		currentValue := val
+
+		for _, fnName := range fnList {
+			fn, ok := funcs[fnName]
+
+			if !ok {
+				fn = funcs["default"]
+			}
+
+			_, last := splitPath(currentKey)
+
+			currentKey, currentValue = fn(last, currentValue)
+		}
+
+		out[currentKey] = currentValue
+	}
+
+	return out
+}
+
+func BuildTransformMap(id string, schema any) map[string]TransformTarget {
+	out := map[string]TransformTarget{}
+
+	getTransformMap(id, schema, "", out)
+
+	return out
+}
+
+func getTransformMap(id string, schema any, prefix string, out map[string]TransformTarget) {
+	if schema == nil {
 		return
 	}
 
-	config.Layer.Delete("")
-	config.Load(mapRes, path)
-}
-
-func getKeyToTransformMap(id string, value any) map[string]TransformTarget {
-	data := map[string]TransformTarget{}
-
-	if value == nil {
-		return data
-	}
-
-	v := reflect.ValueOf(value)
-	t := reflect.TypeOf(value)
+	v := reflect.ValueOf(schema)
+	t := reflect.TypeOf(schema)
 
 	if t.Kind() == reflect.Ptr {
 		v = v.Elem()
 		t = t.Elem()
 	}
-
 	if t.Kind() != reflect.Struct {
-		return data
+		return
 	}
 
 	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		fieldValue := v.Field(i)
+		f := t.Field(i)
+		fv := v.Field(i)
 
-		keys := []string{}
+		base := f.Tag.Get("koanf")
+		if base == "" {
+			continue
+		}
 
-		outputKey := field.Tag.Get("koanf")
+		aliasesRaw := getFieldWithID(id, "aliases", f.Tag)
 
-		keys = append(keys, outputKey)
+		var aliases []string
+		
+		if aliasesRaw != "" {
+			aliases = strings.Split(aliasesRaw, ",")
+		}
 
-		aliases := strings.Split(getFieldWithID(id, "aliases", field.Tag), ",")
-		keys = append(keys, aliases...)
+		transform := getFieldWithID(id, "transform", f.Tag)
+		childTransform := getFieldWithID(id, "childtransform", f.Tag)
 
-		for _, key := range keys {
+		allKeys := append([]string{base}, aliases...)
+
+		for _, key := range allKeys {
 			if key == "" {
 				continue
 			}
 
-			lower := strings.ToLower(key)
+			key = strings.ToLower(key)
 
-			transformTag := getFieldWithID(id, "transform", field.Tag)
-			childTransformTag := getFieldWithID(id, "childtransform", field.Tag)
-
-			data[lower] = TransformTarget{
-				OutputKey:               strings.ToLower(outputKey), // Use `outputKey` here for aliasing
-				Transform:         transformTag,
-				ChildTransform:    childTransformTag,
-				Value:             getValueSafe(fieldValue),
+			var fullKey string
+			if strings.HasPrefix(key, ".") {
+				fullKey = key[1:]
+			} else if prefix != "" {
+				fullKey = prefix + DELIM + key
+			} else {
+				fullKey = key
 			}
 
-			// Recursively walk nested structs
-			if fieldValue.Kind() == reflect.Struct || (fieldValue.Kind() == reflect.Ptr && fieldValue.Elem().Kind() == reflect.Struct) {
-
-				sub := getKeyToTransformMap(id, fieldValue.Interface())
-
-				for subKey, subValue := range sub {
-					if subKey == "" {
-						continue
-					}
-
-					// `.` suffix means absolute (mainly useful for aliases)					
-					if !strings.HasPrefix(subKey, ".") {
-						subKey = lower + "." + strings.ToLower(subKey)
-					} else {
-						subKey = strings.ToLower(subKey[1:])
-					}
-
-					data[subKey] = subValue
-				}
+			out[fullKey] = TransformTarget{
+				OutputKey:      strings.ToLower(prefix + DELIM + base),
+				Transform:      transform,
+				ChildTransform: childTransform,
+				Value:          getValueSafe(fv),
 			}
 		}
-	}
 
-	return data
+		// Recurse into nested structs
+		if fv.Kind() == reflect.Struct || (fv.Kind() == reflect.Ptr && fv.Elem().Kind() == reflect.Struct) {
+
+			nextPrefix := base
+			if prefix != "" {
+				nextPrefix = prefix + DELIM + base
+			}
+
+			getTransformMap(id, fv.Interface(), nextPrefix, out)
+		}
+	}
 }
 
-func getValueSafe(value reflect.Value) any {
-	if !value.IsValid() {
+func Flatten(prefix string, v any, out map[string]any) {
+	switch x := v.(type) {
+
+	case map[string]any:
+		for k, value := range x {
+			var key string
+			if prefix != "" {
+				key = prefix + DELIM + k
+			} else {
+				key = k
+			}
+			Flatten(key, value, out)
+		}
+
+	case []any:
+		for i, value := range x {
+			key := prefix + DELIM + strconv.Itoa(i)
+			Flatten(key, value, out)
+		}
+
+	default:
+		out[prefix] = x
+	}
+}
+
+func Unflatten(flat map[string]any) map[string]any {
+	root := map[string]any{}
+
+	for full, val := range flat {
+		parts := strings.Split(full, DELIM)
+		m := root
+
+		for i := 0; i < len(parts)-1; i++ {
+			part := parts[i]
+
+			_, ok := m[part]; 
+
+			if !ok {
+				m[part] = map[string]any{}
+			}
+
+			m = m[part].(map[string]any)
+		}
+
+		m[parts[len(parts)-1]] = val
+	}
+
+	return root
+}
+
+func splitPath(p string) (string, string) {
+	parts := strings.Split(p, DELIM)
+
+	if len(parts) == 1 {
+		return "", p
+	}
+
+	return strings.Join(parts[:len(parts)-1], DELIM), parts[len(parts)-1]
+}
+
+func getValueSafe(v reflect.Value) any {
+	if !v.IsValid() {
 		return nil
 	}
-	if value.Kind() == reflect.Ptr {
-		if value.IsNil() {
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
 			return nil
 		}
-		return getValueSafe(value.Elem())
+		return getValueSafe(v.Elem())
 	}
-	return value.Interface()
+	return v.Interface()
 }
 
 func getFieldWithID(id string, key string, tag reflect.StructTag) string {
-	field, exists := tag.Lookup(id + ">" + key)
+	if id != "" {
+		value, ok := tag.Lookup(id + ">" + key);
 
-	if !exists {
-		return tag.Get(key)
-	}
-
-	return field
-}
-
-func applyTransform(key string, value any, transformTargets map[string]TransformTarget, funcs map[string]func(string, any) (string, any)) (string, any) {
-	lower := strings.ToLower(key)
-	target := transformTargets[lower]
-
-	targets := map[string]TransformTarget{}
-		
-	maps.Copy(targets, transformTargets)
-
-	newKey, _ := applyTransformToAny(lower, value, transformTargets, funcs)
-
-	newKeyWithDot := newKey
-
-	if newKey != "" {
-		newKeyWithDot = newKey + "."
-	}
-
-	switch asserted := value.(type) {
-	case map[string]any:
-		res := map[string]any{}
-
-		for k, v := range asserted {
-			fullKey := newKeyWithDot + k
-
-			target, ok := targets[fullKey]
-
-			outputKey := newKeyWithDot + target.OutputKey
-
-			if !ok {
-				childTarget := TransformTarget{
-					OutputKey: fullKey,
-					Transform: target.ChildTransform,
-					ChildTransform: target.ChildTransform,
-				}
-
-				targets[fullKey] = childTarget
-
-				outputKey = fullKey
-			}
-
-
-			childKey, childValue := applyTransform(outputKey, v, targets, funcs)
-
-			keyParts := getKeyParts(childKey)
-
-			lastKey := keyParts[len(keyParts)-1]
-
-			fmt.Println(fullKey, "=>", lastKey)
-
-			res[lastKey] = childValue
+		if ok {
+			return value
 		}
-
-		keyParts := getKeyParts(newKey)
-
-		return keyParts[len(keyParts)-1], res
-	case []any:
-		res := []any{}
-		
-		for i, child := range asserted {
-			fullKey := newKeyWithDot + strconv.Itoa(i)
-
-			_, ok := targets[fullKey]
-
-			if !ok {
-				childTarget := TransformTarget{
-					OutputKey: newKeyWithDot + strconv.Itoa(i),
-					Transform: target.ChildTransform,
-					ChildTransform: target.ChildTransform,
-				}
-
-				targets[fullKey] = childTarget
-			}
-			
-			_, childValue := applyTransform(fullKey, child, targets, funcs)
-
-			res = append(res, childValue)
-		}
-
-		keyParts := getKeyParts(newKey)
-
-		return keyParts[len(keyParts)-1], res
-	default:
-		return applyTransformToAny(key, asserted, transformTargets, funcs)
-	}
-}
-
-func applyTransformToAny(key string, value any, transformTargets map[string]TransformTarget, funcs map[string]func(string, any) (string, any)) (string, any) {
-	lower := strings.ToLower(key)
-
-	transformTarget, ok := transformTargets[lower]
-	if !ok {
-		transformTarget.Transform = "default"
 	}
 
-	transformFuncs := strings.Split(transformTarget.Transform, ",")
-
- 	resKey := key
-	resValue := value
-
-	for _, fnKey := range transformFuncs {
-		fn, ok := funcs[fnKey]
-
-		if !ok {
-			fn = funcs["default"]
-		}
-
-		keyParts := getKeyParts(resKey)
-
-		resKey, resValue = fn(keyParts[len(keyParts)-1], resValue)
-	}
-
-	return resKey, resValue
-}
-
-func getKeyParts(fullKey string) []string {
-	keyParts := strings.Split(fullKey, ".")
-
-	return keyParts
+	return tag.Get(key)
 }
