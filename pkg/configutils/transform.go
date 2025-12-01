@@ -50,13 +50,15 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 			}
 		}
 
-		currentKey := target.OutputKey
-		currentValue := val
+		newKey := key
+		newValue := val
+
+		outputKey := target.OutputKey
 
 		fnList := strings.Split(target.Transform, ",")
 		for _, fnName := range fnList {
 			fnName = strings.TrimSpace(fnName)
-			
+
 			if fnName == "" {
 				continue
 			}
@@ -66,11 +68,13 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 				fn = funcs["default"]
 			}
 
-			_, last := splitPath(currentKey)
-			currentKey, currentValue = fn(last, currentValue)
+			_, last := splitPath(outputKey)
+			outputKey, newValue = fn(last, newValue)
+
+			newKey = key + DELIM + outputKey
 		}
 
-		out[currentKey] = currentValue
+		out[newKey] = newValue
 	}
 
 	return out
@@ -97,7 +101,6 @@ func findChildTransform(key string, targets map[string]TransformTarget) Transfor
 
 	return TransformTarget{}
 }
-
 
 func BuildTransformMap(id string, schema any) map[string]TransformTarget {
 	out := map[string]TransformTarget{}
