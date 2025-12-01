@@ -85,9 +85,18 @@ func getKeyToTransformMap(value any) map[string]TransformTarget {
 				sub := getKeyToTransformMap(fieldValue.Interface())
 
 				for subKey, subValue := range sub {
-					fullKey := lower + "." + strings.ToLower(subKey)
+					if subKey == "" {
+						continue
+					}
 
-					data[fullKey] = subValue
+					// `.` suffix means absolute (mainly useful for aliases)					
+					if !strings.HasPrefix(subKey, ".") {
+						subKey = lower + "." + strings.ToLower(subKey)
+					} else {
+						subKey = strings.ToLower(subKey[1:])
+					}
+
+					data[subKey] = subValue
 				}
 			}
 		}
