@@ -1,10 +1,13 @@
 package configutils
 
 import (
+	"fmt"
 	"maps"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/codeshelldev/gotl/pkg/jsonutils"
 )
 
 type TransformTarget struct {
@@ -17,6 +20,8 @@ type TransformTarget struct {
 // Apply Transform funcs based on `transform` and `childtransform` in struct schema
 func (config Config) ApplyTransformFuncs(id string, structSchema any, path string, funcs map[string]func(string, any) (string, any)) {
 	transformTargets := getKeyToTransformMap(id, structSchema)
+
+	fmt.Println(id + ":\n" + jsonutils.Pretty(transformTargets))
 
 	data := config.Layer.Get(path)
 
