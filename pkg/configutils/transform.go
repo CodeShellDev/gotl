@@ -11,7 +11,7 @@ import (
 )
 
 type TransformTarget struct {
-	Key string
+	OutputKey string
 	Transform string
 	ChildTransform string
 	Value any
@@ -80,7 +80,7 @@ func getKeyToTransformMap(id string, value any) map[string]TransformTarget {
 			childTransformTag := getFieldWithID(id, "childtransform", field.Tag)
 
 			data[lower] = TransformTarget{
-				Key:               strings.ToLower(outputKey), // Use `outputKey` here for aliasing
+				OutputKey:               strings.ToLower(outputKey), // Use `outputKey` here for aliasing
 				Transform:         transformTag,
 				ChildTransform:    childTransformTag,
 				Value:             getValueSafe(fieldValue),
@@ -160,11 +160,11 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 
 			target, ok := targets[fullKey]
 
-			fullKey = newKeyWithDot + target.Key
+			fullKey = newKeyWithDot + target.OutputKey
 
 			if !ok {
 				childTarget := TransformTarget{
-					Key: fullKey,
+					OutputKey: k,
 					Transform: target.ChildTransform,
 					ChildTransform: target.ChildTransform,
 				}
@@ -192,7 +192,7 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 
 			if !ok {
 				childTarget := TransformTarget{
-					Key: fullKey,
+					OutputKey: strconv.Itoa(i),
 					Transform: target.ChildTransform,
 					ChildTransform: target.ChildTransform,
 				}
