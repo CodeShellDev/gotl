@@ -160,11 +160,11 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 
 			target, ok := targets[fullKey]
 
-			fullKey = newKeyWithDot + target.OutputKey
+			outputKey := newKeyWithDot + target.OutputKey
 
 			if !ok {
 				childTarget := TransformTarget{
-					OutputKey: newKeyWithDot + k,
+					OutputKey: fullKey,
 					Transform: target.ChildTransform,
 					ChildTransform: target.ChildTransform,
 				}
@@ -172,7 +172,7 @@ func applyTransform(key string, value any, transformTargets map[string]Transform
 				targets[fullKey] = childTarget
 			}
 
-			childKey, childValue := applyTransform(fullKey, v, targets, funcs)
+			childKey, childValue := applyTransform(outputKey, v, targets, funcs)
 
 			keyParts := getKeyParts(childKey)
 
