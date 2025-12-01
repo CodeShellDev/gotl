@@ -62,7 +62,9 @@ func getKeyToTransformMap(id string, value any) map[string]TransformTarget {
 
 		keys := []string{}
 
-		keys = append(keys, field.Tag.Get("koanf"))
+		outputKey := field.Tag.Get("koanf")
+
+		keys = append(keys, outputKey)
 
 		aliases := strings.Split(getFieldWithID(id, "aliases", field.Tag), ",")
 		keys = append(keys, aliases...)
@@ -78,7 +80,7 @@ func getKeyToTransformMap(id string, value any) map[string]TransformTarget {
 			childTransformTag := getFieldWithID(id, "childtransform", field.Tag)
 
 			data[lower] = TransformTarget{
-				Key:               lower,
+				Key:               strings.ToLower(outputKey), // Use `outputKey` here for aliasing
 				Transform:         transformTag,
 				ChildTransform:    childTransformTag,
 				Value:             getValueSafe(fieldValue),
