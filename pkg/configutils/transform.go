@@ -23,7 +23,7 @@ func Flatten(prefix string, v any, out map[string]any) {
 		for k, value := range asserted {
 			var key string
 			if prefix != "" {
-				key = prefix + DELIM + k
+				key = joinPaths(prefix, k)
 			} else {
 				key = k
 			}
@@ -33,7 +33,7 @@ func Flatten(prefix string, v any, out map[string]any) {
 
 	case []any:
 		for i, value := range asserted {
-			key := prefix + DELIM + strconv.Itoa(i)
+			key := joinPaths(prefix, strconv.Itoa(i))
 
 			Flatten(key, value, out)
 		}
@@ -48,7 +48,7 @@ func Unflatten(flat map[string]any) map[string]any {
 	root := map[string]any{}
 
 	for full, val := range flat {
-		parts := strings.Split(full, DELIM)
+		parts := splitPath(full)
 		m := root
 
 		for i := 0; i < len(parts) - 1; i++ {
@@ -128,12 +128,19 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 				fn = funcs["default"]
 			}
 
-			_, last := splitPath(outputKey)
-			outputKey, newValue = fn(last, newValue)
+			outputParts := splitPath(outputKey)
 
-			newKey = key + DELIM + outputKey
+			outputBase := outputParts[len(outputParts)-1]
+
+			outputBase, newValue = fn(outputBase, newValue)
+
+			keyParts := splitPath(key)
+
+			stem := joinPaths(keyParts[:1]...)
+
+			newKey = joinPaths(stem, outputBase)
 			
-			fmt.Println(key, outputKey)
+			fmt.Println(key, outputBase)
 		}
 
 		out[newKey] = newValue
@@ -143,10 +150,10 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 }
 
 func findChildTransform(key string, targets map[string]TransformTarget) TransformTarget {
-	parts := strings.Split(key, DELIM)
+	parts := splitPath(key)
 
 	for i := len(parts) - 1; i > 0; i-- {
-		parent := strings.Join(parts[:i], DELIM)
+		parent := joinPaths(parts[:i]...)
 
 		t, ok := targets[parent]
 
@@ -154,7 +161,7 @@ func findChildTransform(key string, targets map[string]TransformTarget) Transfor
 
 			if t.ChildTransform != "" {
 				return TransformTarget{
-					OutputKey: parent + DELIM + parts[i],
+					OutputKey: joinPaths(parent, parts[i]),
 					Transform: t.ChildTransform,
 				}
 			}
@@ -164,12 +171,10 @@ func findChildTransform(key string, targets map[string]TransformTarget) Transfor
 	return TransformTarget{}
 }
 
-func splitPath(p string) (string, string) {
-	parts := strings.Split(p, DELIM)
+func splitPath(p string) []string {
+	return strings.Split(p, DELIM)
+}
 
-	if len(parts) == 1 {
-		return "", p
-	}
-
-	return strings.Join(parts[:len(parts)-1], DELIM), parts[len(parts)-1]
+func joinPaths(p ...string) string {
+	return strings.Join(p, DELIM)
 }

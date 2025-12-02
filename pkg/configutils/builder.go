@@ -64,12 +64,12 @@ func getTransformMap(id string, schema any, stem string, out map[string]Transfor
 			key = strings.ToLower(key)
 
 			var fullKey string
-			outputKey := stem + DELIM + base
+			outputKey := joinPaths(stem, base)
 
 			if strings.HasPrefix(key, ".") {
 				fullKey = key[1:]
 			} else if stem != "" {
-				fullKey = stem + DELIM + key
+				fullKey = joinPaths(stem, key)
 			} else {
 				fullKey = key
 				outputKey = base
@@ -85,7 +85,7 @@ func getTransformMap(id string, schema any, stem string, out map[string]Transfor
 
 		nextStem := base
 		if stem != "" {
-			nextStem = stem + DELIM + base
+			nextStem = joinPaths(stem, base)
 		}
 
 		fieldKind := fieldValue.Kind()
