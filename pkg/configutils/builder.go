@@ -154,7 +154,7 @@ func getValueSafe(v reflect.Value) any {
 	if !v.IsValid() {
 		return nil
 	}
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			return nil
 		}

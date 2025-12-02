@@ -115,8 +115,8 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 
 		outputKey := target.OutputKey
 
-		fnList := strings.Split(target.Transform, ",")
-		for _, fnName := range fnList {
+		fnList := strings.SplitSeq(target.Transform, ",")
+		for fnName := range fnList {
 			fnName = strings.TrimSpace(fnName)
 
 			if fnName == "" {
@@ -136,11 +136,11 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 
 			keyParts := splitPath(key)
 
-			stem := joinPaths(keyParts[:1]...)
+			stem := joinPaths(keyParts[:len(keyParts)-1]...)
 
 			newKey = joinPaths(stem, outputBase)
 			
-			fmt.Println(key, outputBase)
+			fmt.Println(stem, outputBase)
 		}
 
 		out[newKey] = newValue
