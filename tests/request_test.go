@@ -45,8 +45,8 @@ func TestTypedQuery(t *testing.T) {
 		},
 	}
 
-	expectedStr := jsonutils.ToJson(expected)
-	gotStr := jsonutils.ToJson(got)
+	expectedStr := jsonutils.Pretty(expected)
+	gotStr := jsonutils.Pretty(got)
 
 	if expectedStr != gotStr {
 		t.Error("\nExpected: ", expectedStr, "\nGot: ", gotStr)

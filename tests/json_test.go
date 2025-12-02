@@ -50,8 +50,8 @@ func TestJsonTemplating(t *testing.T) {
 		t.Error("Error Templating JSON:\n", err.Error())
 	}
 
-	expectedStr := jsonutils.ToJson(expected)
-	gotStr := jsonutils.ToJson(got)
+	expectedStr := jsonutils.Pretty(expected)
+	gotStr := jsonutils.Pretty(got)
 
 	if expectedStr != gotStr {
 		t.Error("\nExpected: ", expectedStr, "\nGot: ", gotStr)
