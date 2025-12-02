@@ -14,7 +14,7 @@ func BuildTransformMap(id string, schema any) map[string]TransformTarget {
 	return out
 }
 
-func getTransformMap(id string, schema any, stem string, out map[string]TransformTarget) {
+func getTransformMap(id string, schema any, parent string, out map[string]TransformTarget) {
 	if schema == nil {
 		return
 	}
@@ -64,12 +64,12 @@ func getTransformMap(id string, schema any, stem string, out map[string]Transfor
 			key = strings.ToLower(key)
 
 			var fullKey string
-			outputKey := joinPaths(stem, base)
+			outputKey := joinPaths(parent, base)
 
 			if strings.HasPrefix(key, ".") {
 				fullKey = key[1:]
-			} else if stem != "" {
-				fullKey = joinPaths(stem, key)
+			} else if parent != "" {
+				fullKey = joinPaths(parent, key)
 			} else {
 				fullKey = key
 				outputKey = base
@@ -83,37 +83,37 @@ func getTransformMap(id string, schema any, stem string, out map[string]Transfor
 			}
 		}
 
-		nextStem := base
-		if stem != "" {
-			nextStem = joinPaths(stem, base)
+		nextParent := base
+		if parent != "" {
+			nextParent = joinPaths(parent, base)
 		}
 
 		fieldKind := fieldValue.Kind()
 
 		switch fieldKind {
 		case reflect.Struct:
-			getTransformMap(id, fieldValue.Interface(), nextStem, out)
+			getTransformMap(id, fieldValue.Interface(), nextParent, out)
 		case reflect.Pointer:
-			handlePointer(id, fieldValue, nextStem, out)
+			handlePointer(id, fieldValue, nextParent, out)
 		case reflect.Slice, reflect.Array:
-			handleArray(id, field, nextStem, out)
+			handleArray(id, field, nextParent, out)
 		case reflect.Map:
-			handleMap(id, field, nextStem, out)
+			handleMap(id, field, nextParent, out)
 		}
 	}
 }
 
-func handlePointer(id string, fieldValue reflect.Value, stem string, out map[string]TransformTarget) {
+func handlePointer(id string, fieldValue reflect.Value, parent string, out map[string]TransformTarget) {
 	if !fieldValue.IsNil() {
 		elem := fieldValue.Elem()
 
 		if elem.Kind() == reflect.Struct {
-			getTransformMap(id, elem.Interface(), stem, out)
+			getTransformMap(id, elem.Interface(), parent, out)
 		}
 	}
 }
 
-func handleArray(id string, field reflect.StructField, stem string, out map[string]TransformTarget) {
+func handleArray(id string, field reflect.StructField, parent string, out map[string]TransformTarget) {
 	t := field.Type.Elem()
 	k := t.Kind()
 
@@ -125,11 +125,11 @@ func handleArray(id string, field reflect.StructField, stem string, out map[stri
 	if k == reflect.Struct {
 		zero := reflect.New(t).Elem().Interface()
 		
-		getTransformMap(id, zero, stem, out)
+		getTransformMap(id, zero, parent, out)
 	}
 }
 
-func handleMap(id string, field reflect.StructField, stem string, out map[string]TransformTarget) {
+func handleMap(id string, field reflect.StructField, parent string, out map[string]TransformTarget) {
 	t := field.Type.Key().Kind()
 
 	if t == reflect.String {
@@ -144,7 +144,7 @@ func handleMap(id string, field reflect.StructField, stem string, out map[string
 		if valueKind == reflect.Struct {
 			iface := reflect.New(valueType).Elem().Interface()
 
-			getTransformMap(id, iface, stem, out)
+			getTransformMap(id, iface, parent, out)
 		}
 	}
 }

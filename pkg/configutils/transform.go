@@ -94,56 +94,59 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 	out := map[string]any{}
 
 	for key, val := range flat {
-		lower := strings.ToLower(key)
+		keyParts := splitPath(key)
 
-		target, ok := targets[lower]
-		if !ok {
-			target = findChildTransform(lower, targets)
+		newKeyParts := []string{}
 
-			// fallback to default
-			if target.Transform == "" {
-				target.Transform = "default"
-			}
-
-			if target.OutputKey == "" {
-				target.OutputKey = key
-			}
-		}
-
-		newKey := key
 		newValue := val
 
-		outputKey := target.OutputKey
+		for i := len(keyParts) - 1; i > 0; i-- {
+			parent := joinPaths(keyParts[:i]...)
 
-		fnList := strings.SplitSeq(target.Transform, ",")
-		for fnName := range fnList {
-			fnName = strings.TrimSpace(fnName)
+			lower := strings.ToLower(parent)
 
-			if fnName == "" {
-				continue
-			}
-
-			fn, ok := funcs[fnName]
+			target, ok := targets[lower]
 			if !ok {
-				fn = funcs["default"]
+				target = findChildTransform(lower, targets)
+
+				// fallback to default
+				if target.Transform == "" {
+					target.Transform = "default"
+				}
+
+				if target.OutputKey == "" {
+					target.OutputKey = key
+				}
 			}
 
-			outputParts := splitPath(outputKey)
+			outputKey := target.OutputKey
 
-			outputBase := outputParts[len(outputParts)-1]
+			outputkeyParts := splitPath(outputKey)
 
-			outputBase, newValue = fn(outputBase, newValue)
+			outputBase := outputkeyParts[len(outputkeyParts)-1]
 
-			keyParts := splitPath(key)
+			fnList := strings.SplitSeq(target.Transform, ",")
+			for fnName := range fnList {
+				fnName = strings.TrimSpace(fnName)
 
-			stem := joinPaths(keyParts[:len(keyParts)-1]...)
+				if fnName == "" {
+					continue
+				}
 
-			newKey = joinPaths(stem, outputBase)
-			
-			fmt.Println(stem, outputBase)
+				fn, ok := funcs[fnName]
+				if !ok {
+					fn = funcs["default"]
+				}
+
+				outputBase, newValue = fn(outputBase, newValue)
+			}
+
+			fmt.Println(parent, outputBase)
+
+			newKeyParts = append(newKeyParts, outputBase)
 		}
 
-		out[newKey] = newValue
+		out[joinPaths(newKeyParts...)] = newValue
 	}
 
 	return out
@@ -158,7 +161,6 @@ func findChildTransform(key string, targets map[string]TransformTarget) Transfor
 		t, ok := targets[parent]
 
 		if ok {
-
 			if t.ChildTransform != "" {
 				return TransformTarget{
 					OutputKey: joinPaths(parent, parts[i]),
