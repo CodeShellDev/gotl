@@ -16,6 +16,60 @@ type TransformTarget struct {
 	Value          any
 }
 
+// Flatten `data: { key: value }` into `data.key: value``
+func Flatten(prefix string, v any, out map[string]any) {
+	switch asserted := v.(type) {
+
+	case map[string]any:
+		for k, value := range asserted {
+			var key string
+			if prefix != "" {
+				key = prefix + DELIM + k
+			} else {
+				key = k
+			}
+
+			Flatten(key, value, out)
+		}
+
+	case []any:
+		for i, value := range asserted {
+			key := prefix + DELIM + strconv.Itoa(i)
+
+			Flatten(key, value, out)
+		}
+
+	default:
+		out[prefix] = asserted
+	}
+}
+
+// Unflatten `data.key: value` into `data: { key: value }`
+func Unflatten(flat map[string]any) map[string]any {
+	root := map[string]any{}
+
+	for full, val := range flat {
+		parts := strings.Split(full, DELIM)
+		m := root
+
+		for i := 0; i < len(parts) - 1; i++ {
+			part := parts[i]
+
+			_, ok := m[part] 
+
+			if !ok {
+				m[part] = map[string]any{}
+			}
+
+			m = m[part].(map[string]any)
+		}
+
+		m[parts[len(parts)-1]] = val
+	}
+
+	return root
+}
+
 // Apply Transform funcs based on `transform`, `childtransform` and `aliases` in struct schema
 func (config Config) ApplyTransformFuncs(id string, schema any, path string, funcs map[string]func(string, any) (string, any)) {
 	raw := config.Layer.Get(path)
@@ -109,139 +163,6 @@ func findChildTransform(key string, targets map[string]TransformTarget) Transfor
 	}
 
 	return TransformTarget{}
-}
-
-func BuildTransformMap(id string, schema any) map[string]TransformTarget {
-	out := map[string]TransformTarget{}
-
-	getTransformMap(id, schema, "", out)
-
-	return out
-}
-
-func getTransformMap(id string, schema any, prefix string, out map[string]TransformTarget) {
-	if schema == nil {
-		return
-	}
-
-	v := reflect.ValueOf(schema)
-	t := reflect.TypeOf(schema)
-
-	if t.Kind() == reflect.Ptr {
-		v = v.Elem()
-		t = t.Elem()
-	}
-	if t.Kind() != reflect.Struct {
-		return
-	}
-
-	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
-		fv := v.Field(i)
-
-		base := f.Tag.Get("koanf")
-		if base == "" {
-			continue
-		}
-
-		aliasesRaw := getFieldWithID(id, "aliases", f.Tag)
-
-		var aliases []string
-		
-		if aliasesRaw != "" {
-			aliases = strings.Split(aliasesRaw, ",")
-		}
-
-		transform := getFieldWithID(id, "transform", f.Tag)
-		childTransform := getFieldWithID(id, "childtransform", f.Tag)
-
-		allKeys := append([]string{base}, aliases...)
-
-		for _, key := range allKeys {
-			if key == "" {
-				continue
-			}
-
-			key = strings.ToLower(key)
-
-			var fullKey string
-			if strings.HasPrefix(key, ".") {
-				fullKey = key[1:]
-			} else if prefix != "" {
-				fullKey = prefix + DELIM + key
-			} else {
-				fullKey = key
-			}
-
-			out[fullKey] = TransformTarget{
-				OutputKey:      strings.ToLower(prefix + DELIM + base),
-				Transform:      transform,
-				ChildTransform: childTransform,
-				Value:          getValueSafe(fv),
-			}
-		}
-
-		// Recurse into nested structs
-		if fv.Kind() == reflect.Struct || (fv.Kind() == reflect.Ptr && fv.Elem().Kind() == reflect.Struct) {
-
-			nextPrefix := base
-			if prefix != "" {
-				nextPrefix = prefix + DELIM + base
-			}
-
-			getTransformMap(id, fv.Interface(), nextPrefix, out)
-		}
-	}
-}
-
-func Flatten(prefix string, v any, out map[string]any) {
-	switch x := v.(type) {
-
-	case map[string]any:
-		for k, value := range x {
-			var key string
-			if prefix != "" {
-				key = prefix + DELIM + k
-			} else {
-				key = k
-			}
-			Flatten(key, value, out)
-		}
-
-	case []any:
-		for i, value := range x {
-			key := prefix + DELIM + strconv.Itoa(i)
-			Flatten(key, value, out)
-		}
-
-	default:
-		out[prefix] = x
-	}
-}
-
-func Unflatten(flat map[string]any) map[string]any {
-	root := map[string]any{}
-
-	for full, val := range flat {
-		parts := strings.Split(full, DELIM)
-		m := root
-
-		for i := 0; i < len(parts) - 1; i++ {
-			part := parts[i]
-
-			_, ok := m[part] 
-
-			if !ok {
-				m[part] = map[string]any{}
-			}
-
-			m = m[part].(map[string]any)
-		}
-
-		m[parts[len(parts)-1]] = val
-	}
-
-	return root
 }
 
 func splitPath(p string) (string, string) {
