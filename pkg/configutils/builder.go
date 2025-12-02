@@ -148,3 +148,29 @@ func handleMap(id string, field reflect.StructField, stem string, out map[string
 		}
 	}
 }
+
+
+func getValueSafe(v reflect.Value) any {
+	if !v.IsValid() {
+		return nil
+	}
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return nil
+		}
+		return getValueSafe(v.Elem())
+	}
+	return v.Interface()
+}
+
+func getFieldWithID(id string, key string, tag reflect.StructTag) string {
+	if id != "" {
+		value, ok := tag.Lookup(id + ">" + key)
+
+		if ok {
+			return value
+		}
+	}
+
+	return tag.Get(key)
+}

@@ -2,7 +2,6 @@ package configutils
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -173,29 +172,4 @@ func splitPath(p string) (string, string) {
 	}
 
 	return strings.Join(parts[:len(parts)-1], DELIM), parts[len(parts)-1]
-}
-
-func getValueSafe(v reflect.Value) any {
-	if !v.IsValid() {
-		return nil
-	}
-	if v.Kind() == reflect.Ptr {
-		if v.IsNil() {
-			return nil
-		}
-		return getValueSafe(v.Elem())
-	}
-	return v.Interface()
-}
-
-func getFieldWithID(id string, key string, tag reflect.StructTag) string {
-	if id != "" {
-		value, ok := tag.Lookup(id + ">" + key)
-
-		if ok {
-			return value
-		}
-	}
-
-	return tag.Get(key)
 }
