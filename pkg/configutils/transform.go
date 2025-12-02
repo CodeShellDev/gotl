@@ -76,11 +76,7 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, fun
 	flat := map[string]any{}
 	Flatten("", raw, flat)
 
-	fmt.Println("Flattened: ", jsonutils.Pretty(flat))
-
 	targets := BuildTransformMap(id, schema)
-
-	fmt.Println("Targets: ", jsonutils.Pretty(targets))
 
 	transformed := ApplyTransforms(flat, targets, funcs)
 
@@ -136,6 +132,8 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 			outputKey, newValue = fn(last, newValue)
 
 			newKey = key + DELIM + outputKey
+			
+			fmt.Println(key, outputKey)
 		}
 
 		out[newKey] = newValue
