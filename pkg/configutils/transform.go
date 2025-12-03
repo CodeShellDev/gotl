@@ -145,10 +145,10 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 				outputBase, newValue = fn(outputBase, newValue)
 			}
 
-			fmt.Println(parent, outputBase)
-
 			newKeyParts = append(newKeyParts, outputBase)
 		}
+
+		fmt.Println(jsonutils.Pretty(newKeyParts))
 
 		out[joinPaths(newKeyParts...)] = newValue
 	}
