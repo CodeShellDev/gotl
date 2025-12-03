@@ -103,7 +103,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 		for i := range keyParts {
 			parent := joinPaths(keyParts[:i]...)
 
-			if i == 0 {
+			if i == len(keyParts) {
 				parent = key
 			}
 			
@@ -126,8 +126,6 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 			outputKey := target.OutputKey
 
 			outputkeyParts := splitPath(outputKey)
-
-			fmt.Println(jsonutils.Pretty(target))
 
 			outputBase := outputkeyParts[len(outputkeyParts)-1]
 
