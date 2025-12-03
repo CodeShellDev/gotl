@@ -103,7 +103,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 		for i := range keyParts {
 			parent := joinPaths(keyParts[:i]...)
 
-			if i == len(keyParts) {
+			if i == len(keyParts) - 1 {
 				parent = key
 			}
 			
@@ -144,6 +144,8 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 
 				outputBase, newValue = fn(outputBase, newValue)
 			}
+
+			fmt.Println(outputBase)
 
 			newKeyParts = append(newKeyParts, outputBase)
 		}
