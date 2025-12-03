@@ -101,11 +101,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 		newValue := val
 
 		for i := range keyParts {
-			parent := joinPaths(keyParts[:i]...)
-
-			if i == len(keyParts) - 1 {
-				parent = key
-			}
+			parent := joinPaths(keyParts[:i+1]...)
 
 			fmt.Println(i, key, keyParts, parent)
 			
