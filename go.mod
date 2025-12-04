@@ -1,6 +1,6 @@
 module github.com/codeshelldev/gotl
 
-go 1.25.4
+go 1.25.5
 
 require github.com/knadh/koanf/v2 v2.3.0
 
