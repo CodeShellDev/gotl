@@ -91,41 +91,31 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, fun
 }
 
 func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, funcs map[string]func(string, any) (string, any)) map[string]any {
+
 	out := map[string]any{}
 
 	for key, val := range flat {
 		keyParts := splitPath(key)
 
 		newKeyParts := []string{}
-
 		newValue := val
 
 		for i := range keyParts {
 			parent := joinPaths(keyParts[:i+1]...)
-
-			fmt.Println(i, key, keyParts, parent)
-			
 			lower := strings.ToLower(parent)
 
-			target, ok := targets[lower]
-			if !ok {
-				target = findChildTransform(lower, targets)
+			target := resolveTransform(lower, targets)
 
-				// fallback to default
-				if target.Transform == "" {
-					target.Transform = "default"
-				}
-
-				if target.OutputKey == "" {
-					target.OutputKey = key
-				}
+			// fallback to default
+			if target.Transform == "" {
+				target.Transform = "default"
+			}
+			if target.OutputKey == "" {
+				target.OutputKey = parent
 			}
 
-			outputKey := target.OutputKey
-
-			outputkeyParts := splitPath(outputKey)
-
-			outputBase := outputkeyParts[len(outputkeyParts)-1]
+			outputKeyParts := splitPath(target.OutputKey)
+			outputBase := outputKeyParts[len(outputKeyParts)-1]
 
 			fnList := strings.SplitSeq(target.Transform, ",")
 			for fnName := range fnList {
@@ -140,10 +130,12 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 					fn = funcs["default"]
 				}
 
+				if fn == nil {
+					continue
+				}
+
 				outputBase, newValue = fn(outputBase, newValue)
 			}
-
-			fmt.Println(outputKey, outputBase)
 
 			newKeyParts = append(newKeyParts, outputBase)
 		}
@@ -154,25 +146,83 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 	return out
 }
 
-func findChildTransform(key string, targets map[string]TransformTarget) TransformTarget {
-	parts := splitPath(key)
+func resolveTransform(lower string, targets map[string]TransformTarget) TransformTarget {
+	t, ok := targets[lower]
 
-	for i := len(parts) - 1; i > 0; i-- {
-		parent := joinPaths(parts[:i]...)
+	if ok {
+        return t
+    }
 
-		t, ok := targets[parent]
+	t = findTransform(lower, targets)
 
-		if ok {
-			if t.ChildTransform != "" {
-				return TransformTarget{
-					OutputKey: joinPaths(parent, parts[i]),
-					Transform: t.ChildTransform,
-				}
-			}
-		}
-	}
+    if t.Transform != "" {
+        return TransformTarget{
+            OutputKey:      t.OutputKey,
+            Transform:      t.Transform,
+            ChildTransform: t.ChildTransform,
+        }
+    }
 
-	return TransformTarget{}
+    parts := splitPath(lower)
+    for i := len(parts) - 1; i >= 1; i-- {
+        parent := joinPaths(parts[:i]...)
+
+        t := findTransform(parent, targets)
+        if t.ChildTransform != "" {
+            fullKey := joinPaths(t.OutputKey, joinPaths(parts[i:]...))
+
+            return TransformTarget{
+                OutputKey:      fullKey,
+                Transform:      t.ChildTransform,
+                ChildTransform: t.ChildTransform,
+            }
+        }
+    }
+
+    return TransformTarget{}
+}
+
+func findTransform(lower string, targets map[string]TransformTarget) TransformTarget {
+    actualParts := splitPath(lower)
+
+    bestLen := -1
+    var best TransformTarget
+
+    for schema, t := range targets {
+        schemaParts := splitPath(schema)
+
+        if matchWithDynamic(actualParts, schemaParts) {
+            if len(schemaParts) > bestLen {
+                bestLen = len(schemaParts)
+                best = t
+            }
+        }
+    }
+
+    return best
+}
+
+func matchWithDynamic(actualParts, schemaParts []string) bool {
+    if len(actualParts) < len(schemaParts) {
+        return false
+    }
+
+    offset := len(actualParts) - len(schemaParts)
+
+    for i := range schemaParts {
+        schemaPart := schemaParts[i]
+        actualPart := actualParts[i+offset]
+
+        if schemaPart == "*" {
+            continue
+        }
+
+        if !strings.EqualFold(schemaPart, actualPart) {
+            return false
+        }
+    }
+
+    return true
 }
 
 func splitPath(p string) []string {

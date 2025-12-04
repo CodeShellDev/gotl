@@ -80,12 +80,13 @@ func TestConfigFlattening(t *testing.T) {
 }
 
 type Test_StructSchema struct {
-	UnknownMap         	map[string]any              `koanf:"unknownmap"  transform:"default"`
+	UnknownMap         	map[string]any              `koanf:"unknownmap"  transform:"normal"`
+	UnknownArray		[]any						`koanf:"unknownarray" childtransform:"child"`
 	StructMap      		map[string]Test_StructType	`koanf:"structmap"   childtransform:"child"`
 }
 
 type Test_StructType struct {
-	Key 				string						`koanf:"key"         aliases:".key"`
+	Key 				string						`koanf:"key"         aliases:".key"           transform:"normal"`
 }
 
 func TestTransformMapBuilder(t *testing.T) {
@@ -96,7 +97,13 @@ func TestTransformMapBuilder(t *testing.T) {
 			OutputKey: "unknownmap",
 			Value: nil,
 			ChildTransform: "",
-			Transform: "default",
+			Transform: "normal",
+		},
+		"unknownarray": {
+			OutputKey: "unknownarray",
+			Value: nil,
+			ChildTransform: "child",
+			Transform: "",
 		},
 		"structmap": {
 			OutputKey: "structmap",
@@ -104,17 +111,17 @@ func TestTransformMapBuilder(t *testing.T) {
 			ChildTransform: "child",
 			Transform: "",
 		},
-		"structmap.key": {
-			OutputKey: "structmap.key",
+		"structmap.*.key": {
+			OutputKey: "structmap.*.key",
 			Value: "",
 			ChildTransform: "",
-			Transform: "",
+			Transform: "normal",
 		},
 		"key": {
-			OutputKey: "structmap.key",
+			OutputKey: "structmap.*.key",
 			Value: "",
 			ChildTransform: "",
-			Transform: "",
+			Transform: "normal",
 		},
 	}
 
@@ -123,5 +130,63 @@ func TestTransformMapBuilder(t *testing.T) {
 
 	if transformTargetJson != expectedJson {
 		t.Error("Expected: ", expectedJson, "\nGot: ", transformTargetJson)
+	}
+}
+
+func TestTransform(t *testing.T) {
+	data := map[string]any{
+		"unknownmap": map[string]any{
+			"key": "value",
+		},
+		"unknownarray": []any {
+			1, 2, 3,
+		},
+		"structmap": map[string]any{
+			"mapKey": map[string]any{
+				"key": "value",
+			},
+		},
+	}
+
+	flattened := map[string]any{}
+
+	configutils.Flatten("", data, flattened)
+
+	transformTargets := configutils.BuildTransformMap("", &Test_StructSchema{})
+
+	funcs := map[string]func(string, any) (string, any){
+		"normal": func(s string, a any) (string, any) {
+			return "normal:" + s, a
+		},
+		"child": func(s string, a any) (string, any) {
+			return "child:" + s, a
+		},
+	}
+
+	transformed := configutils.ApplyTransforms(flattened, transformTargets, funcs)
+
+	unflattened := configutils.Unflatten(transformed)
+
+	expected := map[string]any{
+		"structmap": map[string]any{
+            "child:mapkey": map[string]any{
+              "normal:key": "value",
+            },
+		},
+		"normal:unknownmap": map[string]any{
+			"normal:key": "value",
+		},
+		"unknownarray": map[string]any {
+			"child:0": 1,
+			"child:1": 2,
+			"child:2": 3,
+		},
+	}
+
+	transformedJson := jsonutils.Pretty(unflattened)
+	expectedJson := jsonutils.Pretty(expected)
+
+	if transformedJson != expectedJson {
+		t.Error("Expected: ", expectedJson, "\nGot: ", transformedJson)
 	}
 }

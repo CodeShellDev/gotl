@@ -26,7 +26,6 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 		if v.IsNil() {
 			return
 		}
-
 		v = v.Elem()
 		t = t.Elem()
 	}
@@ -88,17 +87,20 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 			nextParent = joinPaths(parent, base)
 		}
 
-		fieldKind := fieldValue.Kind()
-
-		switch fieldKind {
+		switch fieldValue.Kind() {
 		case reflect.Struct:
 			getTransformMap(id, fieldValue.Interface(), nextParent, out)
+
 		case reflect.Pointer:
 			handlePointer(id, fieldValue, nextParent, out)
+
 		case reflect.Slice, reflect.Array:
-			handleArray(id, field, nextParent, out)
+			arrayParent := joinPaths(nextParent, "*")
+			handleArray(id, field, arrayParent, out)
+
 		case reflect.Map:
-			handleMap(id, field, nextParent, out)
+			mapParent := joinPaths(nextParent, "*")
+			handleMap(id, field, mapParent, out)
 		}
 	}
 }
