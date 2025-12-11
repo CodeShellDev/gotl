@@ -64,7 +64,7 @@ func levelString(l zapcore.Level) string {
 	case DeveloperLevel:
 		return "dev"
 	default:
-		return l.CapitalString()
+		return l.String()
 	}
 }
 

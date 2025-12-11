@@ -83,8 +83,14 @@ func format(data ...any) string {
 		switch value := item.(type) {
 		case string:
 			res += value
+		case []byte:
+			res += string(value)
 		case int:
 			res += strconv.Itoa(value)
+		case int32:
+			res += strconv.Itoa(int(value))
+		case int64:
+			res += strconv.Itoa(int(value))
 		case bool:
 			if value {
 				res += "true"
