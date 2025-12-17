@@ -194,7 +194,7 @@ func TestTransform(t *testing.T) {
             },
 		},
 		"normal:unknownmap": map[string]any{
-			"normal:key": "value",
+			"key": "value",
 		},
 		"struct": map[string]any{
 			"normal:key2": "value2",

@@ -94,7 +94,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 
 		fullTarget := resolveTransform(strings.ToLower(key), targets)
 
-		if len(keyParts) != len(splitPath(fullTarget.OutputKey)) {
+		if fullTarget.OutputKey != "" && len(keyParts) != len(splitPath(fullTarget.OutputKey)) {
 			key = fullTarget.OutputKey
 
 			keyParts = splitPath(key)
