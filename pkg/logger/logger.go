@@ -85,8 +85,12 @@ func format(data ...any) string {
 			res += value
 		case []byte:
 			res += string(value)
-		case int, int32, int64:
+		case int:
 			res += strconv.Itoa(value)
+		case int32:
+			res += strconv.Itoa(int(value))
+		case int64:
+			res += strconv.Itoa(int(value))
 		case bool:
 			if value {
 				res += "true"
