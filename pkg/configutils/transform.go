@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/codeshelldev/gotl/pkg/jsonutils"
 )
 
 type TransformTarget struct {
@@ -138,11 +136,7 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, fun
 
 	targets := BuildTransformMap(id, schema)
 
-	fmt.Println("TransformMap: ", jsonutils.Pretty(targets))
-
 	transformed := ApplyTransforms(flat, targets, funcs)
-
-	fmt.Println("AppliedTransforms: ", jsonutils.Pretty(transformed))
 
 	result := Unflatten(transformed)
 
@@ -206,6 +200,8 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 
 			newKeyParts = append(newKeyParts, outputBase)
 		}
+
+		fmt.Println(key, " => ", joinPaths(newKeyParts...))
 
 		out[joinPaths(newKeyParts...)] = newValue
 	}
