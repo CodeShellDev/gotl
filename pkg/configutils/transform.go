@@ -1,8 +1,11 @@
 package configutils
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/codeshelldev/gotl/pkg/jsonutils"
 )
 
 type TransformTarget struct {
@@ -135,7 +138,11 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, fun
 
 	targets := BuildTransformMap(id, schema)
 
+	fmt.Println("TransformMap: ", jsonutils.Pretty(targets))
+
 	transformed := ApplyTransforms(flat, targets, funcs)
+
+	fmt.Println("AppliedTransforms: ", jsonutils.Pretty(transformed))
 
 	result := Unflatten(transformed)
 
