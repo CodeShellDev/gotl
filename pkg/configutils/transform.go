@@ -2,6 +2,7 @@ package configutils
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -237,7 +238,8 @@ func resolveTransform(lower string, targets map[string]TransformTarget) Transfor
         parent := joinPaths(parts[:i]...)
 
         t := findTransform(parent, targets)
-        if t.ChildTransform != "" {
+		
+		if isContainer(t.Value) {
             fullKey := joinPaths(t.OutputKey, joinPaths(parts[i:]...))
 
             return TransformTarget{
@@ -249,6 +251,24 @@ func resolveTransform(lower string, targets map[string]TransformTarget) Transfor
     }
 
     return TransformTarget{}
+}
+
+func isContainer(v any) bool {
+	if v == nil {
+		return false
+	}
+
+	t := reflect.TypeOf(v)
+	for t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+
+	switch t.Kind() {
+	case reflect.Map, reflect.Slice, reflect.Array:
+		return true
+	default:
+		return false
+	}
 }
 
 func findTransform(lower string, targets map[string]TransformTarget) TransformTarget {
