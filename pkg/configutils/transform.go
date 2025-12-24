@@ -44,23 +44,83 @@ func Flatten(prefix string, v any, out map[string]any) {
 func Unflatten(flat map[string]any) map[string]any {
 	root := map[string]any{}
 
-	for full, val := range flat {
-		parts := splitPath(full)
-		m := root
+	for key, value := range flat {
+		parts := splitPath(key)
 
-		for i := 0; i < len(parts) - 1; i++ {
-			part := parts[i]
+		var current any = root
+		var parent any
+		var parentKey any
 
-			_, ok := m[part] 
+		for i, part := range parts {
+			last := i == len(parts) - 1
 
-			if !ok {
-				m[part] = map[string]any{}
+			intPart, err := strconv.Atoi(part)
+
+			if err == nil {
+				var slice []any
+
+				if current == nil {
+					slice = []any{}
+				} else {
+					slice = current.([]any)
+				}
+
+				for len(slice) <= intPart {
+					slice = append(slice, nil)
+				}
+
+				// save slice in parent
+				switch asserted := parent.(type) {
+				case map[string]any:
+					asserted[parentKey.(string)] = slice
+				case []any:
+					asserted[parentKey.(int)] = slice
+				}
+
+				if last {
+					slice[intPart] = value
+					break
+				}
+
+				if slice[intPart] == nil {
+					_, err := strconv.Atoi(parts[i+1])
+					if err == nil {
+						slice[intPart] = []any{}
+					} else {
+						slice[intPart] = map[string]any{}
+					}
+				}
+
+				parent = slice
+				parentKey = intPart
+				current = slice[intPart]
+				continue
+			} else {
+				m, ok := current.(map[string]any)
+				if !ok {
+					m = map[string]any{}
+				}
+
+				if last {
+					m[part] = value
+					break
+				}
+
+				_, exists := m[part]
+				if !exists {
+					_, err := strconv.Atoi(parts[i+1])
+					if err == nil {
+						m[part] = []any{}
+					} else {
+						m[part] = map[string]any{}
+					}
+				}
+
+				parent = m
+				parentKey = part
+				current = m[part]
 			}
-
-			m = m[part].(map[string]any)
 		}
-
-		m[parts[len(parts)-1]] = val
 	}
 
 	return root

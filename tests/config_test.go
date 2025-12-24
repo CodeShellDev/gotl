@@ -22,10 +22,10 @@ func TestConfigUnflattening(t *testing.T) {
 		"data": map[string]any{
 			"key": "value",
 		},
-		"array": map[string]any{
-			"0": 1,
-			"1": 2,
-			"2": 3,
+		"array": []any{
+			1,
+			2,
+			3,
 		},
 		"dict": map[string]any{
 			"data": map[string]any{
@@ -47,10 +47,10 @@ func TestConfigFlattening(t *testing.T) {
 		"data": map[string]any{
 			"key": "value",
 		},
-		"array": map[string]any{
-			"0": 1,
-			"1": 2,
-			"2": 3,
+		"array": []any{
+			1,
+			2,
+			3,
 		},
 		"dict": map[string]any{
 			"data": map[string]any{
@@ -80,18 +80,18 @@ func TestConfigFlattening(t *testing.T) {
 }
 
 type Test_StructSchema struct {
-	UnknownMap         	map[string]any              `koanf:"unknownmap"  transform:"normal"`
-	UnknownArray		[]any						`koanf:"unknownarray" childtransform:"child"`
-	StructMap      		map[string]Test_StructMapType	`koanf:"structmap"   childtransform:"child"`
-	Struct				Test_StructType				`koanf:"struct"`
+	UnknownMap         	map[string]any                  `koanf:"unknownmap"   transform:"normal"`
+	UnknownArray		[]any						    `koanf:"unknownarray" childtransform:"child"`
+	StructMap      		map[string]Test_StructMapType	`koanf:"structmap"    childtransform:"child"`
+	Struct				Test_StructType				    `koanf:"struct"`
 }
 
 type Test_StructMapType struct {
-	Key 				string						`koanf:"key"           transform:"normal"`
+	Key 				string						    `koanf:"key"          transform:"normal"`
 }
 
 type Test_StructType struct {
-	Key2 				string						`koanf:"key2"           aliases:".key2"         transform:"normal"`
+	Key2 				string						    `koanf:"key2"         aliases:".key2"         transform:"normal"`
 }
 
 func TestTransformMapBuilder(t *testing.T) {
