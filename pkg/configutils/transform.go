@@ -1,12 +1,9 @@
 package configutils
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/codeshelldev/gotl/pkg/jsonutils"
 )
 
 type TransformTarget struct {
@@ -158,8 +155,6 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 
 		fullTarget := resolveTransform(strings.ToLower(key), targets)
 
-		fmt.Println("Target: ", jsonutils.Pretty(fullTarget))
-
 		if fullTarget.OutputKey != "" && len(keyParts) != len(splitPath(fullTarget.OutputKey)) {
 			key = fullTarget.OutputKey
 
@@ -179,8 +174,6 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 			if target.OutputKey == "" {
 				target.OutputKey = parent
 			}
-
-			fmt.Println("NewTarget: ", jsonutils.Pretty(target))
 
 			outputKeyParts := splitPath(target.OutputKey)
 			outputBase := outputKeyParts[len(outputKeyParts)-1]
@@ -207,8 +200,6 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 
 			newKeyParts = append(newKeyParts, outputBase)
 		}
-
-		fmt.Println(key, " => ", joinPaths(newKeyParts...))
 
 		out[joinPaths(newKeyParts...)] = newValue
 	}
