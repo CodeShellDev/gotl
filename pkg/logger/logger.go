@@ -146,6 +146,9 @@ func Sync() {
 	}
 }
 
+func Get() *Logger {
+	return defaultLogger
+}
 
 func (logger *Logger) Level() string {
 	return levelString(logger.level.Level())
