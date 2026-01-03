@@ -66,7 +66,7 @@ func (config *Config) LoadFile(path string, parser koanf.Parser) (*file.File, er
 }
 
 // Load files inside of dir with parser into Config path (default: ext="")
-func (config *Config) LoadDir(path string, dir string, ext string, parser koanf.Parser, transform func(*Config, *file.File)) error {
+func (config *Config) LoadDir(path string, dir string, ext string, parser koanf.Parser, transform func(*Config, string)) error {
 	files, err := filepath.Glob(filepath.Join(dir, "*" + ext))
 
 	if err != nil {
@@ -80,13 +80,13 @@ func (config *Config) LoadDir(path string, dir string, ext string, parser koanf.
 
 		tmp.OnReload(config.ReloadFunc)
 
-		file, err := tmp.LoadFile(f, parser)
+		_, err := tmp.LoadFile(f, parser)
 
 		if err != nil {
 			return err
 		}
 
-		transform(tmp, file)
+		transform(tmp, f)
 
 		array = append(array, tmp.Layer.Raw())
 	}
