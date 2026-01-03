@@ -1,51 +1,105 @@
 package logger
 
-import "go.uber.org/zap/zapcore"
+import (
+	"go.uber.org/zap/zapcore"
+)
 
-func Dev(data ...any) {
-	ok := logger.Check(DeveloperLevel, format(data...))
+func (logger *Logger) Dev(data ...any) {
+	ok := logger.zap.Check(DeveloperLevel, format(data...))
 
 	if ok != nil {
 		ok.Write()
 	}
 }
 
+func (logger *Logger) Debug(data ...any) {
+	logger.zap.Debug(format(data...))
+}
+
+func (logger *Logger) Info(data ...any) {
+	logger.zap.Info(format(data...))
+}
+
+func (logger *Logger) Warn(data ...any) {
+	logger.zap.Warn(format(data...))
+}
+
+func (logger *Logger) Error(data ...any) {
+	logger.zap.Error(format(data...))
+}
+
+func (logger *Logger) Fatal(data ...any) {
+	logger.zap.Fatal(format(data...))
+}
+
+
+func (logger *Logger) IsDev() bool {
+	return logger.zap.Level().Enabled(DeveloperLevel)
+}
+
+func (logger *Logger) IsDebug() bool {
+	return logger.zap.Level().Enabled(zapcore.DebugLevel)
+}
+
+func (logger *Logger) IsInfo() bool {
+	return logger.zap.Level().Enabled(zapcore.InfoLevel)
+}
+
+func (logger *Logger) IsWarn() bool {
+	return logger.zap.Level().Enabled(zapcore.WarnLevel)
+}
+
+func (logger *Logger) IsError() bool {
+	return logger.zap.Level().Enabled(zapcore.ErrorLevel)
+}
+
+func (logger *Logger) IsFatal() bool {
+	return logger.zap.Level().Enabled(zapcore.FatalLevel)
+}
+
+
+
 func Debug(data ...any) {
-	logger.Debug(format(data...))
+	defaultLogger.Debug(data)
 }
 
 func Info(data ...any) {
-	logger.Info(format(data...))
+	defaultLogger.Info(data)
 }
 
 func Warn(data ...any) {
-	logger.Warn(format(data...))
+	defaultLogger.Warn(data)
 }
 
 func Error(data ...any) {
-	logger.Error(format(data...))
+	defaultLogger.Error(data)
 }
 
 func Fatal(data ...any) {
-	logger.Fatal(format(data...))
+	defaultLogger.Fatal(data)
 }
 
+
 func IsDev() bool {
-	return logger.Level().Enabled(DeveloperLevel)
+	return defaultLogger.IsDev()
 }
 
 func IsDebug() bool {
-	return logger.Level().Enabled(zapcore.DebugLevel)
+	return defaultLogger.IsDebug()
 }
+
 func IsInfo() bool {
-	return logger.Level().Enabled(zapcore.InfoLevel)
+	return defaultLogger.IsInfo()
 }
+
 func IsWarn() bool {
-	return logger.Level().Enabled(zapcore.WarnLevel)
+	return defaultLogger.IsWarn()
 }
+
 func IsError() bool {
-	return logger.Level().Enabled(zapcore.ErrorLevel)
+	return defaultLogger.IsError()
 }
+
 func IsFatal() bool {
-	return logger.Level().Enabled(zapcore.FatalLevel)
+	return defaultLogger.IsFatal()
 }

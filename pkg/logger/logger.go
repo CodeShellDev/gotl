@@ -10,9 +10,13 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var _logLevel = ""
+var defaultLogger *Logger
 
-var logger *zap.Logger
+type Logger struct {
+	zap      *zap.Logger
+	level    zap.AtomicLevel
+	options  Options
+}
 
 type Options struct {
 	TimeLayout string
@@ -20,60 +24,53 @@ type Options struct {
 	StackDepth int
 }
 
-func Level() string {
-	return levelString(logger.Level())
-}
-
-func Sync() {
-	logger.Sync()
-}
-
-// Initialize logger with level string
-func Init(level string) error {
-	return initialize(level, Options{
+func DefaultOptions() Options {
+	return Options{
 		TimeLayout: "02.01 15:04",
 		EncodeLevel: customEncodeLevel,
 		StackDepth: 1,
-	})
+	}
 }
 
-// Initialize logger with level string and options
-func InitWith(level string, options Options) error {
-	return initialize(level, options)
+func NewWithDefaults(level string) (*Logger, error) {
+	return New(level, DefaultOptions())
 }
 
-func initialize(level string, option Options) error {
-	_logLevel = strings.ToLower(level)
-
-	logLevel := parseLevel(_logLevel)
+func New(level string, options Options) (*Logger, error) {
+	lvl := parseLevel(strings.ToLower(level))
+	atomicLevel := zap.NewAtomicLevelAt(lvl)
 
 	cfg := zap.Config{
-		Level:       zap.NewAtomicLevelAt(logLevel),
-		Development: false,
-		Sampling:    nil,
+		Level:       atomicLevel,
 		Encoding:    "console",
+		OutputPaths: []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
 		EncoderConfig: zapcore.EncoderConfig{
 			TimeKey:        "time",
 			LevelKey:       "level",
-			NameKey:        "logger",
 			CallerKey:      "caller",
 			MessageKey:     "msg",
 			StacktraceKey:  "stacktrace",
-			LineEnding:     zapcore.DefaultLineEnding,
-			EncodeLevel:    option.EncodeLevel,
-			EncodeTime:     zapcore.TimeEncoderOfLayout(option.TimeLayout),
+			EncodeLevel:    options.EncodeLevel,
+			EncodeTime:     zapcore.TimeEncoderOfLayout(options.TimeLayout),
 			EncodeDuration: zapcore.StringDurationEncoder,
 			EncodeCaller:   zapcore.ShortCallerEncoder,
 		},
-		OutputPaths:      []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
 	}
 
-	var err error
+	z, err := cfg.Build(
+		zap.AddCaller(),
+		zap.AddCallerSkip(options.StackDepth),
+	)
+	if err != nil {
+		return nil, err
+	}
 
-	logger, err = cfg.Build(zap.AddCaller(), zap.AddCallerSkip(option.StackDepth))
-
-	return err
+	return &Logger{
+		zap:     z,
+		level:   atomicLevel,
+		options: options,
+	}, nil
 }
 
 func format(data ...any) string {
@@ -110,4 +107,66 @@ func format(data ...any) string {
 	}
 
 	return res
+}
+
+
+func Init(level string) error {
+	l, err := NewWithDefaults(level)
+	if err != nil {
+		return err
+	}
+
+	defaultLogger = l
+
+	return nil
+}
+
+func InitWith(level string, options Options) error {
+	l, err := New(level, options)
+	if err != nil {
+		return err
+	}
+	
+	defaultLogger = l
+
+	return nil
+}
+
+func Level() string {
+	if defaultLogger != nil {
+		return defaultLogger.Level()
+	}
+
+	return ""
+}
+
+func Sync() {
+	if defaultLogger != nil {
+		defaultLogger.Sync()
+	}
+}
+
+
+func (logger *Logger) Level() string {
+	return levelString(logger.level.Level())
+}
+
+func (logger *Logger) SetLevel(level string) {
+	logger.level.SetLevel(parseLevel(strings.ToLower(level)))
+}
+
+func (logger *Logger) Sub(level string) (*Logger, error) {
+	return New(level, logger.options)
+}
+
+func (logger *Logger) With(fields ...zap.Field) *Logger {
+	return &Logger{
+		zap:     logger.zap.With(fields...),
+		level:   logger.level,
+		options: logger.options,
+	}
+}
+
+func (logger *Logger) Sync() {
+	_ = logger.zap.Sync()
 }
