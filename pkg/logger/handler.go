@@ -19,15 +19,19 @@ type Logger struct {
 }
 
 type Options struct {
-	TimeLayout string
 	EncodeLevel zapcore.LevelEncoder
+	EncodeCaller zapcore.CallerEncoder
+	EncodeDuration zapcore.DurationEncoder
+	EncodeTime zapcore.TimeEncoder
 	StackDepth int
 }
 
 func DefaultOptions() Options {
 	return Options{
-		TimeLayout: "02.01 15:04",
+		EncodeTime: zapcore.TimeEncoderOfLayout("02.01 15:04"),
 		EncodeLevel: customEncodeLevel,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller: zapcore.ShortCallerEncoder,
 		StackDepth: 1,
 	}
 }
@@ -52,9 +56,9 @@ func New(level string, options Options) (*Logger, error) {
 			MessageKey:     "msg",
 			StacktraceKey:  "stacktrace",
 			EncodeLevel:    options.EncodeLevel,
-			EncodeTime:     zapcore.TimeEncoderOfLayout(options.TimeLayout),
-			EncodeDuration: zapcore.StringDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
+			EncodeTime:     options.EncodeTime,
+			EncodeDuration: options.EncodeDuration,
+			EncodeCaller:   options.EncodeCaller,
 		},
 	}
 
