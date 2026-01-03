@@ -1,0 +1,175 @@
+package logger
+
+import (
+	"image/color"
+	"strconv"
+	"strings"
+
+	"github.com/codeshelldev/gotl/pkg/jsonutils"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
+
+var defaultLogger *Logger
+
+type Logger struct {
+	zap      *zap.Logger
+	level    zap.AtomicLevel
+	options  Options
+}
+
+type Options struct {
+	TimeLayout string
+	EncodeLevel zapcore.LevelEncoder
+	StackDepth int
+}
+
+func DefaultOptions() Options {
+	return Options{
+		TimeLayout: "02.01 15:04",
+		EncodeLevel: customEncodeLevel,
+		StackDepth: 1,
+	}
+}
+
+func NewWithDefaults(level string) (*Logger, error) {
+	return New(level, DefaultOptions())
+}
+
+func New(level string, options Options) (*Logger, error) {
+	lvl := parseLevel(strings.ToLower(level))
+	atomicLevel := zap.NewAtomicLevelAt(lvl)
+
+	cfg := zap.Config{
+		Level:       atomicLevel,
+		Encoding:    "console",
+		OutputPaths: []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "time",
+			LevelKey:       "level",
+			CallerKey:      "caller",
+			MessageKey:     "msg",
+			StacktraceKey:  "stacktrace",
+			EncodeLevel:    options.EncodeLevel,
+			EncodeTime:     zapcore.TimeEncoderOfLayout(options.TimeLayout),
+			EncodeDuration: zapcore.StringDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+	}
+
+	z, err := cfg.Build(
+		zap.AddCaller(),
+		zap.AddCallerSkip(options.StackDepth),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Logger{
+		zap:     z,
+		level:   atomicLevel,
+		options: options,
+	}, nil
+}
+
+func format(data ...any) string {
+	res := ""
+
+	for _, item := range data {
+		switch value := item.(type) {
+		case string:
+			res += value
+		case []byte:
+			res += string(value)
+		case int:
+			res += strconv.Itoa(value)
+		case int32:
+			res += strconv.Itoa(int(value))
+		case int64:
+			res += strconv.Itoa(int(value))
+		case bool:
+			if value {
+				res += "true"
+			} else {
+				res += "false"
+			}
+		default:
+			lines := strings.Split(jsonutils.Pretty(value), "\n")
+
+			lineStr := ""
+
+			for _, line := range lines {
+				lineStr += "\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + endColor()
+			}
+			res += lineStr
+		}
+	}
+
+	return res
+}
+
+
+func Init(level string) error {
+	l, err := NewWithDefaults(level)
+	if err != nil {
+		return err
+	}
+
+	defaultLogger = l
+
+	return nil
+}
+
+func InitWith(level string, options Options) error {
+	l, err := New(level, options)
+	if err != nil {
+		return err
+	}
+	
+	defaultLogger = l
+
+	return nil
+}
+
+func Level() string {
+	if defaultLogger != nil {
+		return defaultLogger.Level()
+	}
+
+	return ""
+}
+
+func Sync() {
+	if defaultLogger != nil {
+		defaultLogger.Sync()
+	}
+}
+
+func Get() *Logger {
+	return defaultLogger
+}
+
+func (logger *Logger) Level() string {
+	return levelString(logger.level.Level())
+}
+
+func (logger *Logger) SetLevel(level string) {
+	logger.level.SetLevel(parseLevel(strings.ToLower(level)))
+}
+
+func (logger *Logger) Sub(level string) (*Logger, error) {
+	return New(level, logger.options)
+}
+
+func (logger *Logger) With(fields ...zap.Field) *Logger {
+	return &Logger{
+		zap:     logger.zap.With(fields...),
+		level:   logger.level,
+		options: logger.options,
+	}
+}
+
+func (logger *Logger) Sync() {
+	_ = logger.zap.Sync()
+}

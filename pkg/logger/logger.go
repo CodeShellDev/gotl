@@ -1,175 +1,107 @@
 package logger
 
 import (
-	"image/color"
-	"strconv"
-	"strings"
-
-	"github.com/codeshelldev/gotl/pkg/jsonutils"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-var defaultLogger *Logger
+func (logger *Logger) Dev(data ...any) {
+	ok := logger.zap.Check(DeveloperLevel, format(data...))
 
-type Logger struct {
-	zap      *zap.Logger
-	level    zap.AtomicLevel
-	options  Options
-}
-
-type Options struct {
-	TimeLayout string
-	EncodeLevel zapcore.LevelEncoder
-	StackDepth int
-}
-
-func DefaultOptions() Options {
-	return Options{
-		TimeLayout: "02.01 15:04",
-		EncodeLevel: customEncodeLevel,
-		StackDepth: 1,
+	if ok != nil {
+		ok.Write()
 	}
 }
 
-func NewWithDefaults(level string) (*Logger, error) {
-	return New(level, DefaultOptions())
+func (logger *Logger) Debug(data ...any) {
+	logger.zap.Debug(format(data...))
 }
 
-func New(level string, options Options) (*Logger, error) {
-	lvl := parseLevel(strings.ToLower(level))
-	atomicLevel := zap.NewAtomicLevelAt(lvl)
-
-	cfg := zap.Config{
-		Level:       atomicLevel,
-		Encoding:    "console",
-		OutputPaths: []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
-		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:        "time",
-			LevelKey:       "level",
-			CallerKey:      "caller",
-			MessageKey:     "msg",
-			StacktraceKey:  "stacktrace",
-			EncodeLevel:    options.EncodeLevel,
-			EncodeTime:     zapcore.TimeEncoderOfLayout(options.TimeLayout),
-			EncodeDuration: zapcore.StringDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
-		},
-	}
-
-	z, err := cfg.Build(
-		zap.AddCaller(),
-		zap.AddCallerSkip(options.StackDepth),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Logger{
-		zap:     z,
-		level:   atomicLevel,
-		options: options,
-	}, nil
+func (logger *Logger) Info(data ...any) {
+	logger.zap.Info(format(data...))
 }
 
-func format(data ...any) string {
-	res := ""
+func (logger *Logger) Warn(data ...any) {
+	logger.zap.Warn(format(data...))
+}
 
-	for _, item := range data {
-		switch value := item.(type) {
-		case string:
-			res += value
-		case []byte:
-			res += string(value)
-		case int:
-			res += strconv.Itoa(value)
-		case int32:
-			res += strconv.Itoa(int(value))
-		case int64:
-			res += strconv.Itoa(int(value))
-		case bool:
-			if value {
-				res += "true"
-			} else {
-				res += "false"
-			}
-		default:
-			lines := strings.Split(jsonutils.Pretty(value), "\n")
+func (logger *Logger) Error(data ...any) {
+	logger.zap.Error(format(data...))
+}
 
-			lineStr := ""
-
-			for _, line := range lines {
-				lineStr += "\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + endColor()
-			}
-			res += lineStr
-		}
-	}
-
-	return res
+func (logger *Logger) Fatal(data ...any) {
+	logger.zap.Fatal(format(data...))
 }
 
 
-func Init(level string) error {
-	l, err := NewWithDefaults(level)
-	if err != nil {
-		return err
-	}
-
-	defaultLogger = l
-
-	return nil
+func (logger *Logger) IsDev() bool {
+	return logger.zap.Level().Enabled(DeveloperLevel)
 }
 
-func InitWith(level string, options Options) error {
-	l, err := New(level, options)
-	if err != nil {
-		return err
-	}
-	
-	defaultLogger = l
-
-	return nil
+func (logger *Logger) IsDebug() bool {
+	return logger.zap.Level().Enabled(zapcore.DebugLevel)
 }
 
-func Level() string {
-	if defaultLogger != nil {
-		return defaultLogger.Level()
-	}
-
-	return ""
+func (logger *Logger) IsInfo() bool {
+	return logger.zap.Level().Enabled(zapcore.InfoLevel)
 }
 
-func Sync() {
-	if defaultLogger != nil {
-		defaultLogger.Sync()
-	}
+func (logger *Logger) IsWarn() bool {
+	return logger.zap.Level().Enabled(zapcore.WarnLevel)
 }
 
-func Get() *Logger {
-	return defaultLogger
+func (logger *Logger) IsError() bool {
+	return logger.zap.Level().Enabled(zapcore.ErrorLevel)
 }
 
-func (logger *Logger) Level() string {
-	return levelString(logger.level.Level())
+func (logger *Logger) IsFatal() bool {
+	return logger.zap.Level().Enabled(zapcore.FatalLevel)
 }
 
-func (logger *Logger) SetLevel(level string) {
-	logger.level.SetLevel(parseLevel(strings.ToLower(level)))
+func Dev(data ...any) {
+	defaultLogger.Dev(data...)
 }
 
-func (logger *Logger) Sub(level string) (*Logger, error) {
-	return New(level, logger.options)
+func Debug(data ...any) {
+	defaultLogger.Debug(data...)
 }
 
-func (logger *Logger) With(fields ...zap.Field) *Logger {
-	return &Logger{
-		zap:     logger.zap.With(fields...),
-		level:   logger.level,
-		options: logger.options,
-	}
+func Info(data ...any) {
+	defaultLogger.Info(data...)
 }
 
-func (logger *Logger) Sync() {
-	_ = logger.zap.Sync()
+func Warn(data ...any) {
+	defaultLogger.Warn(data...)
+}
+
+func Error(data ...any) {
+	defaultLogger.Error(data...)
+}
+
+func Fatal(data ...any) {
+	defaultLogger.Fatal(data...)
+}
+
+
+func IsDev() bool {
+	return defaultLogger.IsDev()
+}
+
+func IsDebug() bool {
+	return defaultLogger.IsDebug()
+}
+
+func IsInfo() bool {
+	return defaultLogger.IsInfo()
+}
+
+func IsWarn() bool {
+	return defaultLogger.IsWarn()
+}
+
+func IsError() bool {
+	return defaultLogger.IsError()
+}
+
+func IsFatal() bool {
+	return defaultLogger.IsFatal()
 }
