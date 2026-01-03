@@ -58,6 +58,9 @@ func (logger *Logger) IsFatal() bool {
 }
 
 
+func Dev(data ...any) {
+	defaultLogger.Dev(data)
+}
 
 func Debug(data ...any) {
 	defaultLogger.Debug(data)
