@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"maps"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,20 +34,17 @@ func (body Body) ToString() string {
 
 // Write body into request
 func (body *Body) Write(req *http.Request) error {
-	newBody, err := CreateBody(body.Data)
-
+	rawBytes, err := json.Marshal(body.Data)
 	if err != nil {
 		return err
 	}
-
-	body = &newBody
+	
+	body.Raw = rawBytes
 
 	bodyLength := len(body.Raw)
 
-	if req.ContentLength != int64(bodyLength) {
-		req.ContentLength = int64(bodyLength)
-		req.Header.Set("Content-Length", strconv.Itoa(bodyLength))
-	}
+	req.ContentLength = int64(bodyLength)
+	req.Header.Set("Content-Length", strconv.Itoa(bodyLength))
 
 	req.Body = io.NopCloser(bytes.NewReader(body.Raw))
 
@@ -96,9 +94,7 @@ func ReadBody(req *http.Request) ([]byte, error) {
 func GetReqHeaders(req *http.Request) map[string][]string {
 	data := map[string][]string{}
 
-	for key, value := range req.Header {
-		data[key] = value
-	}
+	maps.Copy(data, req.Header)
 
 	return data
 }
