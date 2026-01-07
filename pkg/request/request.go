@@ -47,6 +47,10 @@ func (body *Body) Write(req *http.Request) error {
 	req.ContentLength = int64(bodyLength)
 	req.Header.Set("Content-Length", strconv.Itoa(bodyLength))
 
+	if !body.Empty {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
 	req.Body = io.NopCloser(bytes.NewReader(body.Raw))
 
 	return nil
