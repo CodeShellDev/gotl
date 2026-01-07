@@ -34,12 +34,13 @@ func (body Body) ToString() string {
 
 // Write body into request
 func (body *Body) Write(req *http.Request) error {
-	rawBytes, err := json.Marshal(body.Data)
+	newBody, err := CreateBody(body.Data)
+
 	if err != nil {
 		return err
 	}
-	
-	body.Raw = rawBytes
+
+	*body = newBody
 
 	bodyLength := len(body.Raw)
 
