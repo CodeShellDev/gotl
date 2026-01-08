@@ -48,6 +48,12 @@ func ToType(str string) any {
 		if intErr == nil {
 			return intValue
 		}
+
+		floatValue, floatErr := strconv.ParseFloat(cleaned, 64)
+
+		if floatErr == nil {
+			return floatValue
+		}
 	}
 
 	return str
