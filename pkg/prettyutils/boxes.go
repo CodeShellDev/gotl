@@ -88,6 +88,22 @@ type Style struct {
 	Italic		bool
 }
 
+func (s1 Style) Combine(s2 Style) Style {
+	result := s1
+
+	if s2.Foreground != nil {
+		result.Foreground = s2.Foreground
+	}
+	if s2.Background != nil {
+		result.Background = s2.Background
+	}
+
+	result.Bold = s2.Bold
+	result.Italic = s2.Italic
+
+	return result
+}
+
 func (s Style) ansi() string {
 	codes := []string{}
 
@@ -143,8 +159,41 @@ type Box struct {
 	MinWidth    int
 	PaddingX    int
 	PaddingY    int
-	BorderStyle Style
+	Style	BoxStyle
 	Segments    []Segment
+}
+
+type BoxStyle struct {
+	Background	Color
+	Border		BorderStyle
+}
+
+type BorderStyle struct {
+	Color		Color
+	Bold		bool
+	Italic		bool
+}
+
+func (s BoxStyle) Base() Style {
+	return Style{
+		Background: s.Background,
+	}
+}
+
+func (s BoxStyle) ansi() string {
+	return s.Base().ansi()
+}
+
+func (s BorderStyle) Base() Style {
+	return Style{
+		Background: s.Color,
+		Bold: s.Bold,
+		Italic: s.Italic,
+	}
+}
+
+func (s BorderStyle) ansi() string {
+	return s.Base().ansi()
 }
 
 func NewBox(width int) *Box {
@@ -181,7 +230,7 @@ func (box *Box) Render() string {
 	inner := box.Width - 2
 
 	var out strings.Builder
-	border := box.BorderStyle.ansi()
+	border := box.Style.Border.ansi()
 
 	out.WriteString(border)
 	out.WriteString("┌" + strings.Repeat("─", inner) + "┐")
@@ -208,9 +257,9 @@ func (box *Box) Render() string {
 
 func (box *Box) emptyLine() string {
 	inner := box.Width - 2
-	return box.BorderStyle.ansi() + "│" +
+	return box.Style.Border.ansi() + "│" +
 		strings.Repeat(" ", inner) +
-		box.BorderStyle.ansi() + "│" +
+		box.Style.Border.ansi() + "│" +
 		reset() + "\n"
 }
 
@@ -262,7 +311,7 @@ func (box *Box) renderSegment(s Segment) string {
 	inner := box.Width - 2 - (box.PaddingX * 2)
 	paddingLeft, paddingRight := getPadding(s.Text, inner, s.Align)
 
-	return box.BorderStyle.ansi() + "│" +
+	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
 		reset() +
 		strings.Repeat(" ", box.PaddingX) + 
 		strings.Repeat(" ", paddingLeft) +
@@ -270,7 +319,7 @@ func (box *Box) renderSegment(s Segment) string {
 		reset() +
 		strings.Repeat(" ", paddingRight) +
 		strings.Repeat(" ", box.PaddingX) +
-		box.BorderStyle.ansi() + "│" +
+		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
 		reset() + "\n"
 }
 
