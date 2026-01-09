@@ -1,0 +1,6 @@
+github.com/codeshelldev/gotl/pkg/jsonutils v0.0.1 h1:MHmFykeW50BCJfzcFjgeQY6juN80JpidIMH9qM0IEbY=
+github.com/codeshelldev/gotl/pkg/jsonutils v0.0.1/go.mod h1:oxgKaAoMu6iYVHfgR7AhkK22xbYx4K0KCkyVEfYVoWs=
+github.com/codeshelldev/gotl/pkg/query v0.0.1 h1:M6WZxX9qCafwCBQsifUI1ieuK/4Hu8R0auRvo/g8DQk=
+github.com/codeshelldev/gotl/pkg/query v0.0.1/go.mod h1:eveazMWbzfZT6OYie8bkJ6ZQFYEiCV+f1wPyk51ktk0=
+github.com/codeshelldev/gotl/pkg/stringutils v0.0.1 h1:z6oam8KLf7SQPymTTcJnYXUFf1Y+3oMVVFtJlyvGKi0=
+github.com/codeshelldev/gotl/pkg/stringutils v0.0.1/go.mod h1:kJusN/iowJCR2MlVIqqF14d/CUsBIP4RqOeeKMTjyV8=
