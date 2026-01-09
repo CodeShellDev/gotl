@@ -365,6 +365,8 @@ func getFuncNameWithSource(source, parent, key string) string {
 			if exists {
 				search = s
 			}
+		} else {
+			return ""
 		}
 
 		if search == source {
