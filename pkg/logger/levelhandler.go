@@ -30,7 +30,7 @@ func parseLevel(s string) zapcore.Level {
 }
 
 func colorCode(str string, color color.RGBA) string {
-	return startColor(color) + str + endColor()
+	return startColor(color) + str + resetColor()
 }
 
 func colorToInt(color color.RGBA) (int, int, int, int) {
@@ -52,11 +52,11 @@ func startColor(color color.RGBA) string {
 
 	colorStr := strconv.Itoa(red) + ";" + strconv.Itoa(green) + ";" + strconv.Itoa(blue)
 
-	return "\x1b[" + mode + colorStr + "m"
+	return "\033[" + mode + colorStr + "m"
 }
 
-func endColor() string {
-	return "\x1b[0m"
+func resetColor() string {
+	return "\033[0m"
 }
 
 func levelString(l zapcore.Level) string {

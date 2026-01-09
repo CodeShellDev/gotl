@@ -104,7 +104,7 @@ func format(data ...any) string {
 			lineStr := ""
 
 			for _, line := range lines {
-				lineStr += "\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + endColor()
+				lineStr += "\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + resetColor()
 			}
 			res += lineStr
 		}
