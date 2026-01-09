@@ -170,10 +170,7 @@ func (box *Box) renderSegment(s Segment) string {
 		left = 0
 	}
 
-	right := inner - left - textLen
-	if right < 0 {
-		right = 0
-	}
+	right := max(inner - left - textLen, 0)
 
 	return box.BorderStyle.ansi() + "│" +
 		strings.Repeat(" ", left) +
