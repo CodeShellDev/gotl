@@ -93,7 +93,7 @@ type Test_StructMapType struct {
 }
 
 type Test_StructType struct {
-	Key2 				string						    `koanf:"key2"         aliases:".key2"         transform:"normal"        onuse:"test"`
+	Key2 				string						    `koanf:"key2"         aliases:".key2"         transform:"normal"        onuse:".key2>>test"`
 }
 
 func TestTransformMapBuilder(t *testing.T) {
@@ -126,7 +126,7 @@ func TestTransformMapBuilder(t *testing.T) {
 			Value: "",
 			ChildTransform: "",
 			Transform: "normal",
-			OnUse: "",
+			OnUse: "test",
 		},
 		"struct": {
 			OutputKey: "struct",
@@ -142,14 +142,14 @@ func TestTransformMapBuilder(t *testing.T) {
 			Value: "",
 			ChildTransform: "",
 			Transform: "normal",
-			OnUse: "test",
+			OnUse: ".key2>>test",
 		},
 		"key2": {
 			OutputKey: "struct.key2",
 			Value: "",
 			ChildTransform: "",
 			Transform: "normal",
-			OnUse: "test",
+			OnUse: ".key2>>test",
 		},
 	}
 
@@ -157,6 +157,7 @@ func TestTransformMapBuilder(t *testing.T) {
 	cleaned := map[string]configutils.TransformTarget{}
 	for i, t := range transformTargets {
 		t.Source = reflect.StructField{}
+		t.Parent = ""
 
 		cleaned[i] = t
 	}
@@ -182,6 +183,9 @@ func TestTransform(t *testing.T) {
 			"mapKey": map[string]any{
 				"key": "value",
 			},
+		},
+		"struct": map[string]any{
+			"key2": "value1",
 		},
 	}
 
