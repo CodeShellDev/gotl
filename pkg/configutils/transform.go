@@ -216,7 +216,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			for fnName := range onUseList {
 				fnName = strings.TrimSpace(fnName)
 
-				fnName = getFuncNameWithSource(match, fnName)
+				fnName = getFuncNameWithSource(match, joinPaths(newKeyParts...), fnName)
 
 				if fnName == "" {
 					continue
@@ -353,12 +353,22 @@ func joinPaths(p ...string) string {
 	return strings.Join(p, DELIM)
 }
 
-func getFuncNameWithSource(source, key string) string {
-	search, funcName, exists := strings.Cut(key, ">>")
+func getFuncNameWithSource(source, parent, key string) string {
+	search, fnName, exists := strings.Cut(key, ">>")
 
 	if exists {
+		if strings.HasPrefix(search, ".") {
+			search = search[1:]
+		} else {
+			s, exists := strings.CutPrefix(search, parent)
+
+			if exists {
+				search = s
+			}
+		}
+
 		if search == source {
-			return funcName
+			return fnName
 		}
 
 		return ""
