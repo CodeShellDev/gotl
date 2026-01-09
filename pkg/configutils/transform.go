@@ -364,7 +364,7 @@ func getFuncNameWithSource(source, parent, key, keyParent string) string {
 		if strings.HasPrefix(search, ".") {
 			search = search[1:]
 		} else if parent != "" {
-			s, exists := strings.CutPrefix(source, keyParent)
+			s, exists := strings.CutPrefix(source, keyParent + ".")
 
 			if !exists {
 				return ""
@@ -375,7 +375,7 @@ func getFuncNameWithSource(source, parent, key, keyParent string) string {
 			return ""
 		}
 
-		fmt.Println(source, parent)
+		fmt.Println(search, source, parent, keyParent)
 
 		if search == source {
 			return fnName
