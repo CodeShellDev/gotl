@@ -230,11 +230,11 @@ func (box *Box) Render() string {
 	inner := box.Width - 2
 
 	var out strings.Builder
-	border := box.Style.Border.ansi()
+	border := box.Style.Base().Combine(box.Style.Border.Base()).ansi()
 
 	out.WriteString(border)
 	out.WriteString("┌" + strings.Repeat("─", inner) + "┐")
-	out.WriteString(reset() + "\n")
+	out.WriteString(reset() + box.Style.ansi() + "\n")
 
 	for i := 0; i < box.PaddingY; i++ {
 		out.WriteString(box.emptyLine())
@@ -257,9 +257,9 @@ func (box *Box) Render() string {
 
 func (box *Box) emptyLine() string {
 	inner := box.Width - 2
-	return box.Style.Border.ansi() + "│" +
+	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
 		strings.Repeat(" ", inner) +
-		box.Style.Border.ansi() + "│" +
+		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
 		reset() + "\n"
 }
 
