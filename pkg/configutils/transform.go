@@ -160,8 +160,6 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 		newKeyParts := []string{}
 		newValue := val
 
-		var source string
-
 		source, fullTarget := resolveTransform(strings.ToLower(key), targets)
 
 		if fullTarget.OutputKey != "" && len(keyParts) != len(splitPath(fullTarget.OutputKey)) {
@@ -176,7 +174,12 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			parent := joinPaths(keyParts[:i+1]...)
 			lower := strings.ToLower(parent)
 
-			_, target = resolveTransform(lower, targets)
+			var match string
+			match, target = resolveTransform(lower, targets)
+
+			if source == "" {
+				source = match
+			}
 
 			// fallback to default
 			if target.Transform == "" {
