@@ -277,7 +277,7 @@ func (box *Box) Render() string {
 	out.WriteString(box.renderTop(inner))
 
 	out.WriteString(strings.Repeat(" ", box.MarginX))
-	out.WriteString(strings.Repeat("\n", box.MarginY))
+	out.WriteString("\n")
 
 	for i := 0; i < box.PaddingY; i++ {
 		out.WriteString(strings.Repeat(" ", box.MarginX))
