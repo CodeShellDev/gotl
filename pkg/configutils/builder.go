@@ -53,6 +53,8 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 		transform := getFieldWithID(id, "transform", field.Tag)
 		childTransform := getFieldWithID(id, "childtransform", field.Tag)
 
+		onUse := getFieldWithID(id, "onuse", field.Tag)
+
 		allKeys := append([]string{base}, aliases...)
 
 		for _, key := range allKeys {
@@ -76,6 +78,8 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 
 			out[fullKey] = TransformTarget{
 				OutputKey:      strings.ToLower(outputKey),
+				Source: 		field,
+				OnUse: 			onUse,
 				Transform:      transform,
 				ChildTransform: childTransform,
 				Value:          getValueSafe(fieldValue),

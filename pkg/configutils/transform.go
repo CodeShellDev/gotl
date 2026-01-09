@@ -7,10 +7,17 @@ import (
 )
 
 type TransformTarget struct {
-	OutputKey      string
-	Transform      string
-	ChildTransform string
-	Value          any
+	OutputKey      	string
+	Source			reflect.StructField
+	OnUse			string
+	Transform     	string
+	ChildTransform	string
+	Value          	any
+}
+
+type TransformOptions struct {
+	Transforms		map[string]func(key string, value any) (string, any)
+	OnUse			map[string]func(source string, target TransformTarget)
 }
 
 // Flatten `data: { key: value }` into `data.key: value``
@@ -128,7 +135,7 @@ func Unflatten(flat map[string]any) map[string]any {
 }
 
 // Apply Transform funcs based on `transform`, `childtransform` and `aliases` in struct schema
-func (config Config) ApplyTransformFuncs(id string, schema any, path string, funcs map[string]func(string, any) (string, any)) {
+func (config Config) ApplyTransformFuncs(id string, schema any, path string, options TransformOptions) {
 	raw := config.Layer.Get(path)
 
 	flat := map[string]any{}
@@ -136,7 +143,7 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, fun
 
 	targets := BuildTransformMap(id, schema)
 
-	transformed := ApplyTransforms(flat, targets, funcs)
+	transformed := ApplyTransforms(flat, targets, options)
 
 	result := Unflatten(transformed)
 
@@ -144,7 +151,7 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, fun
 	config.Load(result, path)
 }
 
-func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, funcs map[string]func(string, any) (string, any)) map[string]any {
+func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, options TransformOptions) map[string]any {
 	out := map[string]any{}
 
 	for key, val := range flat {
@@ -161,11 +168,13 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 			keyParts = splitPath(key)
 		}
 
+		var target TransformTarget
+
 		for i := range keyParts {
 			parent := joinPaths(keyParts[:i+1]...)
 			lower := strings.ToLower(parent)
 
-			target := resolveTransform(lower, targets)
+			target = resolveTransform(lower, targets)
 
 			// fallback to default
 			if target.Transform == "" {
@@ -178,17 +187,17 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 			outputKeyParts := splitPath(target.OutputKey)
 			outputBase := outputKeyParts[len(outputKeyParts)-1]
 
-			fnList := strings.SplitSeq(target.Transform, ",")
-			for fnName := range fnList {
+			transformList := strings.SplitSeq(target.Transform, ",")
+			for fnName := range transformList {
 				fnName = strings.TrimSpace(fnName)
 
 				if fnName == "" {
 					continue
 				}
 
-				fn, ok := funcs[fnName]
+				fn, ok := options.Transforms[fnName]
 				if !ok {
-					fn = funcs["default"]
+					fn = options.Transforms["default"]
 				}
 
 				if fn == nil {
@@ -196,6 +205,26 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, fu
 				}
 
 				outputBase, newValue = fn(outputBase, newValue)
+			}
+
+			onUseList := strings.SplitSeq(target.OnUse, ",")
+			for fnName := range onUseList {
+				fnName = strings.TrimSpace(fnName)
+
+				if fnName == "" {
+					continue
+				}
+
+				fn, ok := options.OnUse[fnName]
+				if !ok {
+					continue
+				}
+
+				if fn == nil {
+					continue
+				}
+
+				fn(parent, target)
 			}
 
 			newKeyParts = append(newKeyParts, outputBase)
