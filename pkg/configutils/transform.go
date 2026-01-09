@@ -256,7 +256,9 @@ func resolveTransform(lower string, targets map[string]TransformTarget) (string,
     if t.Transform != "" {
         return lower, TransformTarget{
             OutputKey:      t.OutputKey,
+			Source: t.Source,
             Transform:      t.Transform,
+			OnUse: t.OnUse,
             ChildTransform: t.ChildTransform,
         }
     }
@@ -272,7 +274,9 @@ func resolveTransform(lower string, targets map[string]TransformTarget) (string,
 
             return parent, TransformTarget{
                 OutputKey:      fullKey,
+				Source: t.Source,
                 Transform:      t.ChildTransform,
+				OnUse: t.OnUse,
                 ChildTransform: t.ChildTransform,
             }
         }
