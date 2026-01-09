@@ -1,6 +1,7 @@
 package configutils
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -368,6 +369,8 @@ func getFuncNameWithSource(source, parent, key string) string {
 		} else {
 			return ""
 		}
+
+		fmt.Println(parent)
 
 		if search == source {
 			return fnName
