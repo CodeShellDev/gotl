@@ -161,13 +161,28 @@ type Box struct {
 	PaddingY    int
 	MarginX		int
 	MarginY		int
-	Style	BoxStyle
+	Style		BoxStyle
+	Border		Border
 	Segments    []Segment
 }
 
 type BoxStyle struct {
 	Background	Color
 	Border		BorderStyle
+}
+
+type Border struct {
+	Chars		BorderChars
+	Style		BorderStyle
+}
+
+type BorderChars struct {
+	Horizontal	rune
+	Vertical	rune
+	TopLeft		rune
+	TopRight	rune
+	BottomLeft 	rune
+	BottomRight	rune
 }
 
 type BorderStyle struct {
@@ -203,19 +218,42 @@ func NewBox(width int) *Box {
 		Width:    width,
 		SizeMode: FixedWidth,
 		PaddingX: 1,
+		Border: Border{
+			Chars: BorderChars{
+				Horizontal:  '─',
+				Vertical:    '│',
+				TopLeft:     '┌',
+				TopRight:    '┐',
+				BottomLeft:  '└',
+				BottomRight: '┘',
+			},
+		},
 	}
 }
 
 func NewAutoBox() *Box {
-	return &Box{
-		SizeMode: AutoWidth,
-		PaddingX: 1,
-	}
+	box := NewBox(0)
+
+	box.SizeMode = AutoWidth
+
+	return box
 }
 
 
 func (box *Box) AddSegment(s Segment) {
 	box.Segments = append(box.Segments, s)
+}
+
+func (box *Box) renderTop(width int) string {
+	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() +
+		string(box.Border.Chars.TopLeft) + strings.Repeat(string(box.Border.Chars.Vertical), width) + string(box.Border.Chars.TopRight) +
+		reset()
+}
+
+func (box *Box) renderBottom(width int) string {
+	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() +
+		string(box.Border.Chars.BottomLeft) + strings.Repeat(string(box.Border.Chars.Vertical), width) + string(box.Border.Chars.BottomRight) +
+		reset()
 }
 
 
@@ -232,13 +270,14 @@ func (box *Box) Render() string {
 	inner := box.Width - 2
 
 	var out strings.Builder
-	border := box.Style.Base().Combine(box.Style.Border.Base()).ansi()
 
 	out.WriteString(strings.Repeat("\n", box.MarginY))
 	out.WriteString(strings.Repeat(" ", box.MarginX))
-	out.WriteString(border)
-	out.WriteString("┌" + strings.Repeat("─", inner) + "┐")
-	out.WriteString(reset() + "\n")
+
+	out.WriteString(box.renderTop(inner))
+
+	out.WriteString(strings.Repeat(" ", box.MarginX))
+	out.WriteString(strings.Repeat("\n", box.MarginY))
 
 	for i := 0; i < box.PaddingY; i++ {
 		out.WriteString(strings.Repeat(" ", box.MarginX))
@@ -265,9 +304,9 @@ func (box *Box) Render() string {
 	}
 
 	out.WriteString(strings.Repeat(" ", box.MarginX))
-	out.WriteString(border)
-	out.WriteString("└" + strings.Repeat("─", inner) + "┘")
-	out.WriteString(reset())
+
+	out.WriteString(box.renderBottom(inner))
+
 	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(strings.Repeat("\n", box.MarginY))
 
