@@ -370,7 +370,7 @@ func getFuncNameWithSource(source, parent, key string) string {
 			return ""
 		}
 
-		fmt.Println(parent)
+		fmt.Println(source, parent)
 
 		if search == source {
 			return fnName
