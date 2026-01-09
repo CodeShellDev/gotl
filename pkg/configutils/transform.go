@@ -1,6 +1,7 @@
 package configutils
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -211,6 +212,8 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 
 				outputBase, newValue = fn(outputBase, newValue)
 			}
+
+			fmt.Println(target.OnUse)
 
 			onUseList := strings.SplitSeq(target.OnUse, ",")
 			for fnName := range onUseList {
