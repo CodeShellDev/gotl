@@ -364,11 +364,13 @@ func getFuncNameWithSource(source, parent, key, keyParent string) string {
 		if strings.HasPrefix(search, ".") {
 			search = search[1:]
 		} else if parent != "" {
-			exists := strings.HasPrefix(source, keyParent)
+			s, exists := strings.CutPrefix(source, keyParent)
 
 			if !exists {
 				return ""
 			}
+
+			search = s
 		} else {
 			return ""
 		}
