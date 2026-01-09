@@ -1,4 +1,4 @@
-package prettyutils
+package pretty
 
 import (
 	"strconv"

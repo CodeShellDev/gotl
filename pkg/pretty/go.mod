@@ -1,4 +1,4 @@
-module github.com/codeshelldev/gotl/pkg/prettyutils
+module github.com/codeshelldev/gotl/pkg/pretty
 
 go 1.25.5
 
