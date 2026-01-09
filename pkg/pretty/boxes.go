@@ -264,6 +264,7 @@ func (box *Box) Render() string {
 		out.WriteString(strings.Repeat(" ", box.MarginX) + "\n")
 	}
 
+	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(border)
 	out.WriteString("└" + strings.Repeat("─", inner) + "┘")
 	out.WriteString(reset())
