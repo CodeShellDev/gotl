@@ -235,9 +235,10 @@ func (box *Box) Render() string {
 	border := box.Style.Base().Combine(box.Style.Border.Base()).ansi()
 
 	out.WriteString(strings.Repeat("\n", box.MarginY))
-	out.WriteString(border)
 	out.WriteString(strings.Repeat(" ", box.MarginX))
+	out.WriteString(border)
 	out.WriteString("┌" + strings.Repeat("─", inner) + "┐")
+	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(reset() + "\n")
 
 	for i := 0; i < box.PaddingY; i++ {
@@ -267,6 +268,7 @@ func (box *Box) Render() string {
 	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(border)
 	out.WriteString("└" + strings.Repeat("─", inner) + "┘")
+	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(reset())
 	out.WriteString(strings.Repeat("\n", box.MarginY))
 
