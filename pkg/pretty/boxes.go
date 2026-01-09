@@ -238,7 +238,6 @@ func (box *Box) Render() string {
 	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(border)
 	out.WriteString("┌" + strings.Repeat("─", inner) + "┐")
-	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(reset() + "\n")
 
 	for i := 0; i < box.PaddingY; i++ {
@@ -246,7 +245,7 @@ func (box *Box) Render() string {
 
 		out.WriteString(box.emptyLine())
 
-		out.WriteString(strings.Repeat(" ", box.MarginX))
+		out.WriteString(strings.Repeat(" ", box.MarginX) + "\n")
 	}
 
 	for _, s := range box.Segments {
@@ -254,7 +253,7 @@ func (box *Box) Render() string {
 
 		out.WriteString(box.renderSegment(s))
 
-		out.WriteString(strings.Repeat(" ", box.MarginX))
+		out.WriteString(strings.Repeat(" ", box.MarginX) + "\n")
 	}
 
 	for i := 0; i < box.PaddingY; i++ {
@@ -262,14 +261,13 @@ func (box *Box) Render() string {
 
 		out.WriteString(box.emptyLine())
 
-		out.WriteString(strings.Repeat(" ", box.MarginX))
+		out.WriteString(strings.Repeat(" ", box.MarginX) + "\n")
 	}
 
-	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(border)
 	out.WriteString("└" + strings.Repeat("─", inner) + "┘")
-	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(reset())
+	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(strings.Repeat("\n", box.MarginY))
 
 	return out.String()
@@ -280,7 +278,7 @@ func (box *Box) emptyLine() string {
 	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
 		strings.Repeat(" ", inner) +
 		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
-		reset() + "\n"
+		reset()
 }
 
 func (box *Box) computeWidth() int {
@@ -342,8 +340,7 @@ func (box *Box) renderSegment(s Segment) string {
 		strings.Repeat(" ", paddingRight) +
 		strings.Repeat(" ", box.PaddingX) +
 		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
-		reset() +
-		"\n"
+		reset()
 	}
 
 func runeLen(s string) int {
