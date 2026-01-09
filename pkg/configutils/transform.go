@@ -1,6 +1,7 @@
 package configutils
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -354,11 +355,14 @@ func joinPaths(p ...string) string {
 }
 
 func getFuncNameWithSource(source, key string) string {
-	parts := strings.SplitN(key, source + ">>", 1)
+	search, funcName, exists := strings.Cut(key, source + ">>")
 
-	if len(parts) > 0 {
-		if parts[0] == source {
-			return parts[1]
+	fmt.Println(source, key)
+	fmt.Println(funcName, exists)
+
+	if exists {
+		if search == source {
+			return funcName
 		}
 
 		return ""
