@@ -234,7 +234,7 @@ func (box *Box) Render() string {
 
 	out.WriteString(border)
 	out.WriteString("┌" + strings.Repeat("─", inner) + "┐")
-	out.WriteString(reset() + box.Style.ansi() + "\n")
+	out.WriteString(reset() + box.Style.ansi() + "\n" + reset())
 
 	for i := 0; i < box.PaddingY; i++ {
 		out.WriteString(box.emptyLine())
