@@ -209,26 +209,38 @@ func (box *Box) computeWidth() int {
 	return width
 }
 
-func (box *Box) renderSegment(s Segment) string {
-	inner := box.Width - 2 - (box.PaddingX * 2)
-	textLen := runeLen(s.Text)
-
-	var left int
-	switch s.Align {
-	case AlignCenter:
-		left = (inner - textLen) / 2
-	case AlignRight:
-		left = inner - textLen
+func padText(text string, width int, align Align) string {
+	textLen := runeLen(text)
+	if width <= textLen {
+		return text
 	}
 
-	left = max(left, 0)
+	space := width - textLen
+	var left, right int
 
-	right := max(inner - left - textLen, 0)
+	switch align {
+	case AlignLeft:
+		left = 0
+		right = space
+	case AlignRight:
+		left = space
+		right = 0
+	case AlignCenter:
+		left = space / 2
+		right = space - left
+	}
+
+	return strings.Repeat(" ", left) + text + strings.Repeat(" ", right)
+}
+
+func (box *Box) renderSegment(s Segment) string {
+	inner := box.Width - 2 - (box.PaddingX * 2)
+	text := padText(s.Text, inner, s.Align)
 
 	return box.BorderStyle.ansi() + "│" +
-		strings.Repeat(" ", box.PaddingX + left) +
-		s.Style.ansi() + s.Text + reset() +
-		strings.Repeat(" ", right + box.PaddingX) +
+		strings.Repeat(" ", box.PaddingX) +
+		s.Style.ansi() + text + reset() +
+		strings.Repeat(" ", box.PaddingX) +
 		box.BorderStyle.ansi() + "│" +
 		reset() + "\n"
 }
