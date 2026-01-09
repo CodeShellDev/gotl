@@ -35,15 +35,15 @@ type Basic BasicColor
 
 func (c Basic) fg() string {
 	if c <= 7 {
-		return "3" + c.fg()
+		return "3" + strconv.Itoa(int(c))
 	}
-	return "9" + (c - 8).fg()
+	return "9" + strconv.Itoa(int(c) - 8)
 }
 
 type ANSI256 uint8
 
 func (c ANSI256) fg() string {
-	return "38;5;" + c.fg()
+	return "38;5;" + strconv.Itoa(int(c))
 }
 
 type RGB struct {
