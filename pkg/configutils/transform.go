@@ -177,8 +177,8 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			var match string
 			match, target = resolveTransform(lower, targets)
 
-			if source == "" {
-				source = match
+			if source != "" {
+				match = source
 			}
 
 			// fallback to default
@@ -229,7 +229,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 					continue
 				}
 
-				fn(source, target)
+				fn(match, target)
 			}
 
 			newKeyParts = append(newKeyParts, outputBase)
