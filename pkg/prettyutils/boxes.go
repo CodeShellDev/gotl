@@ -3,7 +3,8 @@ package prettyutils
 import (
 	"strconv"
 	"strings"
-	"unicode/utf8"
+
+	"github.com/mattn/go-runewidth"
 )
 
 type Color interface {
@@ -246,5 +247,5 @@ func (box *Box) renderSegment(s Segment) string {
 }
 
 func runeLen(s string) int {
-	return utf8.RuneCountInString(s)
+	return runewidth.StringWidth(s)
 }
