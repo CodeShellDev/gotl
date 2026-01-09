@@ -359,7 +359,7 @@ func getFuncNameWithSource(source, parent, key string) string {
 	if exists {
 		if strings.HasPrefix(search, ".") {
 			search = search[1:]
-		} else {
+		} else if parent != "" {
 			s, exists := strings.CutPrefix(search, parent)
 
 			if exists {
