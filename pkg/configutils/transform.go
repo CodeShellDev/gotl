@@ -9,6 +9,7 @@ import (
 
 type TransformTarget struct {
 	OutputKey      	string
+	Parent			string
 	Source			reflect.StructField
 	OnUse			string
 	Transform     	string
@@ -217,7 +218,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			for fnName := range onUseList {
 				fnName = strings.TrimSpace(fnName)
 
-				fnName = getFuncNameWithSource(match, lower, fnName)
+				fnName = getFuncNameWithSource(match, target.Parent, fnName)
 
 				if fnName == "" {
 					continue
@@ -256,9 +257,10 @@ func resolveTransform(lower string, targets map[string]TransformTarget) (string,
     if t.Transform != "" {
         return lower, TransformTarget{
             OutputKey:      t.OutputKey,
-			Source: t.Source,
+			Parent: 		t.Parent,
+			Source: 		t.Source,
             Transform:      t.Transform,
-			OnUse: t.OnUse,
+			OnUse: 			t.OnUse,
             ChildTransform: t.ChildTransform,
         }
     }
@@ -274,9 +276,10 @@ func resolveTransform(lower string, targets map[string]TransformTarget) (string,
 
             return parent, TransformTarget{
                 OutputKey:      fullKey,
-				Source: t.Source,
+				Parent: 		t.Parent,	
+				Source: 		t.Source,
                 Transform:      t.ChildTransform,
-				OnUse: t.OnUse,
+				OnUse: 			t.OnUse,
                 ChildTransform: t.ChildTransform,
             }
         }
@@ -361,10 +364,10 @@ func getFuncNameWithSource(source, parent, key string) string {
 		if strings.HasPrefix(search, ".") {
 			search = search[1:]
 		} else if parent != "" {
-			s, exists := strings.CutPrefix(search, parent)
+			exists := strings.HasPrefix(source, parent)
 
-			if exists {
-				search = s
+			if !exists {
+				return ""
 			}
 		} else {
 			return ""

@@ -78,6 +78,7 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 
 			out[fullKey] = TransformTarget{
 				OutputKey:      strings.ToLower(outputKey),
+				Parent: 		parent,
 				Source: 		field,
 				OnUse: 			onUse,
 				Transform:      transform,
