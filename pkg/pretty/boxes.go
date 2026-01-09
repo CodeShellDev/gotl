@@ -186,7 +186,7 @@ func (s BoxStyle) ansi() string {
 
 func (s BorderStyle) Base() Style {
 	return Style{
-		Background: s.Color,
+		Foreground: s.Color,
 		Bold: s.Bold,
 		Italic: s.Italic,
 	}
