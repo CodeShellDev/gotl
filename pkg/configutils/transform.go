@@ -160,7 +160,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 		newKeyParts := []string{}
 		newValue := val
 
-		fullTarget := resolveTransform(strings.ToLower(key), targets)
+		_, fullTarget := resolveTransform(strings.ToLower(key), targets)
 
 		if fullTarget.OutputKey != "" && len(keyParts) != len(splitPath(fullTarget.OutputKey)) {
 			key = fullTarget.OutputKey
@@ -169,12 +169,13 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 		}
 
 		var target TransformTarget
+		var source string
 
 		for i := range keyParts {
 			parent := joinPaths(keyParts[:i+1]...)
 			lower := strings.ToLower(parent)
 
-			target = resolveTransform(lower, targets)
+			source, target = resolveTransform(lower, targets)
 
 			// fallback to default
 			if target.Transform == "" {
@@ -224,7 +225,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 					continue
 				}
 
-				fn(parent, target)
+				fn(source, target)
 			}
 
 			newKeyParts = append(newKeyParts, outputBase)
@@ -236,17 +237,17 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 	return out
 }
 
-func resolveTransform(lower string, targets map[string]TransformTarget) TransformTarget {
+func resolveTransform(lower string, targets map[string]TransformTarget) (string, TransformTarget) {
 	t, ok := targets[lower]
 
 	if ok {
-        return t
+        return lower, t
     }
 
 	t = findTransform(lower, targets)
 
     if t.Transform != "" {
-        return TransformTarget{
+        return lower, TransformTarget{
             OutputKey:      t.OutputKey,
             Transform:      t.Transform,
             ChildTransform: t.ChildTransform,
@@ -262,7 +263,7 @@ func resolveTransform(lower string, targets map[string]TransformTarget) Transfor
 		if isContainer(t.Value) {
             fullKey := joinPaths(t.OutputKey, joinPaths(parts[i:]...))
 
-            return TransformTarget{
+            return parent, TransformTarget{
                 OutputKey:      fullKey,
                 Transform:      t.ChildTransform,
                 ChildTransform: t.ChildTransform,
@@ -270,7 +271,7 @@ func resolveTransform(lower string, targets map[string]TransformTarget) Transfor
         }
     }
 
-    return TransformTarget{}
+    return "", TransformTarget{}
 }
 
 func isContainer(v any) bool {
