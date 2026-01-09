@@ -370,7 +370,7 @@ func getFuncNameWithSource(source, parent, key, keyParent string) string {
 				return ""
 			}
 
-			search = s
+			source = s
 		} else {
 			return ""
 		}
