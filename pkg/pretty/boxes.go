@@ -159,6 +159,8 @@ type Box struct {
 	MinWidth    int
 	PaddingX    int
 	PaddingY    int
+	MarginX		int
+	MarginY		int
 	Style	BoxStyle
 	Segments    []Segment
 }
@@ -232,25 +234,41 @@ func (box *Box) Render() string {
 	var out strings.Builder
 	border := box.Style.Base().Combine(box.Style.Border.Base()).ansi()
 
+	out.WriteString(strings.Repeat("\n", box.MarginY))
 	out.WriteString(border)
+	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString("┌" + strings.Repeat("─", inner) + "┐")
 	out.WriteString(reset() + "\n")
 
 	for i := 0; i < box.PaddingY; i++ {
+		out.WriteString(strings.Repeat(" ", box.MarginX))
+
 		out.WriteString(box.emptyLine())
+
+		out.WriteString(strings.Repeat(" ", box.MarginX))
 	}
 
 	for _, s := range box.Segments {
+		out.WriteString(strings.Repeat(" ", box.MarginX))
+
 		out.WriteString(box.renderSegment(s))
+
+		out.WriteString(strings.Repeat(" ", box.MarginX))
 	}
 
 	for i := 0; i < box.PaddingY; i++ {
+		out.WriteString(strings.Repeat(" ", box.MarginX))
+
 		out.WriteString(box.emptyLine())
+
+		out.WriteString(strings.Repeat(" ", box.MarginX))
 	}
 
+	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(border)
 	out.WriteString("└" + strings.Repeat("─", inner) + "┘")
 	out.WriteString(reset())
+	out.WriteString(strings.Repeat("\n", box.MarginY))
 
 	return out.String()
 }
@@ -313,17 +331,18 @@ func (box *Box) renderSegment(s Segment) string {
 
 	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
 		reset() +
-		box.Style.ansi() + 
-		strings.Repeat(" ", box.PaddingX) + 
+		box.Style.ansi() +
+		strings.Repeat(" ", box.PaddingX) +
 		strings.Repeat(" ", paddingLeft) +
-		box.Style.Base().Combine(s.Style).ansi() + s.Text + 
+		box.Style.Base().Combine(s.Style).ansi() + s.Text +
 		reset() +
 		box.Style.ansi() +
 		strings.Repeat(" ", paddingRight) +
 		strings.Repeat(" ", box.PaddingX) +
 		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
-		reset() + "\n"
-}
+		reset() +
+		"\n"
+	}
 
 func runeLen(s string) int {
 	return runewidth.StringWidth(s)
