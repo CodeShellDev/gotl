@@ -104,17 +104,39 @@ type Segment struct {
 	Style Style
 }
 
+type SizeMode int
+
+const (
+	FixedWidth SizeMode = iota
+	AutoWidth
+)
+
 
 type Box struct {
 	Width       int
+	SizeMode    SizeMode
+	MinWidth    int
+	PaddingX    int
+	PaddingY    int
 	BorderStyle Style
 	Segments    []Segment
-	PaddingY    int
 }
 
 func NewBox(width int) *Box {
-	return &Box{Width: width}
+	return &Box{
+		Width:    width,
+		SizeMode: FixedWidth,
+		PaddingX: 1,
+	}
 }
+
+func NewAutoBox() *Box {
+	return &Box{
+		SizeMode: AutoWidth,
+		PaddingX: 1,
+	}
+}
+
 
 func (box *Box) AddSegment(s Segment) {
 	box.Segments = append(box.Segments, s)
@@ -122,12 +144,23 @@ func (box *Box) AddSegment(s Segment) {
 
 
 func (box *Box) Render() string {
-	var out strings.Builder
+	if box.SizeMode == AutoWidth {
+		box.Width = box.computeWidth()
+	}
+
+	// failsafe for box smaller than 2 border
+	if box.Width < 2 {
+		box.Width = 2
+	}
+
 	inner := box.Width - 2
 
+	var out strings.Builder
 	border := box.BorderStyle.ansi()
 
-	out.WriteString(border + "┌" + strings.Repeat("─", inner) + "┐" + reset() + "\n")
+	out.WriteString(border)
+	out.WriteString("┌" + strings.Repeat("─", inner) + "┐")
+	out.WriteString(reset() + "\n")
 
 	for i := 0; i < box.PaddingY; i++ {
 		out.WriteString(box.emptyLine())
@@ -141,7 +174,9 @@ func (box *Box) Render() string {
 		out.WriteString(box.emptyLine())
 	}
 
-	out.WriteString(border + "└" + strings.Repeat("─", inner) + "┘" + reset())
+	out.WriteString(border)
+	out.WriteString("└" + strings.Repeat("─", inner) + "┘")
+	out.WriteString(reset())
 
 	return out.String()
 }
@@ -154,8 +189,28 @@ func (box *Box) emptyLine() string {
 		reset() + "\n"
 }
 
+func (box *Box) computeWidth() int {
+	max := 0
+
+	for _, s := range box.Segments {
+		l := runeLen(s.Text)
+		if l > max {
+			max = l
+		}
+	}
+
+	inner := max + (box.PaddingX * 2)
+	width := inner + 2 // offset because of borders
+
+	if box.MinWidth > 0 && width < box.MinWidth {
+		width = box.MinWidth
+	}
+
+	return width
+}
+
 func (box *Box) renderSegment(s Segment) string {
-	inner := box.Width - 2
+	inner := box.Width - 2 - (box.PaddingX * 2)
 	textLen := runeLen(s.Text)
 
 	var left int
@@ -166,16 +221,14 @@ func (box *Box) renderSegment(s Segment) string {
 		left = inner - textLen
 	}
 
-	if left < 0 {
-		left = 0
-	}
+	left = max(left, 0)
 
 	right := max(inner - left - textLen, 0)
 
 	return box.BorderStyle.ansi() + "│" +
-		strings.Repeat(" ", left) +
+		strings.Repeat(" ", box.PaddingX + left) +
 		s.Style.ansi() + s.Text + reset() +
-		strings.Repeat(" ", right) +
+		strings.Repeat(" ", right + box.PaddingX) +
 		box.BorderStyle.ansi() + "│" +
 		reset() + "\n"
 }
