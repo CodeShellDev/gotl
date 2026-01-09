@@ -313,10 +313,12 @@ func (box *Box) renderSegment(s Segment) string {
 
 	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
 		reset() +
+		box.Style.ansi() + 
 		strings.Repeat(" ", box.PaddingX) + 
 		strings.Repeat(" ", paddingLeft) +
-		s.Style.ansi() + s.Text + 
+		box.Style.Base().Combine(s.Style).ansi() + s.Text + 
 		reset() +
+		box.Style.ansi() +
 		strings.Repeat(" ", paddingRight) +
 		strings.Repeat(" ", box.PaddingX) +
 		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
