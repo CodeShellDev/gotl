@@ -8,7 +8,8 @@ import (
 )
 
 type Color interface {
-	fg() string
+	foreground() string
+	background() string
 }
 
 type BasicColor int
@@ -34,17 +35,28 @@ const (
 
 type Basic BasicColor
 
-func (c Basic) fg() string {
+func (c Basic) foreground() string {
 	if c <= 7 {
 		return "3" + strconv.Itoa(int(c))
 	}
 	return "9" + strconv.Itoa(int(c) - 8)
 }
 
+func (c Basic) background() string {
+	if c <= 7 {
+		return "4" + strconv.Itoa(int(c))
+	}
+	return "10" + strconv.Itoa(int(c) - 8)
+}
+
 type ANSI256 uint8
 
-func (c ANSI256) fg() string {
+func (c ANSI256) foreground() string {
 	return "38;5;" + strconv.Itoa(int(c))
+}
+
+func (c ANSI256) background() string {
+	return "48;5;" + strconv.Itoa(int(c))
 }
 
 type RGB struct {
@@ -55,17 +67,25 @@ func RGBColor(r, g, b uint8) RGB {
 	return RGB{r, g, b}
 }
 
-func (c RGB) fg() string {
-	return "38;2;" + 
-		strconv.FormatUint(uint64(c.R), 8) + ";" + 
-		strconv.FormatUint(uint64(c.B), 8) + ";" + 
-		strconv.FormatUint(uint64(c.G), 8)
+func (c RGB) foreground() string {
+	return "38;2;" +
+		strconv.Itoa(int(c.R)) + ";" +
+		strconv.Itoa(int(c.G)) + ";" +
+		strconv.Itoa(int(c.B))
+}
+
+func (c RGB) background() string {
+	return "48;2;" +
+		strconv.Itoa(int(c.R)) + ";" +
+		strconv.Itoa(int(c.G)) + ";" +
+		strconv.Itoa(int(c.B))
 }
 
 type Style struct {
-	Fg     Color
-	Bold   bool
-	Italic bool
+	Foreground	Color
+	Background  Color
+	Bold   		bool
+	Italic		bool
 }
 
 func (s Style) ansi() string {
@@ -77,8 +97,11 @@ func (s Style) ansi() string {
 	if s.Italic {
 		codes = append(codes, "3")
 	}
-	if s.Fg != nil {
-		codes = append(codes, s.Fg.fg())
+	if s.Foreground != nil {
+		codes = append(codes, s.Foreground.foreground())
+	}
+	if s.Background != nil {
+		codes = append(codes, s.Background.background())
 	}
 
 	if len(codes) == 0 {
@@ -86,6 +109,7 @@ func (s Style) ansi() string {
 	}
 	return "\033[" + strings.Join(codes, ";") + "m"
 }
+
 
 func reset() string {
 	return "\033[0m"
