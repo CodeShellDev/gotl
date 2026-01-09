@@ -246,13 +246,13 @@ func (box *Box) AddSegment(s Segment) {
 
 func (box *Box) renderTop(width int) string {
 	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() +
-		string(box.Border.Chars.TopLeft) + strings.Repeat(string(box.Border.Chars.Vertical), width) + string(box.Border.Chars.TopRight) +
+		string(box.Border.Chars.TopLeft) + strings.Repeat(string(box.Border.Chars.Horizontal), width) + string(box.Border.Chars.TopRight) +
 		reset()
 }
 
 func (box *Box) renderBottom(width int) string {
 	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() +
-		string(box.Border.Chars.BottomLeft) + strings.Repeat(string(box.Border.Chars.Vertical), width) + string(box.Border.Chars.BottomRight) +
+		string(box.Border.Chars.BottomLeft) + strings.Repeat(string(box.Border.Chars.Horizontal), width) + string(box.Border.Chars.BottomRight) +
 		reset()
 }
 
@@ -369,7 +369,7 @@ func (box *Box) renderSegment(s Segment) string {
 	inner := box.Width - 2 - (box.PaddingX * 2)
 	paddingLeft, paddingRight := getPadding(s.Text, inner, s.Align)
 
-	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
+	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + string(box.Border.Chars.Vertical) +
 		reset() +
 		box.Style.ansi() +
 		strings.Repeat(" ", box.PaddingX) +
@@ -379,7 +379,7 @@ func (box *Box) renderSegment(s Segment) string {
 		box.Style.ansi() +
 		strings.Repeat(" ", paddingRight) +
 		strings.Repeat(" ", box.PaddingX) +
-		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
+		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + string(box.Border.Chars.Vertical) +
 		reset()
 	}
 
