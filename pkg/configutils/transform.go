@@ -217,7 +217,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			for fnName := range onUseList {
 				fnName = strings.TrimSpace(fnName)
 
-				fnName = getFuncNameWithSource(match, joinPaths(newKeyParts...), fnName)
+				fnName = getFuncNameWithSource(match, lower, fnName)
 
 				if fnName == "" {
 					continue
