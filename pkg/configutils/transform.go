@@ -213,7 +213,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 				outputBase, newValue = fn(outputBase, newValue)
 			}
 
-			fmt.Println(target.OnUse)
+			fmt.Println(target.OutputKey)
 
 			onUseList := strings.SplitSeq(target.OnUse, ",")
 			for fnName := range onUseList {

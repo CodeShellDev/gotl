@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/codeshelldev/gotl/pkg/configutils"
@@ -87,11 +89,11 @@ type Test_StructSchema struct {
 }
 
 type Test_StructMapType struct {
-	Key 				string						    `koanf:"key"          transform:"normal"`
+	Key 				string						    `koanf:"key"          transform:"normal"      onuse:"test"`
 }
 
 type Test_StructType struct {
-	Key2 				string						    `koanf:"key2"         aliases:".key2"         transform:"normal"`
+	Key2 				string						    `koanf:"key2"         aliases:".key2"         transform:"normal"        onuse:"test"`
 }
 
 func TestTransformMapBuilder(t *testing.T) {
@@ -103,24 +105,28 @@ func TestTransformMapBuilder(t *testing.T) {
 			Value: nil,
 			ChildTransform: "",
 			Transform: "normal",
+			OnUse: "",
 		},
 		"unknownarray": {
 			OutputKey: "unknownarray",
 			Value: nil,
 			ChildTransform: "child",
 			Transform: "",
+			OnUse: "",
 		},
 		"structmap": {
 			OutputKey: "structmap",
 			Value: nil,
 			ChildTransform: "child",
 			Transform: "",
+			OnUse: "",
 		},
 		"structmap.*.key": {
 			OutputKey: "structmap.*.key",
 			Value: "",
 			ChildTransform: "",
 			Transform: "normal",
+			OnUse: "",
 		},
 		"struct": {
 			OutputKey: "struct",
@@ -129,22 +135,33 @@ func TestTransformMapBuilder(t *testing.T) {
 			},
 			ChildTransform: "",
 			Transform: "",
+			OnUse: "",
 		},
 		"struct.key2": {
 			OutputKey: "struct.key2",
 			Value: "",
 			ChildTransform: "",
 			Transform: "normal",
+			OnUse: "test",
 		},
 		"key2": {
 			OutputKey: "struct.key2",
 			Value: "",
 			ChildTransform: "",
 			Transform: "normal",
+			OnUse: "test",
 		},
 	}
 
-	transformTargetJson := jsonutils.Pretty(transformTargets)
+	// ignore `Source` for matching
+	cleaned := map[string]configutils.TransformTarget{}
+	for i, t := range transformTargets {
+		t.Source = reflect.StructField{}
+
+		cleaned[i] = t
+	}
+
+	transformTargetJson := jsonutils.Pretty(cleaned)
 	expectedJson := jsonutils.Pretty(expected)
 
 	if transformTargetJson != expectedJson {
@@ -174,16 +191,23 @@ func TestTransform(t *testing.T) {
 
 	transformTargets := configutils.BuildTransformMap("", &Test_StructSchema{})
 
-	funcs := map[string]func(string, any) (string, any){
-		"normal": func(s string, a any) (string, any) {
-			return "normal:" + s, a
+	options := configutils.TransformOptions{
+		Transforms: map[string]func(string, any) (string, any){
+			"normal": func(s string, a any) (string, any) {
+				return "normal:" + s, a
+			},
+			"child": func(s string, a any) (string, any) {
+				return "child:" + s, a
+			},
 		},
-		"child": func(s string, a any) (string, any) {
-			return "child:" + s, a
+		OnUse: map[string]func(source string, target configutils.TransformTarget){
+			"test": func(source string, target configutils.TransformTarget) {
+				fmt.Println(source, target)
+			},
 		},
 	}
 
-	transformed := configutils.ApplyTransforms(flattened, transformTargets, funcs)
+	transformed := configutils.ApplyTransforms(flattened, transformTargets, options)
 
 	unflattened := configutils.Unflatten(transformed)
 
