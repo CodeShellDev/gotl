@@ -434,15 +434,15 @@ func (box *Box) emptyLine() string {
 var ansiRegexp = regexp.MustCompile(`\x1b\[[0-9;?]*[a-zA-Z]`)
 
 func visibleWidth(s string) int {
-	clean := ansiRegexp.ReplaceAllString(s, "")
-    fmt.Printf("%q\n", s)  
-    fmt.Printf("%q\n", clean)  
+	clean := ansiRegexp.ReplaceAllString(s, "") 
 	return runewidth.StringWidth(clean)
 }
 
 func (box *Box) renderLine(content string, width int, align Align) string {
 	left, right := getPadding(visibleWidth(content), width, align)
 	borderStyle := box.Style.Base().Combine(box.Border.Style.Base())
+
+	fmt.Println(visibleWidth(content), left, right)
 
 	return borderStyle.ansi() + string(box.Border.Chars.Vertical) + reset() +
 		box.Style.Base().ansi() + strings.Repeat(" ", box.PaddingX + left) +
