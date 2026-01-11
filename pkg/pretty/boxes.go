@@ -146,14 +146,38 @@ type Span struct {
 }
 
 func (s Span) Width() int {
-	return runewidth.StringWidth(s.Text)
+	max := 0
+	for line := range strings.SplitSeq(s.Text, "\n") {
+		w := runewidth.StringWidth(line)
+
+		if w > max {
+			max = w
+		}
+	}
+	return max
 }
 
 func (s Span) Render(base Style) string {
 	style := base.Combine(s.Style)
-	return style.ansi() + s.Text + reset()
-}
 
+	lines := strings.Split(s.Text, "\n")
+	
+	if len(lines) == 1 {
+		return style.ansi() + lines[0] + reset()
+	}
+
+	var out strings.Builder
+
+	for i, line := range lines {
+		if i > 0 {
+			out.WriteRune('\n')
+		}
+
+		out.WriteString(style.ansi() + line + reset())
+	}
+
+	return out.String()
+}
 
 type Align int
 
