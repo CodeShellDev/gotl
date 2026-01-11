@@ -139,11 +139,21 @@ const (
 	AlignRight
 )
 
-type Segment struct {
+type Span struct {
 	Text  string
+	Style Style
+}
+
+type Line struct {
+	Spans []Span
+}
+
+type Block struct {
+	Lines []Line
 	Align Align
 	Style Style
 }
+
 
 type SizeMode int
 
@@ -152,66 +162,59 @@ const (
 	AutoWidth
 )
 
-
 type Box struct {
-	Width       int
-	SizeMode    SizeMode
-	MinWidth    int
-	PaddingX    int
-	PaddingY    int
-	MarginX		int
-	MarginY		int
-	Style		BoxStyle
-	Border		Border
-	Segments    []Segment
+	Width    int
+	SizeMode SizeMode
+	MinWidth int
+
+	PaddingX int
+	PaddingY int
+	MarginX  int
+	MarginY  int
+
+	Style  BoxStyle
+	Border Border
+
+	Blocks []Block
 }
 
 type BoxStyle struct {
-	Background	Color
-	Border		BorderStyle
+	Background Color
+	Border     BorderStyle
 }
 
 type Border struct {
-	Chars		BorderChars
-	Style		BorderStyle
+	Chars BorderChars
+	Style BorderStyle
 }
 
 type BorderChars struct {
-	Horizontal	rune
-	Vertical	rune
-	TopLeft		rune
-	TopRight	rune
-	BottomLeft 	rune
-	BottomRight	rune
+	Horizontal   rune
+	Vertical     rune
+	TopLeft      rune
+	TopRight     rune
+	BottomLeft   rune
+	BottomRight  rune
 }
 
 type BorderStyle struct {
-	Color		Color
-	Bold		bool
-	Italic		bool
+	Color  Color
+	Bold   bool
+	Italic bool
 }
 
 func (s BoxStyle) Base() Style {
-	return Style{
-		Background: s.Background,
-	}
-}
-
-func (s BoxStyle) ansi() string {
-	return s.Base().ansi()
+	return Style{Background: s.Background}
 }
 
 func (s BorderStyle) Base() Style {
 	return Style{
 		Foreground: s.Color,
-		Bold: s.Bold,
-		Italic: s.Italic,
+		Bold:       s.Bold,
+		Italic:    s.Italic,
 	}
 }
 
-func (s BorderStyle) ansi() string {
-	return s.Base().ansi()
-}
 
 func NewBox(width int) *Box {
 	return &Box{
@@ -233,50 +236,29 @@ func NewBox(width int) *Box {
 
 func NewAutoBox() *Box {
 	box := NewBox(0)
-
 	box.SizeMode = AutoWidth
-
 	return box
 }
 
-
-func (box *Box) AddSegment(s Segment) {
-	box.Segments = append(box.Segments, s)
+func (box *Box) AddBlock(b Block) {
+	box.Blocks = append(box.Blocks, b)
 }
-
-func (box *Box) renderTop(width int) string {
-	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() +
-		string(box.Border.Chars.TopLeft) + strings.Repeat(string(box.Border.Chars.Horizontal), width) + string(box.Border.Chars.TopRight) +
-		reset()
-}
-
-func (box *Box) renderBottom(width int) string {
-	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() +
-		string(box.Border.Chars.BottomLeft) + strings.Repeat(string(box.Border.Chars.Horizontal), width) + string(box.Border.Chars.BottomRight) +
-		reset()
-}
-
 
 func (box *Box) Render() string {
 	if box.SizeMode == AutoWidth {
 		box.Width = box.computeWidth()
 	}
 
-	// failsafe for box smaller than 2 border
 	if box.Width < 2 {
 		box.Width = 2
 	}
 
 	inner := box.Width - 2
-
 	var out strings.Builder
 
 	out.WriteString(strings.Repeat("\n", box.MarginY))
 	out.WriteString(strings.Repeat(" ", box.MarginX))
-
 	out.WriteString(box.renderTop(inner))
-
-	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString("\n")
 
 	for i := 0; i < box.PaddingY; i++ {
@@ -284,15 +266,17 @@ func (box *Box) Render() string {
 
 		out.WriteString(box.emptyLine())
 
-		out.WriteString(strings.Repeat(" ", box.MarginX) + "\n")
+		out.WriteString("\n")
 	}
 
-	for _, s := range box.Segments {
-		out.WriteString(strings.Repeat(" ", box.MarginX))
+	for _, block := range box.Blocks {
+		for _, line := range block.Lines {
+			out.WriteString(strings.Repeat(" ", box.MarginX))
 
-		out.WriteString(box.renderSegment(s))
+			out.WriteString(box.renderLine(block, line))
 
-		out.WriteString(strings.Repeat(" ", box.MarginX) + "\n")
+			out.WriteString("\n")
+		}
 	}
 
 	for i := 0; i < box.PaddingY; i++ {
@@ -300,39 +284,80 @@ func (box *Box) Render() string {
 
 		out.WriteString(box.emptyLine())
 
-		out.WriteString(strings.Repeat(" ", box.MarginX) + "\n")
+		out.WriteString("\n")
 	}
 
 	out.WriteString(strings.Repeat(" ", box.MarginX))
-
 	out.WriteString(box.renderBottom(inner))
-
-	out.WriteString(strings.Repeat(" ", box.MarginX))
 	out.WriteString(strings.Repeat("\n", box.MarginY))
 
 	return out.String()
 }
 
+func (box *Box) renderTop(w int) string {
+	s := box.Style.Base().Combine(box.Style.Border.Base()).ansi()
+	return s + string(box.Border.Chars.TopLeft) +
+		strings.Repeat(string(box.Border.Chars.Horizontal), w) +
+		string(box.Border.Chars.TopRight) + reset()
+}
+
+func (box *Box) renderBottom(w int) string {
+	s := box.Style.Base().Combine(box.Style.Border.Base()).ansi()
+	return s + string(box.Border.Chars.BottomLeft) +
+		strings.Repeat(string(box.Border.Chars.Horizontal), w) +
+		string(box.Border.Chars.BottomRight) + reset()
+}
+
 func (box *Box) emptyLine() string {
 	inner := box.Width - 2
-	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + string(box.Border.Chars.Vertical) +
+	s := box.Style.Base().Combine(box.Style.Border.Base()).ansi()
+	return s + string(box.Border.Chars.Vertical) +
 		strings.Repeat(" ", inner) +
-		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + string(box.Border.Chars.Vertical) +
-		reset()
+		s + string(box.Border.Chars.Vertical) + reset()
+}
+
+func (box *Box) renderLine(b Block, l Line) string {
+	contentWidth := box.Width - 2 - box.PaddingX * 2
+	textWidth := lineWidth(l)
+
+	left, right := getPaddingWidth(textWidth, contentWidth, b.Align)
+
+	var out strings.Builder
+
+	border := box.Style.Base().Combine(box.Style.Border.Base()).ansi()
+	out.WriteString(border + string(box.Border.Chars.Vertical) + reset())
+	out.WriteString(box.Style.Base().ansi())
+	out.WriteString(strings.Repeat(" ", box.PaddingX + left))
+
+	for _, sp := range l.Spans {
+		style := b.Style.Combine(sp.Style)
+
+		out.WriteString(style.ansi())
+		out.WriteString(sp.Text)
+		out.WriteString(reset())
+	}
+
+	out.WriteString(box.Style.Base().ansi())
+	out.WriteString(strings.Repeat(" ", box.PaddingX + right))
+	out.WriteString(border + string(box.Border.Chars.Vertical) + reset())
+
+	return out.String()
 }
 
 func (box *Box) computeWidth() int {
 	max := 0
 
-	for _, s := range box.Segments {
-		l := runeLen(s.Text)
-		if l > max {
-			max = l
+	for _, b := range box.Blocks {
+		for _, l := range b.Lines {
+			w := lineWidth(l)
+			if w > max {
+				max = w
+			}
 		}
 	}
 
-	inner := max + (box.PaddingX * 2)
-	width := inner + 2 // offset because of borders
+	inner := max + box.PaddingX * 2
+	width := inner + 2
 
 	if box.MinWidth > 0 && width < box.MinWidth {
 		width = box.MinWidth
@@ -341,48 +366,27 @@ func (box *Box) computeWidth() int {
 	return width
 }
 
-func getPadding(text string, width int, align Align) (int, int) {
-	textLen := runeLen(text)
-	if width <= textLen {
+func lineWidth(l Line) int {
+	w := 0
+	for _, s := range l.Spans {
+		w += runewidth.StringWidth(s.Text)
+	}
+	return w
+}
+
+func getPaddingWidth(text, width int, align Align) (int, int) {
+	if width <= text {
 		return 0, 0
 	}
 
-	space := width - textLen
-	var left, right int
-
+	space := width - text
 	switch align {
-	case AlignLeft:
-		left = 0
-		right = space
 	case AlignRight:
-		left = space
-		right = 0
+		return space, 0
 	case AlignCenter:
-		left = space / 2
-		right = space - left
+		left := space / 2
+		return left, space - left
+	default:
+		return 0, space
 	}
-
-	return left, right
-}
-
-func (box *Box) renderSegment(s Segment) string {
-	inner := box.Width - 2 - (box.PaddingX * 2)
-	paddingLeft, paddingRight := getPadding(s.Text, inner, s.Align)
-
-	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + string(box.Border.Chars.Vertical) +
-		reset() +
-		box.Style.ansi() +
-		strings.Repeat(" ", box.PaddingX) +
-		strings.Repeat(" ", paddingLeft) +
-		box.Style.Base().Combine(s.Style).ansi() + s.Text +
-		reset() +
-		box.Style.ansi() +
-		strings.Repeat(" ", paddingRight) +
-		strings.Repeat(" ", box.PaddingX) +
-		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + string(box.Border.Chars.Vertical) +
-		reset()
-	}
-
-func runeLen(s string) int {
-	return runewidth.StringWidth(s)
 }
