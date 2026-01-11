@@ -1,6 +1,7 @@
 package pretty
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -429,9 +430,15 @@ func (box *Box) emptyLine() string {
 	return style.ansi() + string(box.Border.Chars.Vertical) + strings.Repeat(" ", inner) + string(box.Border.Chars.Vertical) + reset()
 }
 
-func (box *Box) renderLine(content string, width int, align Align) string {
-	left, right := getPadding(runewidth.StringWidth(content), width, align)
+var ansiRegexp = regexp.MustCompile(`033\[[0-9;]*m`)
 
+func visibleWidth(s string) int {
+	clean := ansiRegexp.ReplaceAllString(s, "")
+	return runewidth.StringWidth(clean)
+}
+
+func (box *Box) renderLine(content string, width int, align Align) string {
+	left, right := getPadding(visibleWidth(content), width, align)
 	borderStyle := box.Style.Base().Combine(box.Border.Style.Base())
 
 	return borderStyle.ansi() + string(box.Border.Chars.Vertical) + reset() +
