@@ -262,26 +262,6 @@ func (box *Box) AddBlock(block Block) {
 }
 
 
-func normalizeBlock(block Block) []Segment {
-	var out []Segment
-
-	for _, segment := range block.Segments {
-		maxHeight := 1
-
-		for range maxHeight {
-			var items []Inline
-
-			for _, item := range segment.Items {
-				items = append(items, item)
-			}
-
-			out = append(out, Segment{Items: items})
-		}
-	}
-
-	return out
-}
-
 func lineWidth(segment Segment) int {
 	w := 0
 
@@ -296,9 +276,8 @@ func (box *Box) computeWidth() int {
 	max := 0
 
 	for _, block := range box.Blocks {
-		lines := normalizeBlock(block)
-		for _, l := range lines {
-			w := lineWidth(l)
+		for _, segment := range block.Segments {
+			w := lineWidth(segment)
 			if w > max {
 				max = w
 			}
@@ -341,9 +320,7 @@ func (box *Box) Render() string {
 	}
 
 	for _, block := range box.Blocks {
-		lines := normalizeBlock(block)
-
-		for _, segments := range lines {
+		for _, segments := range block.Segments {
 			out.WriteString(strings.Repeat(" ", box.MarginX))
 
 			out.WriteString(box.renderLine(segments, block))
