@@ -342,10 +342,10 @@ func (box *Box) Render() string {
 	}
 
 	for _, block := range box.Blocks {
-		for _, segments := range block.Segments {
+		for _, segment := range block.Segments {
 			out.WriteString(strings.Repeat(" ", box.MarginX))
 
-			out.WriteString(box.renderLine(segments, block))
+			out.WriteString(box.renderLine(segment, block))
 
 			out.WriteString("\n")
 		}
@@ -398,63 +398,31 @@ func (box *Box) emptyLine() string {
 }
 
 func (box *Box) renderLine(segment Segment, block Block) string {
-	var lines [][]Inline
-	currentLine := []Inline{}
+	inner := box.Width - 2 - box.PaddingX * 2
+	contentWidth := lineWidth(segment)
 
-	for _, item := range segment.Items {
-		span, ok := item.(Span)
-
-		if ok {
-			for i, lineSpan := range span.Lines() {
-				if i == 0 {
-					currentLine = append(currentLine, lineSpan)
-				} else {
-					lines = append(lines, currentLine)
-					currentLine = []Inline{lineSpan}
-				}
-			}
-		} else {
-			currentLine = append(currentLine, item)
-		}
-	}
-
-	lines = append(lines, currentLine)
+	left, right := getPadding(contentWidth, inner, block.Align)
 
 	var out strings.Builder
 
-	for i, line := range lines {
-		inner := box.Width - 2 - box.PaddingX*2
-		contentWidth := 0
+	borderStyle := box.Style.Base().Combine(box.Border.Style.Base())
+	baseStyle := box.Style.Base().Combine(block.Style)
 
-		for _, it := range line {
-			contentWidth += it.Width()
-		}
-		
-		left, right := getPadding(contentWidth, inner, block.Align)
+	out.WriteString(borderStyle.ansi())
+	out.WriteRune(box.Border.Chars.Vertical)
+	out.WriteString(reset())
 
-		borderStyle := box.Style.Base().Combine(box.Border.Style.Base())
-		baseStyle := box.Style.Base().Combine(block.Style)
+	out.WriteString(baseStyle.ansi())
+	out.WriteString(strings.Repeat(" ", box.PaddingX + left))
 
-		out.WriteString(borderStyle.ansi())
-		out.WriteRune(box.Border.Chars.Vertical)
-		out.WriteString(reset())
-
-		out.WriteString(baseStyle.ansi())
-		out.WriteString(strings.Repeat(" ", box.PaddingX+left))
-
-		for _, item := range line {
-			out.WriteString(item.Render(baseStyle))
-		}
-
-		out.WriteString(strings.Repeat(" ", right+box.PaddingX))
-		out.WriteString(borderStyle.ansi())
-		out.WriteRune(box.Border.Chars.Vertical)
-		out.WriteString(reset())
-
-		if i < len(lines)-1 {
-			out.WriteString("\n")
-		}
+	for _, item := range segment.Items {
+		out.WriteString(item.Render(baseStyle))
 	}
+
+	out.WriteString(strings.Repeat(" ", right + box.PaddingX))
+	out.WriteString(borderStyle.ansi())
+	out.WriteRune(box.Border.Chars.Vertical)
+	out.WriteString(reset())
 
 	return out.String()
 }
