@@ -1,6 +1,7 @@
 package pretty
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -434,6 +435,7 @@ var ansiRegexp = regexp.MustCompile(`\x1b\[[0-9;?]*[a-zA-Z]`)
 
 func visibleWidth(s string) int {
 	clean := ansiRegexp.ReplaceAllString(s, "")
+	fmt.Println(clean)
 	return runewidth.StringWidth(clean)
 }
 
