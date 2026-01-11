@@ -315,9 +315,9 @@ func (box *Box) Render() string {
 
 func (box *Box) emptyLine() string {
 	inner := box.Width - 2
-	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
+	return box.Style.Base().Combine(box.Style.Border.Base()).ansi() + string(box.Border.Chars.Horizontal) +
 		strings.Repeat(" ", inner) +
-		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + "│" +
+		box.Style.Base().Combine(box.Style.Border.Base()).ansi() + string(box.Border.Chars.Horizontal) +
 		reset()
 }
 
