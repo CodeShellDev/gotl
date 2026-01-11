@@ -1,7 +1,6 @@
 package pretty
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -441,9 +440,6 @@ func visibleWidth(s string) int {
 func (box *Box) renderLine(content string, width int, align Align) string {
     innerWidth := width - box.PaddingX * 2
     left, right := getPadding(visibleWidth(content), innerWidth, align)
-
-	fmt.Println(left, right)
- 	fmt.Printf("%q\n", content)
 
     borderStyle := box.Style.Base().Combine(box.Border.Style.Base())
 
