@@ -430,7 +430,7 @@ func (box *Box) emptyLine() string {
 	return style.ansi() + string(box.Border.Chars.Vertical) + strings.Repeat(" ", inner) + string(box.Border.Chars.Vertical) + reset()
 }
 
-var ansiRegexp = regexp.MustCompile(`033\[[0-9;]*m`)
+var ansiRegexp = regexp.MustCompile(`\x1b\[[0-9;?]*[a-zA-Z]`)
 
 func visibleWidth(s string) int {
 	clean := ansiRegexp.ReplaceAllString(s, "")
