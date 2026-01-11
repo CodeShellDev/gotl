@@ -435,7 +435,7 @@ var ansiRegexp = regexp.MustCompile(`\x1b\[[0-9;?]*[a-zA-Z]`)
 
 func visibleWidth(s string) int {
 	clean := ansiRegexp.ReplaceAllString(s, "")
-	fmt.Println(clean)
+	fmt.Println(s, clean)
 	return runewidth.StringWidth(clean)
 }
 
