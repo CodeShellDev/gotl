@@ -155,26 +155,6 @@ func (s Span) Render(base Style) string {
 }
 
 
-type Image interface {
-	Width() int
-	Height() int
-	RenderRow(row int, base Style) string
-}
-
-type ImageInline struct {
-	Image Image
-	Row   int
-}
-
-func (i ImageInline) Width() int {
-	return i.Image.Width()
-}
-
-func (i ImageInline) Render(base Style) string {
-	return i.Image.RenderRow(i.Row, base)
-}
-
-
 type Align int
 
 const (
@@ -288,30 +268,11 @@ func normalizeBlock(block Block) []Segment {
 	for _, segment := range block.Segments {
 		maxHeight := 1
 
-		for _, item := range segment.Items {
-			img, ok := item.(ImageInline)
-
-			if ok {
-				if img.Image.Height() > maxHeight {
-					maxHeight = img.Image.Height()
-				}
-			}
-		}
-
-		for row := 0; row < maxHeight; row++ {
+		for range maxHeight {
 			var items []Inline
 
 			for _, item := range segment.Items {
-				img, ok := item.(ImageInline)
-
-				if ok {
-					items = append(items, ImageInline{
-						Image: img.Image,
-						Row:   row,
-					})
-				} else {
-					items = append(items, item)
-				}
+				items = append(items, item)
 			}
 
 			out = append(out, Segment{Items: items})
