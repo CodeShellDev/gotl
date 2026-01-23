@@ -33,7 +33,7 @@ func DefaultOptions() Options {
 		EncodeLevel: customEncodeLevel,
 		EncodeDuration: zapcore.StringDurationEncoder,
 		EncodeCaller: zapcore.ShortCallerEncoder,
-		StackDepth: 1,
+		StackDepth: 2,
 	}
 }
 
