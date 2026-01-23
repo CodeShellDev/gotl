@@ -13,9 +13,10 @@ import (
 var defaultLogger *Logger
 
 type Logger struct {
-	zap		*zap.Logger
-	level	*zap.AtomicLevel
-	options	Options
+	zap			*zap.Logger
+	level		*zap.AtomicLevel
+	options		Options
+	transform	func(in string) string
 }
 
 type Options struct {
@@ -132,6 +133,9 @@ func format(data ...any) string {
 	return res
 }
 
+func transform(content string, fn func(in string) string) string {
+	return fn(content)
+}
 
 func Init(level string) error {
 	l, err := NewWithDefaults(level)
@@ -181,6 +185,10 @@ func (logger *Logger) SetLevel(level string) {
 	logger.level.SetLevel(parseLevel(strings.ToLower(level)))
 }
 
+func (logger *Logger) SetTransform(transform func(in string) string) {
+	logger.transform = transform
+}
+
 func (logger *Logger) Clone() (*Logger, error) {
 	return New(logger.level.Level().String(), logger.options)
 }
@@ -191,14 +199,6 @@ func (logger *Logger) Sub(level string) *Logger {
 	return &Logger{
 		zap:     logger.zap,
 		level:   &atomicLevel,
-		options: logger.options,
-	}
-}
-
-func (logger *Logger) With(fields ...zap.Field) *Logger {
-	return &Logger{
-		zap:     logger.zap.With(fields...),
-		level:   logger.level,
 		options: logger.options,
 	}
 }

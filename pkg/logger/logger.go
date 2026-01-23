@@ -4,39 +4,43 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+func (logger *Logger) parse(data ...any) string {
+	return transform(format(data...), logger.transform)
+}
+
 func (logger *Logger) Dev(data ...any) {
 	if logger.IsDev() {
-		logger.zap.Log(DeveloperLevel, format(data...))
+		logger.zap.Log(DeveloperLevel, logger.parse(data...))
 	}
 }
 
 func (logger *Logger) Debug(data ...any) {
 	if logger.IsDebug() {
-		logger.zap.Debug(format(data...))
+		logger.zap.Debug(logger.parse(data...))
 	}
 }
 
 func (logger *Logger) Info(data ...any) {
 	if logger.IsInfo() {
-		logger.zap.Info(format(data...))
+		logger.zap.Info(logger.parse(data...))
 	}
 }
 
 func (logger *Logger) Warn(data ...any) {
 	if logger.IsWarn() {
-		logger.zap.Warn(format(data...))
+		logger.zap.Warn(logger.parse(data...))
 	}
 }
 
 func (logger *Logger) Error(data ...any) {
 	if logger.IsError() {
-		logger.zap.Error(format(data...))
+		logger.zap.Error(logger.parse(data...))
 	}
 }
 
 func (logger *Logger) Fatal(data ...any) {
 	if logger.IsFatal() {
-		logger.zap.Fatal(format(data...))
+		logger.zap.Fatal(logger.parse(data...))
 	}
 }
 
