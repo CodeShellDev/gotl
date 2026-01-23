@@ -213,6 +213,11 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 				outputBase, newValue = fn(outputBase, newValue)
 			}
 
+			// fallback to default
+			if target.OnUse == "" {
+				target.OnUse = "default"
+			}
+
 			onUseList := strings.SplitSeq(target.OnUse, ",")
 			for fnName := range onUseList {
 				fnName = strings.TrimSpace(fnName)
