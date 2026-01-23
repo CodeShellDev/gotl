@@ -90,6 +90,8 @@ func modifyCaller(encoder zapcore.CallerEncoder) zapcore.CallerEncoder {
 			}
 		}
 
+		caller.File = path
+
 		encoder(caller, pae)
 	}
 }
