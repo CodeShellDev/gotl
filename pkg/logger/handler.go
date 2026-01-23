@@ -133,7 +133,7 @@ func format(data ...any) string {
 	return res
 }
 
-func transform(content string, fn func(in string) string) string {
+func transform(content string, fn func(content string) string) string {
 	if fn != nil {
 		return fn(content)
 	}
@@ -189,7 +189,7 @@ func (logger *Logger) SetLevel(level string) {
 	logger.level.SetLevel(parseLevel(strings.ToLower(level)))
 }
 
-func (logger *Logger) SetTransform(transform func(in string) string) {
+func (logger *Logger) SetTransform(transform func(content string) string) {
 	logger.transform = transform
 }
 
@@ -205,6 +205,10 @@ func (logger *Logger) Sub(level string) *Logger {
 		level:   &atomicLevel,
 		options: logger.options,
 	}
+}
+
+func (logger *Logger) Print() {
+	logger.Info("Level: ", logger.Level(), ", Transform: ", logger.transform)
 }
 
 func (logger *Logger) Sync() {
