@@ -80,7 +80,7 @@ func New(level string, options Options) (*Logger, error) {
 
 func modifyCaller(encoder zapcore.CallerEncoder) zapcore.CallerEncoder {
 	return func(caller zapcore.EntryCaller, pae zapcore.PrimitiveArrayEncoder) {
-		fmt.Println(caller)
+		fmt.Println(caller.File, caller.Function, caller.Line)
 
 		encoder(caller, pae)
 	}
