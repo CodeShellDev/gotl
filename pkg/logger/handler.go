@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"image/color"
 	"strconv"
 	"strings"
@@ -58,7 +59,7 @@ func New(level string, options Options) (*Logger, error) {
 			EncodeLevel:    options.EncodeLevel,
 			EncodeTime:     options.EncodeTime,
 			EncodeDuration: options.EncodeDuration,
-			EncodeCaller:   options.EncodeCaller,
+			EncodeCaller:   modifyCaller(options.EncodeCaller),
 		},
 	}
 
@@ -75,6 +76,14 @@ func New(level string, options Options) (*Logger, error) {
 		level:   &atomicLevel,
 		options: options,
 	}, nil
+}
+
+func modifyCaller(encoder zapcore.CallerEncoder) zapcore.CallerEncoder {
+	return func(caller zapcore.EntryCaller, pae zapcore.PrimitiveArrayEncoder) {
+		fmt.Println(caller)
+
+		encoder(caller, pae)
+	}
 }
 
 func format(data ...any) string {
