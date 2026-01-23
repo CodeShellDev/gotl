@@ -13,17 +13,17 @@ import (
 var defaultLogger *Logger
 
 type Logger struct {
-	zap      *zap.Logger
-	level    zap.AtomicLevel
-	options  Options
+	zap		*zap.Logger
+	level	*zap.AtomicLevel
+	options	Options
 }
 
 type Options struct {
-	EncodeLevel zapcore.LevelEncoder
-	EncodeCaller zapcore.CallerEncoder
-	EncodeDuration zapcore.DurationEncoder
-	EncodeTime zapcore.TimeEncoder
-	StackDepth int
+	EncodeLevel 	zapcore.LevelEncoder
+	EncodeCaller 	zapcore.CallerEncoder
+	EncodeDuration 	zapcore.DurationEncoder
+	EncodeTime 		zapcore.TimeEncoder
+	StackDepth 		int
 }
 
 func DefaultOptions() Options {
@@ -72,7 +72,7 @@ func New(level string, options Options) (*Logger, error) {
 
 	return &Logger{
 		zap:     z,
-		level:   atomicLevel,
+		level:   &atomicLevel,
 		options: options,
 	}, nil
 }
@@ -162,8 +162,18 @@ func (logger *Logger) SetLevel(level string) {
 	logger.level.SetLevel(parseLevel(strings.ToLower(level)))
 }
 
-func (logger *Logger) Sub(level string) (*Logger, error) {
-	return New(level, logger.options)
+func (logger *Logger) Clone() (*Logger, error) {
+	return New(logger.level.Level().String(), logger.options)
+}
+
+func (logger *Logger) Sub(level string) *Logger {
+	atomicLevel := zap.NewAtomicLevelAt(parseLevel(strings.ToLower(level)))
+
+	return &Logger{
+		zap:     logger.zap,
+		level:   &atomicLevel,
+		options: logger.options,
+	}
 }
 
 func (logger *Logger) With(fields ...zap.Field) *Logger {

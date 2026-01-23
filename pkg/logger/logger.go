@@ -5,56 +5,64 @@ import (
 )
 
 func (logger *Logger) Dev(data ...any) {
-	ok := logger.zap.Check(DeveloperLevel, format(data...))
-
-	if ok != nil {
-		ok.Write()
+	if logger.IsDev() {
+		logger.zap.Log(DeveloperLevel, format(data...))
 	}
 }
 
 func (logger *Logger) Debug(data ...any) {
-	logger.zap.Debug(format(data...))
+	if logger.IsDebug() {
+		logger.zap.Debug(format(data...))
+	}
 }
 
 func (logger *Logger) Info(data ...any) {
-	logger.zap.Info(format(data...))
+	if logger.IsInfo() {
+		logger.zap.Info(format(data...))
+	}
 }
 
 func (logger *Logger) Warn(data ...any) {
-	logger.zap.Warn(format(data...))
+	if logger.IsWarn() {
+		logger.zap.Warn(format(data...))
+	}
 }
 
 func (logger *Logger) Error(data ...any) {
-	logger.zap.Error(format(data...))
+	if logger.IsError() {
+		logger.zap.Error(format(data...))
+	}
 }
 
 func (logger *Logger) Fatal(data ...any) {
-	logger.zap.Fatal(format(data...))
+	if logger.IsFatal() {
+		logger.zap.Fatal(format(data...))
+	}
 }
 
 
 func (logger *Logger) IsDev() bool {
-	return logger.zap.Level().Enabled(DeveloperLevel)
+	return logger.level.Level().Enabled(DeveloperLevel)
 }
 
 func (logger *Logger) IsDebug() bool {
-	return logger.zap.Level().Enabled(zapcore.DebugLevel)
+	return logger.level.Level().Enabled(zapcore.DebugLevel)
 }
 
 func (logger *Logger) IsInfo() bool {
-	return logger.zap.Level().Enabled(zapcore.InfoLevel)
+	return logger.level.Level().Enabled(zapcore.InfoLevel)
 }
 
 func (logger *Logger) IsWarn() bool {
-	return logger.zap.Level().Enabled(zapcore.WarnLevel)
+	return logger.level.Level().Enabled(zapcore.WarnLevel)
 }
 
 func (logger *Logger) IsError() bool {
-	return logger.zap.Level().Enabled(zapcore.ErrorLevel)
+	return logger.level.Level().Enabled(zapcore.ErrorLevel)
 }
 
 func (logger *Logger) IsFatal() bool {
-	return logger.zap.Level().Enabled(zapcore.FatalLevel)
+	return logger.level.Level().Enabled(zapcore.FatalLevel)
 }
 
 func Dev(data ...any) {
