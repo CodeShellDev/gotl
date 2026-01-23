@@ -70,29 +70,40 @@ func (logger *Logger) IsFatal() bool {
 }
 
 func Dev(data ...any) {
-	defaultLogger.Dev(data...)
+	if defaultLogger.IsDev() {
+		defaultLogger.zap.Log(DeveloperLevel, defaultLogger.parse(data...))
+	}
 }
 
 func Debug(data ...any) {
-	defaultLogger.Debug(data...)
+	if defaultLogger.IsDebug() {
+		defaultLogger.zap.Debug(defaultLogger.parse(data...))
+	}
 }
 
 func Info(data ...any) {
-	defaultLogger.Info(data...)
+	if defaultLogger.IsInfo() {
+		defaultLogger.zap.Info(defaultLogger.parse(data...))
+	}
 }
 
 func Warn(data ...any) {
-	defaultLogger.Warn(data...)
+	if defaultLogger.IsWarn() {
+		defaultLogger.zap.Warn(defaultLogger.parse(data...))
+	}
 }
 
 func Error(data ...any) {
-	defaultLogger.Error(data...)
+	if defaultLogger.IsError() {
+		defaultLogger.zap.Error(defaultLogger.parse(data...))
+	}
 }
 
 func Fatal(data ...any) {
-	defaultLogger.Fatal(data...)
+	if defaultLogger.IsFatal() {
+		defaultLogger.zap.Fatal(defaultLogger.parse(data...))
+	}
 }
-
 
 func IsDev() bool {
 	return defaultLogger.IsDev()
