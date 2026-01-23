@@ -207,10 +207,6 @@ func (logger *Logger) Sub(level string) *Logger {
 	}
 }
 
-func (logger *Logger) Print() {
-	logger.Info("Level: ", logger.Level(), ", Transform: ", logger.transform)
-}
-
 func (logger *Logger) Sync() {
 	_ = logger.zap.Sync()
 }
