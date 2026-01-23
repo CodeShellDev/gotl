@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"image/color"
 	"strconv"
 	"strings"
@@ -80,7 +79,16 @@ func New(level string, options Options) (*Logger, error) {
 
 func modifyCaller(encoder zapcore.CallerEncoder) zapcore.CallerEncoder {
 	return func(caller zapcore.EntryCaller, pae zapcore.PrimitiveArrayEncoder) {
-		fmt.Println(caller.File, caller.Function, caller.Line)
+		path := caller.File
+
+		i := strings.Index(path, "@")
+		if i != -1 {
+			// find and remove @X.Y.Z
+			slashI := strings.Index(path[i:], "/")
+			if slashI != -1 {
+				path = path[:i] + path[i+slashI:]
+			}
+		}
 
 		encoder(caller, pae)
 	}
