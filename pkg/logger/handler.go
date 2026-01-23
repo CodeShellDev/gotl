@@ -16,7 +16,7 @@ type Logger struct {
 	zap			*zap.Logger
 	level		*zap.AtomicLevel
 	options		Options
-	transform	func(in string) string
+	transform	func(content string) string
 }
 
 type Options struct {
@@ -134,7 +134,11 @@ func format(data ...any) string {
 }
 
 func transform(content string, fn func(in string) string) string {
-	return fn(content)
+	if fn != nil {
+		return fn(content)
+	}
+
+	return content
 }
 
 func Init(level string) error {
