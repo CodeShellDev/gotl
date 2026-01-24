@@ -364,16 +364,18 @@ func joinPaths(p ...string) string {
 }
 
 func GetValueWithSource(source, parent string, valueMap map[string]string) string {
-	value, exists := valueMap[source]
+	if parent == "" {
+		value, exists := valueMap["." + source]
 
-	if exists {
-		return value
+		if exists {
+			return value
+		}
 	}
 
 	base, ok := strings.CutPrefix(source, parent + ".")
 
 	if ok {
-		value, exists = valueMap[base]
+		value, exists := valueMap[base]
 
 		if exists {
 			return value
@@ -393,7 +395,6 @@ func parseTagPart(part string) ([]string, string) {
 	if exists {
 		for _, search := range searchList {
 			search = strings.TrimSpace(search)
-			search = strings.TrimPrefix(search, ".")
 
 			s = append(s, search)
 		}
