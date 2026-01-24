@@ -253,23 +253,41 @@ func (s StyledTextBlockSegment) Width() int {
 	return m
 }
 
-var NamedColors = map[string]Color {
-	"black": Basic(Black),
-	"red": Basic(Red),
-	"green": Basic(Green),
-	"yellow": Basic(Yellow),
-	"blue": Basic(Blue),
+var NamedColors = map[string]Color{
+	// Standard 8
+	"black":   Basic(Black),
+	"red":     Basic(Red),
+	"green":   Basic(Green),
+	"yellow":  Basic(Yellow),
+	"blue":    Basic(Blue),
 	"magenta": Basic(Magenta),
-	"cyan": Basic(Cyan),
-	"white": Basic(White),
-	"bright_black": Basic(BrightBlack),
-	"bright_red": Basic(BrightRed),
-	"bright_green": Basic(BrightGreen),
-	"bright_yellow": Basic(BrightYellow),
-	"bright_blue": Basic(BrightBlue),
+	"cyan":    Basic(Cyan),
+	"white":   Basic(White),
+
+	// Bright 8
+	"bright_black":   Basic(BrightBlack),
+	"bright_red":     Basic(BrightRed),
+	"bright_green":   Basic(BrightGreen),
+	"bright_yellow":  Basic(BrightYellow),
+	"bright_blue":    Basic(BrightBlue),
 	"bright_magenta": Basic(BrightMagenta),
-	"bright_cyan": Basic(BrightCyan),
-	"bright_white": Basic(BrightWhite),
+	"bright_cyan":    Basic(BrightCyan),
+	"bright_white":   Basic(BrightWhite),
+
+	// Extended colors (RGB)
+	"orange":  RGBColor(255, 165, 0),
+	"pink":    RGBColor(255, 192, 203),
+	"purple":  RGBColor(128, 0, 128),
+	"teal":    RGBColor(0, 128, 128),
+	"lime":    RGBColor(0, 255, 0),
+	"navy":    RGBColor(0, 0, 128),
+	"maroon":  RGBColor(128, 0, 0),
+	"olive":   RGBColor(128, 128, 0),
+	"silver":  RGBColor(192, 192, 192),
+	"gray":    RGBColor(128, 128, 128),
+	"fuchsia": RGBColor(255, 0, 255),
+	"aqua":    RGBColor(0, 255, 255),
+	"gold":    RGBColor(255, 215, 0),
 }
 
 func parseStyleColor(color string) Color {
