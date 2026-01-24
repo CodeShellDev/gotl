@@ -206,7 +206,7 @@ func TestTransform(t *testing.T) {
 		},
 		OnUse: map[string]func(source string, target configutils.TransformTarget){
 			"test": func(source string, target configutils.TransformTarget) {
-				fmt.Println(source, target)
+				fmt.Println("test() on", source)
 			},
 		},
 	}

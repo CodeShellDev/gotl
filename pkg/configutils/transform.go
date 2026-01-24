@@ -218,11 +218,13 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 				target.OnUse = "default"
 			}
 
-			onUseList := strings.SplitSeq(target.OnUse, ",")
+			onUseMap := ParseTag(target.OnUse)
+
+			onUse := GetValueWithSource(match, target.Parent, onUseMap)
+
+			onUseList := strings.SplitSeq(onUse, ",")
 			for fnName := range onUseList {
 				fnName = strings.TrimSpace(fnName)
-
-				fnName = GetTagValueWithSource(match, fnName, target.Parent)
 
 				if fnName == "" {
 					continue
@@ -361,32 +363,62 @@ func joinPaths(p ...string) string {
 	return strings.Join(p, DELIM)
 }
 
-func GetTagValueWithSource(source, key, keyParent string) string {
-	s, fnName, exists := strings.Cut(key, ">>")
+func GetValueWithSource(source, parent string, valueMap map[string]string) string {
+	value, exists := valueMap[source]
 
-	searchList := strings.Split(s, ",")
+	if exists {
+		return value
+	}
+
+	base, ok := strings.CutPrefix(source, parent + ".")
+
+	if ok {
+		value, exists = valueMap[base]
+
+		if exists {
+			return value
+		}
+	}
+
+	return valueMap["*"]
+}
+
+func parseTagPart(part string) ([]string, string) {
+	s := []string{}
+	
+	str, value, exists := strings.Cut(part, ">>")
+
+	searchList := strings.Split(str, ",")
 
 	if exists {
 		for _, search := range searchList {
-			if strings.HasPrefix(search, ".") {
-				search = search[1:]
-			} else {
-				s, exists := strings.CutPrefix(source, keyParent + ".")
+			search = strings.TrimSpace(search)
+			search = strings.TrimPrefix(search, ".")
 
-				if !exists {
-					return ""
-				}
-
-				source = s
-			}
-
-			if search == source {
-				return fnName
-			}
+			s = append(s, search)
 		}
 
-		return ""
+		return s, value
 	}
 
-	return key
+	return []string{}, part
+}
+
+func ParseTag(tag string) map[string]string {
+	out := map[string]string{}
+	parts := strings.Split(tag, "|")
+
+	for _, part := range parts {
+		keys, value := parseTagPart(part)
+
+		if len(keys) == 0 {
+			out["*"] = value
+		}
+
+		for _, key := range keys {
+			out[key] = value
+		}
+	}
+
+	return out
 }
