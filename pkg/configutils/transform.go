@@ -1,7 +1,6 @@
 package configutils
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -223,7 +222,6 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			for fnName := range onUseList {
 				fnName = strings.TrimSpace(fnName)
 
-				fmt.Println(parent)
 				fnName = GetTagValueWithSource(match, fnName, target.Parent)
 
 				if fnName == "" {
