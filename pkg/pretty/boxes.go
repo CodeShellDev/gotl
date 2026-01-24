@@ -274,20 +274,25 @@ var NamedColors = map[string]Color{
 	"bright_cyan":    Basic(BrightCyan),
 	"bright_white":   Basic(BrightWhite),
 
-	// Extended colors (RGB)
-	"orange":  RGBColor(255, 165, 0),
-	"pink":    RGBColor(255, 192, 203),
-	"purple":  RGBColor(128, 0, 128),
-	"teal":    RGBColor(0, 128, 128),
-	"lime":    RGBColor(0, 255, 0),
-	"navy":    RGBColor(0, 0, 128),
-	"maroon":  RGBColor(128, 0, 0),
-	"olive":   RGBColor(128, 128, 0),
-	"silver":  RGBColor(192, 192, 192),
-	"gray":    RGBColor(128, 128, 128),
-	"fuchsia": RGBColor(255, 0, 255),
-	"aqua":    RGBColor(0, 255, 255),
-	"gold":    RGBColor(255, 215, 0),
+	// Common extended colors (RGB)
+	"orange":       RGBColor(255, 165, 0),
+	"pink":         RGBColor(255, 192, 203),
+	"purple":       RGBColor(128, 0, 128),
+	"teal":         RGBColor(0, 128, 128),
+	"lime":         RGBColor(0, 255, 0),
+	"brown":        RGBColor(165, 42, 42),
+	"gray":         RGBColor(128, 128, 128),
+	"gold":         RGBColor(255, 215, 0),
+
+	// Bright colors (RGB)
+	"bright_orange": RGBColor(255, 200, 0),
+	"bright_pink":  RGBColor(255, 215, 230),
+	"bright_purple": RGBColor(180, 0, 180),
+	"bright_teal":  RGBColor(0, 200, 200),
+	"bright_lime":  RGBColor(128, 255, 128),
+	"bright_brown": RGBColor(210, 105, 30),
+	"bright_gray":  RGBColor(180, 180, 180),
+	"bright_gold":  RGBColor(255, 235, 128),
 }
 
 func parseStyleColor(color string) Color {
