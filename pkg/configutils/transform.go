@@ -362,23 +362,27 @@ func joinPaths(p ...string) string {
 }
 
 func GetTagValueWithSource(source, key, keyParent string) string {
-	search, fnName, exists := strings.Cut(key, ">>")
+	s, fnName, exists := strings.Cut(key, ">>")
+
+	searchList := strings.Split(s, ",")
 
 	if exists {
-		if strings.HasPrefix(search, ".") {
-			search = search[1:]
-		} else {
-			s, exists := strings.CutPrefix(source, keyParent + ".")
+		for _, search := range searchList {
+			if strings.HasPrefix(search, ".") {
+				search = search[1:]
+			} else {
+				s, exists := strings.CutPrefix(source, keyParent + ".")
 
-			if !exists {
-				return ""
+				if !exists {
+					return ""
+				}
+
+				source = s
 			}
 
-			source = s
-		}
-
-		if search == source {
-			return fnName
+			if search == source {
+				return fnName
+			}
 		}
 
 		return ""
