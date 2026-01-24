@@ -1,6 +1,7 @@
 package pretty
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -63,7 +64,7 @@ func (c ANSI256) background() string {
 
 
 type RGB struct {
-	R, G, B uint8
+	R, G, B	uint8
 }
 
 func RGBColor(r, g, b uint8) RGB {
@@ -86,10 +87,12 @@ func (c RGB) background() string {
 
 
 type Style struct {
-	Foreground	Color
-	Background  Color
-	Bold   		bool
-	Italic		bool
+	Foreground		Color
+	Background		Color
+	Bold   			bool
+	Italic			bool
+	Underline		bool
+	Strikethrough	bool
 }
 
 func (s1 Style) Combine(s2 Style) Style {
@@ -117,6 +120,12 @@ func (s Style) ansi() string {
 	if s.Italic {
 		codes = append(codes, "3")
 	}
+	if s.Underline {
+		codes = append(codes, "4")
+	}
+	if s.Strikethrough {
+		codes = append(codes, "9")
+	}
 	if s.Foreground != nil {
 		codes = append(codes, s.Foreground.foreground())
 	}
@@ -142,8 +151,8 @@ type Inline interface {
 
 
 type Span struct {
-	Text  string
-	Style Style
+	Text	string
+	Style	Style
 }
 
 func (s Span) Width() int { return runewidth.StringWidth(s.Text) }
@@ -193,8 +202,8 @@ func (seg InlineSegment) Render(base Style, width int) []string {
 
 
 type TextBlockSegment struct {
-	Text  string
-	Style Style
+	Text	string
+	Style	Style
 }
 
 func (s TextBlockSegment) Width() int {
@@ -220,6 +229,154 @@ func (s TextBlockSegment) Render(base Style, width int) []string {
 	}
 
 	return result
+}
+
+
+type StyledTextBlockSegment struct {
+	Raw	string
+}
+
+var tagRe = regexp.MustCompile(`\{/?[^\}]*\}`)
+
+func (s StyledTextBlockSegment) Width() int {
+	m := 0
+	lines := strings.SplitSeq(s.Raw, "\n")
+	for line := range lines {
+		// strip all { } tags
+		cleaned := tagRe.ReplaceAllString(line, "")
+
+		w := visibleWidth(cleaned)
+
+		m = max(m, w)
+	}
+
+	return m
+}
+
+var NamedColors = map[string]Color {
+	"black": Basic(Black),
+	"red": Basic(Red),
+	"green": Basic(Green),
+	"yellow": Basic(Yellow),
+	"blue": Basic(Blue),
+	"magenta": Basic(Magenta),
+	"cyan": Basic(Cyan),
+	"white": Basic(White),
+	"bright_black": Basic(BrightBlack),
+	"bright_red": Basic(BrightRed),
+	"bright_green": Basic(BrightGreen),
+	"bright_yellow": Basic(BrightYellow),
+	"bright_blue": Basic(BrightBlue),
+	"bright_magenta": Basic(BrightMagenta),
+	"bright_cyan": Basic(BrightCyan),
+	"bright_white": Basic(BrightWhite),
+}
+
+func parseStyleColor(color string) Color {
+	switch {
+	case strings.HasPrefix(color, "rgb(") && strings.HasSuffix(color, ")"):
+		var r, g, b uint8
+
+		fmt.Sscanf(color, "rgb(%d,%d,%d)", &r, &g, &b)
+
+		return RGBColor(r, g, b)
+	case strings.HasPrefix(color, "ansi(") && strings.HasSuffix(color, ")"):
+		var n int
+
+		fmt.Sscanf(color, "ansi(%d)", &n)
+
+		return ANSI256(n)
+	default:
+		return NamedColors[color]
+	}
+}
+
+func parseStyleTag(tag string) Style {
+	s := Style{}
+
+	parts := strings.Split(tag, ",")
+
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		switch p {
+		case "/":
+			return s
+		case "b", "bold":
+			s.Bold = true
+		case "i", "italic":
+			s.Italic = true
+		case "u", "underline":
+			s.Underline = true
+		case "s", "strikethrough":
+			s.Strikethrough = true
+		default:
+			switch {
+			case strings.HasPrefix(p, "fg="):
+				s.Foreground = parseStyleColor(p[3:])
+			case strings.HasPrefix(p, "bg="):
+				s.Background = parseStyleColor(p[3:])
+			}
+		}
+	}
+
+	return s
+}
+
+func renderStyledText(input string) string {
+	var out strings.Builder
+	stack := []Style{}
+
+	for i := 0; i < len(input); {
+		if input[i] == '{' {
+			if i + 2 < len(input) && input[i + 1] == '/' && input[i + 2] == '}' {
+				if len(stack) > 0 {
+					stack = stack[:len(stack)-1]
+				}
+
+				out.WriteString(reset())
+
+				for _, s := range stack {
+					out.WriteString(s.ansi())
+				}
+
+				i += 3
+				continue
+			}
+
+			closingIndex := strings.IndexByte(input[i:], '}')
+			if closingIndex == -1 {
+				// invalid tag -> take literal {
+				out.WriteByte(input[i])
+
+				i++
+				continue
+			}
+
+			tag := input[i + 1 : i + closingIndex]
+			
+			style := parseStyleTag(tag)
+			stack = append(stack, style)
+
+			out.WriteString(style.ansi())
+
+			i += closingIndex + 1
+		} else {
+			out.WriteByte(input[i])
+			i++
+		}
+	}
+
+	out.WriteString(reset())
+	return out.String()
+}
+
+
+func (s StyledTextBlockSegment) Render(base Style, width int) []string {
+	styled := renderStyledText(s.Raw)
+
+	lines := strings.Split(styled, "\n")
+
+	return lines
 }
 
 
