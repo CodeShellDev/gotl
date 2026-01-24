@@ -222,7 +222,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			for fnName := range onUseList {
 				fnName = strings.TrimSpace(fnName)
 
-				fnName = getFuncNameWithSource(match, parent, fnName, target.Parent)
+				fnName = GetTagValueWithSource(match, parent, fnName, target.Parent)
 
 				if fnName == "" {
 					continue
@@ -361,7 +361,7 @@ func joinPaths(p ...string) string {
 	return strings.Join(p, DELIM)
 }
 
-func getFuncNameWithSource(source, parent, key, keyParent string) string {
+func GetTagValueWithSource(source, parent, key, keyParent string) string {
 	search, fnName, exists := strings.Cut(key, ">>")
 
 	if exists {
