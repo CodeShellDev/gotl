@@ -364,6 +364,10 @@ func joinPaths(p ...string) string {
 }
 
 func GetValueWithSource(source, parent string, valueMap map[string]string) string {
+	if !strings.HasPrefix(source, parent) {
+		parent = ""
+	}
+
 	if parent == "" {
 		value, exists := valueMap["." + source]
 
@@ -390,10 +394,10 @@ func parseTagPart(part string) ([]string, string) {
 	
 	str, value, exists := strings.Cut(part, ">>")
 
-	searchList := strings.Split(str, ",")
+	searchList := strings.SplitSeq(str, ",")
 
 	if exists {
-		for _, search := range searchList {
+		for search := range searchList {
 			search = strings.TrimSpace(search)
 
 			s = append(s, search)
@@ -407,9 +411,9 @@ func parseTagPart(part string) ([]string, string) {
 
 func ParseTag(tag string) map[string]string {
 	out := map[string]string{}
-	parts := strings.Split(tag, "|")
+	parts := strings.SplitSeq(tag, "|")
 
-	for _, part := range parts {
+	for part := range parts {
 		keys, value := parseTagPart(part)
 
 		if len(keys) == 0 {
