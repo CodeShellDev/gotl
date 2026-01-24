@@ -1,6 +1,7 @@
 package configutils
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -222,7 +223,8 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			for fnName := range onUseList {
 				fnName = strings.TrimSpace(fnName)
 
-				fnName = GetTagValueWithSource(match, parent, fnName, target.Parent)
+				fmt.Println(parent)
+				fnName = GetTagValueWithSource(match, fnName, target.Parent)
 
 				if fnName == "" {
 					continue
@@ -361,13 +363,13 @@ func joinPaths(p ...string) string {
 	return strings.Join(p, DELIM)
 }
 
-func GetTagValueWithSource(source, parent, key, keyParent string) string {
+func GetTagValueWithSource(source, key, keyParent string) string {
 	search, fnName, exists := strings.Cut(key, ">>")
 
 	if exists {
 		if strings.HasPrefix(search, ".") {
 			search = search[1:]
-		} else if parent != "" {
+		} else {
 			s, exists := strings.CutPrefix(source, keyParent + ".")
 
 			if !exists {
@@ -375,8 +377,6 @@ func GetTagValueWithSource(source, parent, key, keyParent string) string {
 			}
 
 			source = s
-		} else {
-			return ""
 		}
 
 		if search == source {
