@@ -7,6 +7,7 @@ import (
 	"io"
 	"maps"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -117,6 +118,17 @@ func ParseHeaders(headers map[string][]string) map[string]any {
 	}
 
 	return generic
+}
+
+// Outputs a URL object with fields populated from the request
+func ParseRequestURL(req *http.Request) (*url.URL, error) {
+	scheme := "http"
+
+	if req.TLS != nil {
+		scheme = "https"
+	}
+
+	return url.Parse(scheme + "://" + req.Host + req.URL.RequestURI())
 }
 
 // Get body from request
