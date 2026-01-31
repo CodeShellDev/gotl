@@ -57,6 +57,30 @@ func (body *Body) Write(req *http.Request) error {
 	return nil
 }
 
+// Write body into response
+func (body *Body) WriteRes(res *http.Response) error {
+	newBody, err := CreateBody(body.Data)
+
+	if err != nil {
+		return err
+	}
+
+	*body = newBody
+
+	bodyLength := len(body.Raw)
+
+	res.ContentLength = int64(bodyLength)
+	res.Header.Set("Content-Length", strconv.Itoa(bodyLength))
+
+	if !body.Empty {
+		res.Header.Set("Content-Type", "application/json")
+	}
+
+	res.Body = io.NopCloser(bytes.NewReader(body.Raw))
+
+	return nil
+}
+
 // Create new body with data
 func CreateBody(data map[string]any) (Body, error) {
 	if len(data) <= 0 {
@@ -82,8 +106,8 @@ func CreateBody(data map[string]any) (Body, error) {
 }
 
 // Read body from request
-func ReadBody(req *http.Request) ([]byte, error) {
-	bodyBytes, err := io.ReadAll(io.LimitReader(req.Body, 5<<20))
+func ReadReqBody(req *http.Request) ([]byte, error) {
+	bodyBytes, err := readBodyBytes(req.Body)
 
 	req.Body.Close()
 
@@ -96,11 +120,39 @@ func ReadBody(req *http.Request) ([]byte, error) {
 	return bodyBytes, nil
 }
 
+// Read body from response
+func ReadResBody(res *http.Response) ([]byte, error) {
+	bodyBytes, err := readBodyBytes(res.Body)
+
+	res.Body.Close()
+
+	res.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bodyBytes, nil
+}
+
+func readBodyBytes(body io.Reader) ([]byte, error) {
+	return io.ReadAll(io.LimitReader(body, 5<<20))
+}
+
 // Get headers from request
 func GetReqHeaders(req *http.Request) map[string][]string {
 	data := map[string][]string{}
 
 	maps.Copy(data, req.Header)
+
+	return data
+}
+
+// Get headers from response
+func GetResHeaders(res *http.Response) map[string][]string {
+	data := map[string][]string{}
+
+	maps.Copy(data, res.Header)
 
 	return data
 }
@@ -121,7 +173,7 @@ func ParseHeaders(headers map[string][]string) map[string]any {
 }
 
 // Outputs a URL object with fields populated from the request
-func ParseRequestURL(req *http.Request) (*url.URL, error) {
+func ParseReqURL(req *http.Request) (*url.URL, error) {
 	scheme := "http"
 
 	if req.TLS != nil {
@@ -133,7 +185,7 @@ func ParseRequestURL(req *http.Request) (*url.URL, error) {
 
 // Get body from request
 func GetReqBody(req *http.Request) (Body, error) {
-	bytes, err := ReadBody(req)
+	bytes, err := ReadReqBody(req)
 
 	var isEmpty bool
 
@@ -147,7 +199,9 @@ func GetReqBody(req *http.Request) (Body, error) {
 
 	var data map[string]any
 
-	switch getBodyType(req) {
+	contentType := req.Header.Get("Content-Type")
+
+	switch getBodyType(contentType) {
 	case Json:
 		data, err = getJsonData(bytes)
 
@@ -171,9 +225,50 @@ func GetReqBody(req *http.Request) (Body, error) {
 	}, nil
 }
 
-func getBodyType(req *http.Request) BodyType {
-	contentType := req.Header.Get("Content-Type")
+// Get body from response
+func GetResBody(res *http.Response) (Body, error) {
+	bytes, err := ReadResBody(res)
 
+	var isEmpty bool
+
+	if err != nil {
+		return Body{Empty: true}, err
+	}
+
+	if len(bytes) <= 0 {
+		return Body{Empty: true}, nil
+	}
+
+	var data map[string]any
+
+	contentType := res.Header.Get("Content-Type")
+
+	switch getBodyType(contentType) {
+	case Json:
+		data, err = getJsonData(bytes)
+
+		if err != nil {
+			return Body{Empty: true}, err
+		}
+	case Form:
+		data, err = getFormData(bytes)
+
+		if err != nil {
+			return Body{Empty: true}, err
+		}
+	}
+
+	isEmpty = len(data) <= 0
+
+	return Body{
+		Raw:   bytes,
+		Data:  data,
+		Empty: isEmpty,
+	}, nil
+}
+
+
+func getBodyType(contentType string) BodyType {
 	switch {
 	case strings.HasPrefix(contentType, "application/json"):
 		return Json
