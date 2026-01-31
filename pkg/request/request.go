@@ -52,6 +52,8 @@ func (body *Body) Write(w http.ResponseWriter) error {
 	}
 
 	w.Write(body.Raw)
+
+	return nil
 }
 
 // Update body in request
