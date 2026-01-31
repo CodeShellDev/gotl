@@ -33,8 +33,29 @@ func (body Body) ToString() string {
 	return string(body.Raw)
 }
 
-// Write body into request
-func (body *Body) Write(req *http.Request) error {
+// Write body into response writer
+func (body *Body) Write(w http.ResponseWriter) error {
+	newBody, err := CreateBody(body.Data)
+
+	if err != nil {
+		return err
+	}
+
+	*body = newBody
+
+	bodyLength := len(body.Raw)
+
+	w.Header().Set("Content-Length", strconv.Itoa(bodyLength))
+
+	if !body.Empty {
+		w.Header().Set("Content-Type", "application/json")
+	}
+
+	w.Write(body.Raw)
+}
+
+// Update body in request
+func (body *Body) UpdateReq(req *http.Request) error {
 	newBody, err := CreateBody(body.Data)
 
 	if err != nil {
@@ -57,8 +78,8 @@ func (body *Body) Write(req *http.Request) error {
 	return nil
 }
 
-// Write body into response
-func (body *Body) WriteRes(res *http.Response) error {
+// Update body in response
+func (body *Body) UpdateRes(res *http.Response) error {
 	newBody, err := CreateBody(body.Data)
 
 	if err != nil {
