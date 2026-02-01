@@ -6,11 +6,11 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 )
 
-type NullSentinel struct{}
+type NilSentinel struct{}
 
-func NullSentinelHook(_, _ reflect.Type, data any) (any, error) {
+func NilSentinelHook(_, _ reflect.Type, data any) (any, error) {
     if data == nil {
-        return NullSentinel{}, nil
+        return NilSentinel{}, nil
     }
     return data, nil
 }
@@ -55,7 +55,7 @@ func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
 func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
     optional.Set = true
 
-    _, ok := raw.(NullSentinel)
+    _, ok := raw.(NilSentinel)
     if ok {
         // explici null
         return nil
