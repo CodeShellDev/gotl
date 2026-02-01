@@ -1,7 +1,6 @@
 package configutils
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -39,6 +38,10 @@ func Flatten(prefix string, v any, out map[string]any) {
 		}
 
 	case []any:
+		if len(asserted) == 0 {
+			out[prefix] = asserted
+			return
+		}
 		for i, value := range asserted {
 			key := joinPaths(prefix, strconv.Itoa(i))
 
@@ -143,17 +146,11 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, opt
 	flat := map[string]any{}
 	Flatten("", raw, flat)
 
-	fmt.Println("FLATTEN:\n", flat)
-
 	targets := BuildTransformMap(id, schema)
 
 	transformed := ApplyTransforms(flat, targets, options)
 
-	fmt.Println("TRANSFORMED:\n", transformed)
-
 	result := Unflatten(transformed)
-
-	fmt.Println("UNFLATTEN:\n", result)
 
 	config.Layer.Delete("")
 	config.Load(result, path)
