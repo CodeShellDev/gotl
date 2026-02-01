@@ -3,6 +3,7 @@ package configutils
 import (
 	"fmt"
 
+	"github.com/codeshelldev/gotl/pkg/jsonutils"
 	"github.com/go-viper/mapstructure/v2"
 )
 
@@ -46,19 +47,8 @@ func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
 func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
     optional.Set = true
 
-    _, ok := raw.([]string)
-
-    if ok {
-        fmt.Println(optional, raw)
-    }
-
-    if raw == nil {
-        var zero T
-
-        optional.Value = zero
-
-        return nil
-    }
+    fmt.Print("JSON:\n", jsonutils.Pretty(optional.Value), jsonutils.Pretty(raw))
+    fmt.Print("GO:\n", optional.Value, raw)
 
     return mapstructure.Decode(raw, &optional.Value)
 }
