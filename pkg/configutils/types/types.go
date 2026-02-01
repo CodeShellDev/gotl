@@ -55,5 +55,11 @@ func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
 func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
     optional.Set = true
 
+    _, ok := raw.(NullSentinel)
+    if ok {
+        // explici null
+        return nil
+    }
+
     return mapstructure.Decode(raw, &optional.Value)
 }
