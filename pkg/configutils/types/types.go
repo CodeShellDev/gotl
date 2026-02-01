@@ -61,5 +61,5 @@ func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
         return nil
     }
 
-    return mapstructure.Decode(raw, &optional.Value)
+    return mapstructure.Decode(raw, optional.Value)
 }
