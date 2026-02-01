@@ -2,9 +2,7 @@ package configutils
 
 import (
 	"fmt"
-
-	"github.com/codeshelldev/gotl/pkg/jsonutils"
-	"github.com/go-viper/mapstructure/v2"
+	"reflect"
 )
 
 type Opt[T any] struct {
@@ -44,11 +42,14 @@ func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
     return zero
 }
 
-func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
-    optional.Set = true
+func (optional *Opt[T]) DecodeHook(raw any) error {
+    value := reflect.ValueOf(raw)
+    valueType := reflect.ValueOf(&optional.Value).Elem()
 
-    fmt.Print("JSON:\n", jsonutils.Pretty(optional.Value), jsonutils.Pretty(raw))
-    fmt.Print("GO:\n", optional.Value, raw)
-
-    return mapstructure.Decode(raw, &optional.Value)
+    if value.Type().ConvertibleTo(valueType.Type()) {
+        valueType.Set(value.Convert(valueType.Type()))
+        optional.Set = true
+        return nil
+    }
+    return fmt.Errorf("cannot decode %v into Opt[%T]", raw, optional.Value)
 }
