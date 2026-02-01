@@ -1,6 +1,7 @@
 package configutils
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -142,11 +143,17 @@ func (config Config) ApplyTransformFuncs(id string, schema any, path string, opt
 	flat := map[string]any{}
 	Flatten("", raw, flat)
 
+	fmt.Println("FLATTEN:\n", flat)
+
 	targets := BuildTransformMap(id, schema)
 
 	transformed := ApplyTransforms(flat, targets, options)
 
+	fmt.Println("TRANSFORMED:\n", transformed)
+
 	result := Unflatten(transformed)
+
+	fmt.Println("UNFLATTEN:\n", result)
 
 	config.Layer.Delete("")
 	config.Load(result, path)
