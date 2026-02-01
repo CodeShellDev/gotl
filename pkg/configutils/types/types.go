@@ -9,6 +9,7 @@ type Opt[T any] struct {
 	Value	T
 }
 
+// Returns optional.Value (if set) or fallback
 func (optional Opt[T]) ValueOrFallback(fallback T) T {
     if optional.Set {
         return optional.Value
@@ -17,6 +18,7 @@ func (optional Opt[T]) ValueOrFallback(fallback T) T {
     return fallback
 }
 
+// Returns optional.Value (if set) or fallback.Value
 func (optional Opt[T]) OptOrFallback(fallback Opt[T]) T {
     if optional.Set {
         return optional.Value
@@ -25,6 +27,7 @@ func (optional Opt[T]) OptOrFallback(fallback Opt[T]) T {
     return fallback.Value
 }
 
+// Returns optional.Value (if set) or fallback.Value (if set), else T empty is returned
 func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
     if optional.Set {
         return optional.Value
