@@ -9,12 +9,33 @@ type Opt[T any] struct {
 	Value	T
 }
 
-func (optional Opt[T]) ValueOr(fallback T) T {
+func (optional Opt[T]) ValueOrFallback(fallback T) T {
     if optional.Set {
         return optional.Value
     }
 
     return fallback
+}
+
+func (optional Opt[T]) OptOrFallback(fallback Opt[T]) T {
+    if optional.Set {
+        return optional.Value
+    }
+
+    return fallback.Value
+}
+
+func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
+    if optional.Set {
+        return optional.Value
+    }
+
+    if fallback.Set {
+        return fallback.Value
+    }
+
+    var zero T
+    return zero
 }
 
 func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
