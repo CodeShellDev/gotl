@@ -1,8 +1,6 @@
 package configutils
 
 import (
-	"fmt"
-
 	"github.com/go-viper/mapstructure/v2"
 )
 
@@ -44,9 +42,15 @@ func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
 }
 
 func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
-    fmt.Println(optional, raw)
-
     optional.Set = true
+
+    if raw == nil {
+        var zero T
+
+        optional.Value = zero
+
+        return nil
+    }
 
     return mapstructure.Decode(raw, &optional.Value)
 }
