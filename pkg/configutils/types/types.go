@@ -17,13 +17,13 @@ func NilSentinelHook(_, _ reflect.Type, data any) (any, error) {
 
 type Opt[T any] struct {
 	Set		bool
-	Value	T
+	Value	*T
 }
 
 // Returns optional.Value (if set) or fallback
 func (optional Opt[T]) ValueOrFallback(fallback T) T {
     if optional.Set {
-        return optional.Value
+        return *optional.Value
     }
 
     return fallback
@@ -32,20 +32,20 @@ func (optional Opt[T]) ValueOrFallback(fallback T) T {
 // Returns optional.Value (if set) or fallback.Value
 func (optional Opt[T]) OptOrFallback(fallback Opt[T]) T {
     if optional.Set {
-        return optional.Value
+        return *optional.Value
     }
 
-    return fallback.Value
+    return *fallback.Value
 }
 
 // Returns optional.Value (if set) or fallback.Value (if set), else T empty is returned
 func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
     if optional.Set {
-        return optional.Value
+        return *optional.Value
     }
 
     if fallback.Set {
-        return fallback.Value
+        return *fallback.Value
     }
 
     var zero T
@@ -61,5 +61,14 @@ func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
         return nil
     }
 
-    return mapstructure.Decode(raw, &optional.Value)
+    var value T
+
+    err := mapstructure.Decode(raw, &value)
+    if err != nil {
+        return err
+    }
+
+    optional.Value = &value
+
+    return nil
 }
