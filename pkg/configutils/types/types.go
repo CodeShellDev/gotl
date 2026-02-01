@@ -1,8 +1,7 @@
 package configutils
 
 import (
-	"fmt"
-	"reflect"
+	"github.com/go-viper/mapstructure/v2"
 )
 
 type Opt[T any] struct {
@@ -42,14 +41,8 @@ func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
     return zero
 }
 
-func (optional *Opt[T]) DecodeHook(raw any) error {
-    value := reflect.ValueOf(raw)
-    valueType := reflect.ValueOf(&optional.Value).Elem()
+func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
+    optional.Set = true
 
-    if value.Type().ConvertibleTo(valueType.Type()) {
-        valueType.Set(value.Convert(valueType.Type()))
-        optional.Set = true
-        return nil
-    }
-    return fmt.Errorf("cannot decode %v into Opt[%T]", raw, optional.Value)
+    return mapstructure.Decode(raw, &optional.Value)
 }
