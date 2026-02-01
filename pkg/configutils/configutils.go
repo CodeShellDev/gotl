@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	configutils "github.com/codeshelldev/gotl/pkg/configutils/types"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/providers/env/v2"
 	"github.com/knadh/koanf/providers/file"
@@ -174,6 +176,15 @@ func (config *Config) MergeLayers(layers ...*koanf.Koanf) error {
 	}
 
 	return nil
+}
+
+func (config *Config) Unmarshal(path string, schema any) error {
+	return config.Layer.UnmarshalWithConf(path, schema, koanf.UnmarshalConf{
+		DecoderConfig: &mapstructure.DecoderConfig{
+			DecodeNil: true,
+			DecodeHook: configutils.NullSentinelHook,
+		},
+	})
 }
 
 func watchFile(f *file.File, path string, loadFunc func(string)) {

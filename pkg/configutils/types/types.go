@@ -1,8 +1,19 @@
 package configutils
 
 import (
+	"reflect"
+
 	"github.com/go-viper/mapstructure/v2"
 )
+
+type NullSentinel struct{}
+
+func NullSentinelHook(_, _ reflect.Type, data any) (any, error) {
+    if data == nil {
+        return NullSentinel{}, nil
+    }
+    return data, nil
+}
 
 type Opt[T any] struct {
 	Set		bool
