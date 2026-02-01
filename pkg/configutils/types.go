@@ -4,12 +4,12 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 )
 
-type Optional[T any] struct {
+type Opt[T any] struct {
 	Set		bool
 	Value	T
 }
 
-func (optional Optional[T]) ValueOr(fallback T) T {
+func (optional Opt[T]) ValueOr(fallback T) T {
     if optional.Set {
         return optional.Value
     }
@@ -17,7 +17,7 @@ func (optional Optional[T]) ValueOr(fallback T) T {
     return fallback
 }
 
-func (optional *Optional[T]) UnmarshalMapstructure(raw any) error {
+func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
     optional.Set = true
 
     return mapstructure.Decode(raw, &optional.Value)
