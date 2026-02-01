@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	configutils "github.com/codeshelldev/gotl/pkg/configutils/types"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/providers/env/v2"
@@ -178,10 +179,14 @@ func (config *Config) MergeLayers(layers ...*koanf.Koanf) error {
 }
 
 func (config *Config) Unmarshal(path string, schema any) error {
+	return config.UnmarshalWithHooks(path, schema, configutils.NilSentinelHook)
+}
+
+func (config *Config) UnmarshalWithHooks(path string, schema any, hooks ...mapstructure.DecodeHookFunc) error {
 	return config.UnmarshalWith(path, schema, koanf.UnmarshalConf{
 		DecoderConfig: &mapstructure.DecoderConfig{
 			DecodeNil: true,
-			DecodeHook: mapstructure.ComposeDecodeHookFunc(mapstructure.StringToTimeDurationHookFunc()),
+			DecodeHook: mapstructure.ComposeDecodeHookFunc(hooks...),
 			Metadata:         nil,
 			WeaklyTypedInput: true,
 		},
