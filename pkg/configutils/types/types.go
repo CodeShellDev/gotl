@@ -57,7 +57,7 @@ func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
 
     _, ok := raw.(NilSentinel)
     if ok {
-        // explici null
+        // explicit null
         return nil
     }
 
