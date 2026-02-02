@@ -53,7 +53,7 @@ func (server *HttpServer) ListenAndServer() {
 		go func(s *http.Server, l net.Listener, p string) {
             defer wg.Done()
 
-			server.InfoLog.Output(2, "Listener on port " + port + " started")
+			server.InfoLog.Output(2, "listener on port " + port + " started")
 
 			server.Listeners[port] = s
 
