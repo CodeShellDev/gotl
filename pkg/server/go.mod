@@ -1,4 +1,4 @@
-module github.com/codeshelldev/gotl/pkg/serverutils
+module github.com/codeshelldev/gotl/pkg/server
 
 go 1.25.5
 
