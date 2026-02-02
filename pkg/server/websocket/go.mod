@@ -1,4 +1,4 @@
-module github.com/codeshelldev/gotl/pkg/server
+module github.com/codeshelldev/gotl/pkg/server/websocket
 
 go 1.25.5
 

@@ -1,4 +1,4 @@
-package server
+package httpserver
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-type Server struct {
+type HttpServer struct {
 	Host 		string
 	Ports 		[]string
 	Handler 	http.Handler
@@ -21,8 +21,8 @@ type Server struct {
 	InfoLog		*log.Logger
 }
 
-func Create(handler http.Handler, host string, ports ...string) *Server {
-	return &Server{
+func Create(handler http.Handler, host string, ports ...string) *HttpServer {
+	return &HttpServer{
 		Host: host,
 		Ports: ports,
 		Handler: handler,
@@ -30,7 +30,7 @@ func Create(handler http.Handler, host string, ports ...string) *Server {
 	}
 }
 
-func (server *Server) ListenAndServer() {
+func (server *HttpServer) ListenAndServer() {
     var wg sync.WaitGroup
     stopCh := make(chan struct{})
 
@@ -73,7 +73,7 @@ func (server *Server) ListenAndServer() {
 	<- stopCh
 }
 
-func (server *Server) Shutdown(ctx context.Context) error {
+func (server *HttpServer) Shutdown(ctx context.Context) error {
 	var errs []error
 
 	for port, s := range server.Listeners {
