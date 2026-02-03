@@ -112,6 +112,10 @@ func format(data ...any) string {
 			res += strconv.Itoa(int(value))
 		case int64:
 			res += strconv.Itoa(int(value))
+		case float32:
+			res += strconv.Itoa(int(value))
+		case float64:
+			res += strconv.Itoa(int(value))
 		case bool:
 			if value {
 				res += "true"
