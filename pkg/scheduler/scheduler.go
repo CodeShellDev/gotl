@@ -34,6 +34,10 @@ func New() *Scheduler {
 	}
 }
 
+func (scheduler *Scheduler) Len() int {
+	return scheduler.jobs.Len()
+}
+
 func (scheduler *Scheduler) AddAt(tm time.Time, fn func()) string {
 	return scheduler.add(tm, fn, nil)
 }
