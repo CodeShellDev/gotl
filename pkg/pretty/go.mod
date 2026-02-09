@@ -1,6 +1,6 @@
 module github.com/codeshelldev/gotl/pkg/pretty
 
-go 1.25.5
+go 1.25.6
 
 require github.com/mattn/go-runewidth v0.0.19
 

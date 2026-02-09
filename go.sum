@@ -1,11 +1,15 @@
 github.com/codeshelldev/gotl/pkg/configutils v0.0.4 h1:AHCCP+8FzFKP8lMtytWo98x0583bCPI7wykbw6z9pTs=
 github.com/codeshelldev/gotl/pkg/configutils v0.0.4/go.mod h1:WoWMBB8+84ePRnI2m+kbq1Rw8F/9iCWLHkVBsun3Qjc=
+github.com/codeshelldev/gotl/pkg/configutils v0.0.15 h1:VxaDvR5pjkc4zcxQ0EASnBQKUAs9WAKLAStMQq2yXlA=
+github.com/codeshelldev/gotl/pkg/configutils v0.0.15/go.mod h1:X7wY6s44k0Cxx2oMmJChogB1n1+oR+RqbzmQCCqnN5I=
 github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2 h1:ERsjkaWVrsyUZoEunCEeNYDXhuaIvoSetB8e/zI4Tqo=
 github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2/go.mod h1:oxgKaAoMu6iYVHfgR7AhkK22xbYx4K0KCkyVEfYVoWs=
 github.com/codeshelldev/gotl/pkg/query v0.0.3 h1:Zy8k0R5HcJS00OMPRHybgFEiwMg7ceLyv6bA0G7NOfs=
 github.com/codeshelldev/gotl/pkg/query v0.0.3/go.mod h1:kKaPOKXluIid3qeS7xzrmfq3NxIa8/PhKYHM6GRbwJw=
 github.com/codeshelldev/gotl/pkg/stringutils v0.0.3 h1:7k/HMnX7me8Kchm41I/M6dp3wXI0XORI3oyS87O0Viw=
 github.com/codeshelldev/gotl/pkg/stringutils v0.0.3/go.mod h1:/dWlzYoTj23LmpFs+Bpal4tfUDbOVeApIgkLv9gTgUE=
+github.com/codeshelldev/gotl/pkg/stringutils v0.0.6 h1:9PLmuQ86T4sqTdkJAbsdYsWcQhKlOVGPFbfUKYlEmeY=
+github.com/codeshelldev/gotl/pkg/stringutils v0.0.6/go.mod h1:/dWlzYoTj23LmpFs+Bpal4tfUDbOVeApIgkLv9gTgUE=
 github.com/codeshelldev/gotl/pkg/templating v0.0.3 h1:PAz6VN8yGBuZIdR/sDM+TmW1OFykl+I7/Zwa07uMgYA=
 github.com/codeshelldev/gotl/pkg/templating v0.0.3/go.mod h1:D+wxgsPSiq9HShEzv1mhYAjGJyasWgPoIu+nRk4TPqY=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
@@ -14,6 +18,8 @@ github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/go-viper/mapstructure/v2 v2.4.0 h1:EBsztssimR/CONLSZZ04E8qAkxNYq4Qp9LvH92wZUgs=
 github.com/go-viper/mapstructure/v2 v2.4.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
+github.com/go-viper/mapstructure/v2 v2.5.0 h1:vM5IJoUAy3d7zRSVtIwQgBj7BiWtMPfmPEgAXnvj1Ro=
+github.com/go-viper/mapstructure/v2 v2.5.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/knadh/koanf/maps v0.1.2 h1:RBfmAW5CnZT+PJ1CVc1QSJKf4Xu9kxfQgYVQSu8hpbo=
 github.com/knadh/koanf/maps v0.1.2/go.mod h1:npD/QZY3V6ghQDdcQzl1W4ICNVTkohC8E73eI2xW4yI=
 github.com/knadh/koanf/providers/confmap v1.0.0 h1:mHKLJTE7iXEys6deO5p6olAiZdG5zwp8Aebir+/EaRE=
@@ -24,6 +30,8 @@ github.com/knadh/koanf/providers/file v1.2.1 h1:bEWbtQwYrA+W2DtdBrQWyXqJaJSG3KrP
 github.com/knadh/koanf/providers/file v1.2.1/go.mod h1:bp1PM5f83Q+TOUu10J/0ApLBd9uIzg+n9UgthfY+nRA=
 github.com/knadh/koanf/v2 v2.3.0 h1:Qg076dDRFHvqnKG97ZEsi9TAg2/nFTa9hCdcSa1lvlM=
 github.com/knadh/koanf/v2 v2.3.0/go.mod h1:gRb40VRAbd4iJMYYD5IxZ6hfuopFcXBpc9bbQpZwo28=
+github.com/knadh/koanf/v2 v2.3.2 h1:Ee6tuzQYFwcZXQpc2MiVeC6qHMandf5SMUJJNoFp/c4=
+github.com/knadh/koanf/v2 v2.3.2/go.mod h1:gRb40VRAbd4iJMYYD5IxZ6hfuopFcXBpc9bbQpZwo28=
 github.com/mitchellh/copystructure v1.2.0 h1:vpKXTN4ewci03Vljg/q9QvCGUDttBOGBIa15WveJJGw=
 github.com/mitchellh/copystructure v1.2.0/go.mod h1:qLl+cE2AmVv+CoeAwDPye/v+N2HKCj9FbZEVFJRxO9s=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
@@ -34,5 +42,7 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 golang.org/x/sys v0.40.0 h1:DBZZqJ2Rkml6QMQsZywtnjnnGvHza6BTfYFWY9kjEWQ=
 golang.org/x/sys v0.40.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
+golang.org/x/sys v0.41.0 h1:Ivj+2Cp/ylzLiEU89QhWblYnOE9zerudt9Ftecq2C6k=
+golang.org/x/sys v0.41.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
