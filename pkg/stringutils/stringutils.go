@@ -61,7 +61,19 @@ func ToType(str string) any {
 		}
 	}
 
-	return str
+	// try bool
+	if !IsRuneEscaped(cleaned, 0) {
+		unescaped := UnescapeAll(cleaned)
+
+		switch (unescaped) {
+		case "true":
+			return true
+		case "false":
+			return false
+		}
+	}
+
+	return UnescapeAll(str)
 }
 
 // Removes single backslash escapes from the entire string (`\a` => `a`, `\\a` => `\a`)
