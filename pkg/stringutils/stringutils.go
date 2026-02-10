@@ -1,7 +1,6 @@
 package stringutils
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -45,7 +44,6 @@ func ToType(str string) any {
 	// try number
 	if !strings.HasPrefix(cleaned, "+") {
 		// number is not literal
-        fmt.Println(IsLogicalRuneEscaped(cleaned, 0))
 		if !IsLogicalRuneEscaped(cleaned, 0) {
 			unescaped := UnescapeAll(cleaned)
 
