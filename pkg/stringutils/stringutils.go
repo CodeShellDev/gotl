@@ -45,8 +45,8 @@ func ToType(str string) any {
 	// try number
 	if !strings.HasPrefix(cleaned, "+") {
 		// number is not literal
-        fmt.Println(IsRuneEscaped(cleaned, 0))
-		if !IsRuneEscaped(cleaned, 0) {
+        fmt.Println(IsLogicalRuneEscaped(cleaned, 0))
+		if !IsLogicalRuneEscaped(cleaned, 0) {
 			unescaped := UnescapeAll(cleaned)
 
 			intValue, intErr := strconv.Atoi(unescaped)
@@ -64,7 +64,7 @@ func ToType(str string) any {
 	}
 
 	// try bool
-	if !IsRuneEscaped(cleaned, 0) {
+	if !IsLogicalRuneEscaped(cleaned, 0) {
 		unescaped := UnescapeAll(cleaned)
 
 		switch (unescaped) {
@@ -174,13 +174,47 @@ func IsEnclosedByAndUnescaped(str string, charA, charB rune) bool {
 
 // Checks if the rune at index `pos` in `str` is escaped by a single backslash
 func IsRuneEscaped(str string, pos int) bool {
-    runes := []rune(str)
-    if pos <= 0 || pos >= len(runes) {
-        return false
-    }
+	runes := []rune(str)
+	if pos <= 0 || pos >= len(runes) {
+		return false
+	}
 
-    // Only consider the immediately preceding rune
-    return runes[pos - 1] == '\\' && (pos - 2 < 0 || runes[pos - 2] != '\\')
+	count := 0
+    
+	for i := pos - 1; i >= 0 && runes[i] == '\\'; i-- {
+		count++
+	}
+
+	return count % 2 == 1
+}
+
+// Checks escape status using logical index (backslashes do not contribute to index)
+func IsLogicalRuneEscaped(str string, logicalPos int) bool {
+	runes := []rune(str)
+	logical := 0
+
+	for raw := 0; raw < len(runes); raw++ {
+        // skip backslash
+		if runes[raw] == '\\' && raw + 1 < len(runes) && !IsRuneEscaped(str, raw) {
+			raw++
+            
+			if logical == logicalPos {
+				return true
+			}
+
+			logical++
+
+			continue
+		}
+
+		if logical == logicalPos {
+			return IsRuneEscaped(str, raw)
+		}
+
+		logical++
+	}
+
+	return false
 }
 
 // Checks if every occurrence of `char` in `str` is escaped by `\`
@@ -211,13 +245,6 @@ func HasUnescapedPrefix(str string, target rune) bool {
     return !IsRuneEscaped(str, 0)
 }
 
-// Checks if `char` needs escaping for regex
-func NeedsEscapeForRegex(char rune) bool {
-	special := `.+*?()|[]{}^$\\`
-
-	return strings.ContainsRune(special, char)
-}
-
 // Helper method for converting a (!unescaped) comma-separated string into string slices
 func ToArray(sliceStr string) []string {
     if sliceStr == "" {
@@ -228,7 +255,7 @@ func ToArray(sliceStr string) []string {
     var items []string
     var current []rune
 
-    for i := 0; i < len(runes); i++ {
+    for i := range runes {
         r := runes[i]
 
         if r == ',' && !IsRuneEscaped(sliceStr, i) {
