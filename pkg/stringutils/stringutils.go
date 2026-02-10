@@ -45,6 +45,7 @@ func ToType(str string) any {
 	// try number
 	if !strings.HasPrefix(cleaned, "+") {
 		// number is not literal
+        fmt.Println(IsRuneEscaped(cleaned, 0))
 		if !IsRuneEscaped(cleaned, 0) {
 			unescaped := UnescapeAll(cleaned)
 
@@ -63,7 +64,6 @@ func ToType(str string) any {
 	}
 
 	// try bool
-    fmt.Println(IsRuneEscaped(cleaned, 0))
 	if !IsRuneEscaped(cleaned, 0) {
 		unescaped := UnescapeAll(cleaned)
 
