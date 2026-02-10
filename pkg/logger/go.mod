@@ -3,7 +3,7 @@ module github.com/codeshelldev/gotl/pkg/logger
 go 1.25.6
 
 require (
-	github.com/codeshelldev/gotl/pkg/jsonutils v0.0.1
+	github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2
 	go.uber.org/zap v1.27.1
 )
 
