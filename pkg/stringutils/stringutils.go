@@ -1,6 +1,7 @@
 package stringutils
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -62,6 +63,7 @@ func ToType(str string) any {
 	}
 
 	// try bool
+    fmt.Println(IsRuneEscaped(cleaned, 0))
 	if !IsRuneEscaped(cleaned, 0) {
 		unescaped := UnescapeAll(cleaned)
 
