@@ -6,7 +6,7 @@ require (
 	github.com/codeshelldev/gotl/pkg/configutils v0.0.15
 	github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2
 	github.com/codeshelldev/gotl/pkg/query v0.0.3
-	github.com/codeshelldev/gotl/pkg/stringutils v0.0.6
+	github.com/codeshelldev/gotl/pkg/stringutils v0.0.7
 	github.com/codeshelldev/gotl/pkg/templating v0.0.3
 	github.com/knadh/koanf/v2 v2.3.2 // indirect
 )

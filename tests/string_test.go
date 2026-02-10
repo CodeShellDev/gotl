@@ -52,7 +52,7 @@ func TestStringEnclosement(t *testing.T) {
 }
 
 func TestStringToType(t *testing.T) {
-	str1 := `[item1\,item2]`
+	str1 := `[item1,item2]`
 
 	res1 := stringutils.ToType(str1)
 
@@ -74,5 +74,15 @@ func TestStringToType(t *testing.T) {
 
 	if reflect.TypeOf(res3) != reflect.TypeFor[map[string]any]() {
 		t.Error("Expected:", str3, "== map[string]any", "; Got:", str3, "==", reflect.TypeOf(res3))
+	}
+}
+
+func TestEscapedNumberToString(t *testing.T) {
+	str1 := `\123`
+
+	res1 := stringutils.ToType(str1)
+
+	if reflect.TypeOf(res1) != reflect.TypeFor[string]() {
+		t.Error("Expected:", str1, "== string", "; Got:", str1, "==", reflect.TypeOf(res1))
 	}
 }
