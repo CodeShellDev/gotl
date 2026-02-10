@@ -6,5 +6,5 @@ require github.com/codeshelldev/gotl/pkg/query v0.0.3
 
 require (
 	github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2 // indirect
-	github.com/codeshelldev/gotl/pkg/stringutils v0.0.7 // indirect
+	github.com/codeshelldev/gotl/pkg/stringutils v0.0.8 // indirect
 )
