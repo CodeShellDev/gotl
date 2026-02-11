@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"maps"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -166,7 +165,7 @@ func readBodyBytes(body io.Reader) ([]byte, error) {
 func GetReqHeaders(req *http.Request) map[string][]string {
 	data := map[string][]string{}
 
-	maps.Copy(data, req.Header)
+	CopyHeaders(data, req.Header)
 
 	return data
 }
@@ -175,7 +174,7 @@ func GetReqHeaders(req *http.Request) map[string][]string {
 func GetResHeaders(res *http.Response) map[string][]string {
 	data := map[string][]string{}
 
-	maps.Copy(data, res.Header)
+	CopyHeaders(data, res.Header)
 
 	return data
 }
@@ -193,6 +192,44 @@ func ParseHeaders(headers map[string][]string) map[string]any {
 	}
 
 	return generic
+}
+
+// Copies source headers into destination (deep copy)
+func CopyHeaders(dest map[string][]string, source map[string][]string) {
+	for k, vs := range source {
+		copied := make([]string, len(vs))
+
+		copy(copied, vs)
+
+		dest[k] = copied
+	}
+}
+
+// Copies source map into destination (deep copy)
+func CopyMap(dest map[string]any, source map[string]any) {
+	for k, v := range source {
+		dest[k] = deepCopyAny(v)
+	}
+}
+
+func deepCopyAny(value any) any {
+    switch val := value.(type) {
+    case map[string]any:
+        copyMap := make(map[string]any, len(val))
+
+        CopyMap(copyMap, val)
+
+        return copyMap
+    case []any:
+        copySlice := make([]any, len(val))
+        for i, s := range val {
+            copySlice[i] = deepCopyAny(s)
+        }
+
+        return copySlice
+    default:
+        return val
+    }
 }
 
 // Outputs a URL object with fields populated from the request
