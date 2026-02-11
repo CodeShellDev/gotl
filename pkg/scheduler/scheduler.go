@@ -98,21 +98,19 @@ func (scheduler *Scheduler) PeekID() (string, bool) {
 	return scheduler.jobs[0].id, true
 }
 
-func (scheduler *Scheduler) Latest() (time.Time, func(), bool) {
+func (scheduler *Scheduler) Pop() (bool) {
 	scheduler.mutex.Lock()
 	defer scheduler.mutex.Unlock()
 
 	if len(scheduler.jobs) == 0 {
-		return time.Time{}, nil, false
+		return false
 	}
 
-	latest := scheduler.jobs[0]
-	for _, job := range scheduler.jobs {
-		if job.runAt.After(latest.runAt) {
-			latest = job
-		}
-	}
-	return latest.runAt, latest.fn, true
+	job := heap.Pop(&scheduler.jobs).(*Job)
+	delete(scheduler.indexMap, job.id)
+
+	scheduler.resetTimerLocked()
+	return true
 }
 
 func (scheduler *Scheduler) add(runAt time.Time, fn func(), repeat RepeatPolicy) string {
