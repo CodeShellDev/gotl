@@ -76,6 +76,28 @@ func (scheduler *Scheduler) Cancel(id string) bool {
 	return true
 }
 
+func (scheduler *Scheduler) PeekTime() (time.Time, bool) {
+	scheduler.mutex.Lock()
+	defer scheduler.mutex.Unlock()
+
+	if len(scheduler.jobs) == 0 {
+		return time.Time{}, false
+	}
+
+	return scheduler.jobs[0].runAt, true
+}
+
+func (scheduler *Scheduler) PeekID() (string, bool) {
+	scheduler.mutex.Lock()
+	defer scheduler.mutex.Unlock()
+
+	if len(scheduler.jobs) == 0 {
+		return "", false
+	}
+
+	return scheduler.jobs[0].id, true
+}
+
 func (scheduler *Scheduler) add(runAt time.Time, fn func(), repeat RepeatPolicy) string {
 	scheduler.mutex.Lock()
 	defer scheduler.mutex.Unlock()
