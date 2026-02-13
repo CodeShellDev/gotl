@@ -46,6 +46,14 @@ func (scheduler *Scheduler) AddAfter(duration time.Duration, fn func()) string {
 	return scheduler.AddAt(time.Now().Add(duration), fn)
 }
 
+func (scheduler *Scheduler) AddAtWithID(id string, tm time.Time, fn func()) {
+	scheduler.addWithID(id, tm, fn, nil)
+}
+
+func (scheduler *Scheduler) AddAfterWithID(id string, duration time.Duration, fn func()) {
+	scheduler.AddAtWithID(id, time.Now().Add(duration), fn)
+}
+
 func (scheduler *Scheduler) Run(ctx context.Context) {
 	for {
 		select {
@@ -121,10 +129,17 @@ func (scheduler *Scheduler) Pop() (bool) {
 }
 
 func (scheduler *Scheduler) add(runAt time.Time, fn func(), repeat RepeatPolicy) string {
+	id := newID()
+
+	scheduler.addWithID(id, runAt, fn, repeat)
+
+	return id
+}
+
+func (scheduler *Scheduler) addWithID(id string, runAt time.Time, fn func(), repeat RepeatPolicy) {
 	scheduler.mutex.Lock()
 	defer scheduler.mutex.Unlock()
 
-	id := newID()
 	job := &Job{
 		id:     id,
 		runAt:  runAt,
@@ -133,11 +148,8 @@ func (scheduler *Scheduler) add(runAt time.Time, fn func(), repeat RepeatPolicy)
 	}
 
 	heap.Push(&scheduler.jobs, job)
-
 	scheduler.indexMap[id] = job
 	scheduler.resetTimerLocked()
-
-	return id
 }
 
 func (scheduler *Scheduler) fire() {
