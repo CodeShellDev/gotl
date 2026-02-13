@@ -76,26 +76,33 @@ func (scheduler *Scheduler) Cancel(id string) bool {
 	return true
 }
 
-func (scheduler *Scheduler) PeekTime() (time.Time, bool) {
+func (scheduler *Scheduler) Peek() (string, time.Time, bool) {
 	scheduler.mutex.Lock()
 	defer scheduler.mutex.Unlock()
 
 	if len(scheduler.jobs) == 0 {
-		return time.Time{}, false
+		return "", time.Time{}, false
 	}
 
-	return scheduler.jobs[0].runAt, true
+	return scheduler.jobs[0].id, scheduler.jobs[0].runAt, true
 }
 
-func (scheduler *Scheduler) PeekID() (string, bool) {
+func (scheduler *Scheduler) Latest() (string, time.Time, bool) {
 	scheduler.mutex.Lock()
 	defer scheduler.mutex.Unlock()
 
 	if len(scheduler.jobs) == 0 {
-		return "", false
+		return "", time.Time{}, false
 	}
 
-	return scheduler.jobs[0].id, true
+	maxIndex := 0
+	for i := 1; i < len(scheduler.jobs); i++ {
+		if scheduler.jobs[i].runAt.After(scheduler.jobs[maxIndex].runAt) {
+			maxIndex = i
+		}
+	}
+
+	return scheduler.jobs[maxIndex].id, scheduler.jobs[maxIndex].runAt, true
 }
 
 func (scheduler *Scheduler) Pop() (bool) {
