@@ -130,51 +130,51 @@ func (std *StdLogger) getStdLevelLogger(level zapcore.Level) *log.Logger {
 	return std.levelLoggers[int(level)]
 }
 
-func (std *StdLogger) GetFatal() *log.Logger {
+func (std *StdLogger) StdFatal() *log.Logger {
 	return std.getStdLevelLogger(zapcore.PanicLevel)
 }
 
-func (std *StdLogger) GetError() *log.Logger {
+func (std *StdLogger) StdError() *log.Logger {
 	return std.getStdLevelLogger(zapcore.ErrorLevel)
 }
 
-func (std *StdLogger) GetWarn() *log.Logger {
+func (std *StdLogger) StdWarn() *log.Logger {
 	return std.getStdLevelLogger(zapcore.WarnLevel)
 }
 
-func (std *StdLogger) GetInfo() *log.Logger {
+func (std *StdLogger) StdInfo() *log.Logger {
 	return std.getStdLevelLogger(zapcore.InfoLevel)
 }
 
-func (std *StdLogger) GetDebug() *log.Logger {
+func (std *StdLogger) StdDebug() *log.Logger {
 	return std.getStdLevelLogger(zapcore.DebugLevel)
 }
 
-func (std *StdLogger) GetDev() *log.Logger {
+func (std *StdLogger) StdDev() *log.Logger {
 	return std.getStdLevelLogger(DeveloperLevel)
 }
 
 
-func GetFatal() *log.Logger {
+func StdFatal() *log.Logger {
 	return defaultSdtLogger.getStdLevelLogger(zapcore.PanicLevel)
 }
 
-func GetError() *log.Logger {
+func StdError() *log.Logger {
 	return defaultSdtLogger.getStdLevelLogger(zapcore.ErrorLevel)
 }
 
-func GetWarn() *log.Logger {
+func StdWarn() *log.Logger {
 	return defaultSdtLogger.getStdLevelLogger(zapcore.WarnLevel)
 }
 
-func GetInfo() *log.Logger {
+func StdInfo() *log.Logger {
 	return defaultSdtLogger.getStdLevelLogger(zapcore.InfoLevel)
 }
 
-func GetDebug() *log.Logger {
+func StdDebug() *log.Logger {
 	return defaultSdtLogger.getStdLevelLogger(zapcore.DebugLevel)
 }
 
-func GetDev() *log.Logger {
+func StdDev() *log.Logger {
 	return defaultSdtLogger.getStdLevelLogger(DeveloperLevel)
 }
