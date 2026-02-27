@@ -9,8 +9,47 @@ import (
 	"github.com/codeshelldev/gotl/pkg/ioutils"
 	"go.uber.org/zap/zapcore"
 )
-func getPrefixFromLevel(level zapcore.Level) string {
-	return strconv.Itoa(int(level)) + ";"
+
+var stdLoggers map[int]*StdLogger
+var stdLoggerIndex int
+
+type StdLogger struct {
+	logger *Logger
+	levelLoggers map[int]*log.Logger
+}
+
+func NewStdLogger(level string, options Options) *StdLogger {
+	logger, _ := New(level, options)
+
+	stdLoggerIndex++
+
+	std := &StdLogger{
+		logger: logger,
+		levelLoggers: createStdLoggers(stdLoggerIndex),
+	}
+
+	stdLoggers[stdLoggerIndex] = std
+
+	return std
+}
+
+func NewStdLoggerWithDefaults(level string) *StdLogger {
+	options := DefaultOptions()
+	options.StackDepth++
+
+	return NewStdLogger(level, options)
+}
+
+func getStdLoggerByIndex(i int) *StdLogger {
+	return stdLoggers[i]
+}
+
+func addStdLevelLoggerToLoggers(loggers map[int]*log.Logger, i int, level zapcore.Level) {
+	loggers[int(level)] = log.New(writer, encodeDataForStdLogger(i, level), 0)
+}
+
+func encodeDataForStdLogger(i int, level zapcore.Level) string {
+	return strconv.Itoa(i) + ";" + strconv.Itoa(int(level)) + ";"
 }
 
 func normalizeMessage(msg string) string {
@@ -29,42 +68,78 @@ var writer = &ioutils.InterceptWriter{
 			return
 		}
 
-		parts := strings.SplitAfterN(msg, ";", 1)
+		parts := strings.SplitAfterN(msg, ";", 2)
 
-		if len(parts) == 0 {
+		if len(parts) != 2 {
 			return
 		}
 
-		prefix := parts[0]
+		index := parts[0]
+		lvl := parts[1]
 
-		level, _ := strconv.Atoi(prefix)
+		i, _ := strconv.Atoi(index)
+		level, _ := strconv.Atoi(lvl)
 		msg = parts[1]
 
 		msg = normalizeMessage(msg)
 
 		switch (level) {
 		case int(zapcore.FatalLevel):
-			Fatal(msg)
+			getStdLoggerByIndex(i).logger.Fatal(msg)
 		case int(zapcore.ErrorLevel):
-			Error(msg)
+			getStdLoggerByIndex(i).logger.Error(msg)
 		case int(zapcore.WarnLevel):
-			Warn(msg)
+			getStdLoggerByIndex(i).logger.Warn(msg)
 		case int(zapcore.InfoLevel):
-			Info(msg)
+			getStdLoggerByIndex(i).logger.Info(msg)
 		case int(zapcore.DebugLevel):
-			Debug(msg)
+			getStdLoggerByIndex(i).logger.Debug(msg)
 		case int(DeveloperLevel):
-			Dev(msg)
+			getStdLoggerByIndex(i).logger.Dev(msg)
 		default:
-			Info(msg)
+			getStdLoggerByIndex(i).logger.Info(msg)
 		}
 	},
 }
 
-var FatalLog *log.Logger = log.New(writer, getPrefixFromLevel(zapcore.FatalLevel), 0)
-var ErrorLog *log.Logger = log.New(writer, getPrefixFromLevel(zapcore.ErrorLevel), 0)
-var WarnLog *log.Logger = log.New(writer, getPrefixFromLevel(zapcore.WarnLevel), 0)
+func createStdLoggers(i int) map[int]*log.Logger {
+	loggers := map[int]*log.Logger{}
 
-var InfoLog *log.Logger = log.New(writer, getPrefixFromLevel(zapcore.InfoLevel), 0)
-var DebugLog *log.Logger = log.New(writer, getPrefixFromLevel(zapcore.DebugLevel), 0)
-var DevLog *log.Logger = log.New(writer, getPrefixFromLevel(DeveloperLevel), 0)
+	addStdLevelLoggerToLoggers(loggers, i, zapcore.PanicLevel)
+	addStdLevelLoggerToLoggers(loggers, i, zapcore.ErrorLevel)
+	addStdLevelLoggerToLoggers(loggers, i, zapcore.WarnLevel)
+
+	addStdLevelLoggerToLoggers(loggers, i, zapcore.InfoLevel)
+	addStdLevelLoggerToLoggers(loggers, i, zapcore.DebugLevel)
+	addStdLevelLoggerToLoggers(loggers, i, DeveloperLevel)
+
+	return loggers
+}
+
+func (std *StdLogger) getStdLevelLogger(level zapcore.Level) *log.Logger {
+	return std.levelLoggers[int(level)]
+}
+
+func (std *StdLogger) GetFatal() *log.Logger {
+	return std.getStdLevelLogger(zapcore.PanicLevel)
+}
+
+func (std *StdLogger) GetError() *log.Logger {
+	return std.getStdLevelLogger(zapcore.ErrorLevel)
+}
+
+func (std *StdLogger) GetWarn() *log.Logger {
+	return std.getStdLevelLogger(zapcore.WarnLevel)
+}
+
+func (std *StdLogger) GetInfo() *log.Logger {
+	return std.getStdLevelLogger(zapcore.InfoLevel)
+}
+
+func (std *StdLogger) GetDebug() *log.Logger {
+	return std.getStdLevelLogger(zapcore.DebugLevel)
+}
+
+func (std *StdLogger) GetDev() *log.Logger {
+	return std.getStdLevelLogger(DeveloperLevel)
+}
