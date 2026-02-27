@@ -23,7 +23,7 @@ func InitStdLoggerWith(level string, options Options) {
 }
 
 func NewStdLogger(level string, options Options) *StdLogger {
-	options.StackDepth += 2
+	options.StackDepth += 3
 	logger, _ := New(level, options)
 
 	std := &StdLogger{
