@@ -1,17 +1,11 @@
 package logger
 
 import (
-	"bytes"
 	"log"
-	"strconv"
 	"strings"
 
-	"github.com/codeshelldev/gotl/pkg/ioutils"
 	"go.uber.org/zap/zapcore"
 )
-
-var stdLoggers = map[int]*StdLogger{}
-var stdLoggerIndex int
 
 var defaultSdtLogger *StdLogger
 
@@ -34,101 +28,68 @@ func NewStdLogger(level string, options Options) *StdLogger {
 
 	std := &StdLogger{
 		logger: logger,
-		levelLoggers: createStdLoggers(stdLoggerIndex),
+		levelLoggers: createStdLoggers(logger),
 	}
-
-	stdLoggers[stdLoggerIndex] = std
-
-	stdLoggerIndex++
 
 	return std
 }
 
 func NewStdLoggerWithDefaults(level string) *StdLogger {
-	options := DefaultOptions()
-
-	return NewStdLogger(level, options)
+	return NewStdLogger(level, DefaultOptions())
 }
 
-func getStdLoggerByIndex(i int) *StdLogger {
-	return stdLoggers[i]
+type zapWriter struct {
+	logger *Logger
 }
 
-func addStdLevelLoggerToLoggers(loggers map[int]*log.Logger, i int, level zapcore.Level) {
-	loggers[int(level)] = log.New(writer, encodeDataForStdLogger(i, level), 0)
+func (z *zapWriter) Write(bytes []byte) (n int, err error) {
+	msg := strings.TrimSpace(string(bytes))
+
+	if msg == "" {
+		return len(bytes), nil
+	}
+
+	switch z.logger.level.Level() {
+	case zapcore.FatalLevel:
+		z.logger.Fatal(msg)
+	case zapcore.ErrorLevel:
+		z.logger.Error(msg)
+	case zapcore.WarnLevel:
+		z.logger.Warn(msg)
+	case zapcore.InfoLevel:
+		z.logger.Info(msg)
+	case zapcore.DebugLevel:
+		z.logger.Debug(msg)
+	default:
+		z.logger.Info(msg)
+	}
+
+	return len(bytes), nil
 }
 
-func encodeDataForStdLogger(i int, level zapcore.Level) string {
-	return strconv.Itoa(i) + ";" + strconv.Itoa(int(level)) + ";"
-}
-
-func normalizeMessage(msg string) string {
-	msg = strings.TrimSuffix(msg, "\n")
-
-	msg = strings.ToUpper(msg[:1]) + msg[1:]
-
-	return msg
-}
-
-var writer = &ioutils.InterceptWriter{
-	Writer: &bytes.Buffer{},
-	Hook: func(bytes []byte) {
-		msg := string(bytes)
-		if len(msg) == 0 {
-			return
-		}
-
-		parts := strings.SplitAfterN(msg, ";", 3)
-
-		if len(parts) != 3 {
-			return
-		}
-
-		index := parts[0]
-		lvl := parts[1]
-
-		i, _ := strconv.Atoi(index)
-		level, _ := strconv.Atoi(lvl)
-		msg = parts[2]
-
-		msg = normalizeMessage(msg)
-
-		switch (level) {
-		case int(zapcore.FatalLevel):
-			getStdLoggerByIndex(i).logger.Fatal(msg)
-		case int(zapcore.ErrorLevel):
-			getStdLoggerByIndex(i).logger.Error(msg)
-		case int(zapcore.WarnLevel):
-			getStdLoggerByIndex(i).logger.Warn(msg)
-		case int(zapcore.InfoLevel):
-			getStdLoggerByIndex(i).logger.Info(msg)
-		case int(zapcore.DebugLevel):
-			getStdLoggerByIndex(i).logger.Debug(msg)
-		case int(DeveloperLevel):
-			getStdLoggerByIndex(i).logger.Dev(msg)
-		default:
-			getStdLoggerByIndex(i).logger.Info(msg)
-		}
-	},
-}
-
-func createStdLoggers(i int) map[int]*log.Logger {
+func createStdLoggers(logger *Logger) map[int]*log.Logger {
 	loggers := map[int]*log.Logger{}
 
-	addStdLevelLoggerToLoggers(loggers, i, zapcore.PanicLevel)
-	addStdLevelLoggerToLoggers(loggers, i, zapcore.ErrorLevel)
-	addStdLevelLoggerToLoggers(loggers, i, zapcore.WarnLevel)
-
-	addStdLevelLoggerToLoggers(loggers, i, zapcore.InfoLevel)
-	addStdLevelLoggerToLoggers(loggers, i, zapcore.DebugLevel)
-	addStdLevelLoggerToLoggers(loggers, i, DeveloperLevel)
+	addStdLevelLogger(loggers, logger, zapcore.PanicLevel)
+	addStdLevelLogger(loggers, logger, zapcore.ErrorLevel)
+	addStdLevelLogger(loggers, logger, zapcore.WarnLevel)
+	addStdLevelLogger(loggers, logger, zapcore.InfoLevel)
+	addStdLevelLogger(loggers, logger, zapcore.DebugLevel)
+	addStdLevelLogger(loggers, logger, DeveloperLevel)
 
 	return loggers
+}
+
+func addStdLevelLogger(loggers map[int]*log.Logger, logger *Logger, level zapcore.Level) {
+	w := &zapWriter{logger: logger}
+
+	loggers[int(level)] = log.New(w, "", 0)
 }
 
 func (std *StdLogger) getStdLevelLogger(level zapcore.Level) *log.Logger {
 	return std.levelLoggers[int(level)]
 }
+
 
 func (std *StdLogger) StdFatal() *log.Logger {
 	return std.getStdLevelLogger(zapcore.PanicLevel)
