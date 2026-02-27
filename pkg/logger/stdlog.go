@@ -50,26 +50,6 @@ func NewStdLoggerWithDefaults(level string) *StdLogger {
 	return NewStdLogger(level, options)
 }
 
-func getStdLoggerByIndex(i int) *StdLogger {
-	return stdLoggers[i]
-}
-
-func addStdLevelLoggerToLoggers(loggers map[int]*log.Logger, i int, level zapcore.Level) {
-	loggers[int(level)] = log.New(writer, encodeDataForStdLogger(i, level), 0)
-}
-
-func encodeDataForStdLogger(i int, level zapcore.Level) string {
-	return strconv.Itoa(i) + ";" + strconv.Itoa(int(level)) + ";"
-}
-
-func normalizeMessage(msg string) string {
-	msg = strings.TrimSuffix(msg, "\n")
-
-	msg = strings.ToUpper(msg[:1]) + msg[1:]
-
-	return msg
-}
-
 var writer = &ioutils.InterceptWriter{
 	Writer: &bytes.Buffer{},
 	Hook: func(bytes []byte) {
@@ -110,6 +90,26 @@ var writer = &ioutils.InterceptWriter{
 			getStdLoggerByIndex(i).logger.Info(msg)
 		}
 	},
+}
+
+func getStdLoggerByIndex(i int) *StdLogger {
+	return stdLoggers[i]
+}
+
+func addStdLevelLoggerToLoggers(loggers map[int]*log.Logger, i int, level zapcore.Level) {
+	loggers[int(level)] = log.New(writer, encodeDataForStdLogger(i, level), 0)
+}
+
+func encodeDataForStdLogger(i int, level zapcore.Level) string {
+	return strconv.Itoa(i) + ";" + strconv.Itoa(int(level)) + ";"
+}
+
+func normalizeMessage(msg string) string {
+	msg = strings.TrimSuffix(msg, "\n")
+
+	msg = strings.ToUpper(msg[:1]) + msg[1:]
+
+	return msg
 }
 
 func createStdLoggers(i int) map[int]*log.Logger {
