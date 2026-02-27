@@ -79,9 +79,9 @@ var writer = &ioutils.InterceptWriter{
 			return
 		}
 
-		parts := strings.SplitAfterN(msg, ";", 2)
+		parts := strings.SplitAfterN(msg, ";", 3)
 
-		if len(parts) != 2 {
+		if len(parts) != 3 {
 			return
 		}
 
