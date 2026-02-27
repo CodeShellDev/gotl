@@ -13,9 +13,19 @@ import (
 var stdLoggers map[int]*StdLogger
 var stdLoggerIndex int
 
+var defaultSdtLogger *StdLogger
+
 type StdLogger struct {
 	logger *Logger
 	levelLoggers map[int]*log.Logger
+}
+
+func InitStdLogger(level string) {
+	defaultSdtLogger = NewStdLoggerWithDefaults(level)
+}
+
+func InitStdLoggerWith(level string, options Options) {
+	defaultSdtLogger = NewStdLogger(level, options)
 }
 
 func NewStdLogger(level string, options Options) *StdLogger {
