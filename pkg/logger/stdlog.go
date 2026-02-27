@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var stdLoggers map[int]*StdLogger
+var stdLoggers = map[int]*StdLogger{}
 var stdLoggerIndex int
 
 var defaultSdtLogger *StdLogger
