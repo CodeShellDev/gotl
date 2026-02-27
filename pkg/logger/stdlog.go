@@ -2,7 +2,6 @@ package logger
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -30,6 +29,7 @@ func InitStdLoggerWith(level string, options Options) {
 }
 
 func NewStdLogger(level string, options Options) *StdLogger {
+	options.StackDepth += 2
 	logger, _ := New(level, options)
 
 	std := &StdLogger{
@@ -46,7 +46,6 @@ func NewStdLogger(level string, options Options) *StdLogger {
 
 func NewStdLoggerWithDefaults(level string) *StdLogger {
 	options := DefaultOptions()
-	options.StackDepth++
 
 	return NewStdLogger(level, options)
 }
@@ -102,9 +101,6 @@ var writer = &ioutils.InterceptWriter{
 		case int(zapcore.WarnLevel):
 			getStdLoggerByIndex(i).logger.Warn(msg)
 		case int(zapcore.InfoLevel):
-			fmt.Println(i)
-			fmt.Println(getStdLoggerByIndex(i))
-			fmt.Println(getStdLoggerByIndex(i).logger)
 			getStdLoggerByIndex(i).logger.Info(msg)
 		case int(zapcore.DebugLevel):
 			getStdLoggerByIndex(i).logger.Debug(msg)
