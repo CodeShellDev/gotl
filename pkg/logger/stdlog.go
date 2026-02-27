@@ -2,6 +2,7 @@ package logger
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -31,14 +32,14 @@ func InitStdLoggerWith(level string, options Options) {
 func NewStdLogger(level string, options Options) *StdLogger {
 	logger, _ := New(level, options)
 
-	stdLoggerIndex++
-
 	std := &StdLogger{
 		logger: logger,
 		levelLoggers: createStdLoggers(stdLoggerIndex),
 	}
 
 	stdLoggers[stdLoggerIndex] = std
+
+	stdLoggerIndex++
 
 	return std
 }
@@ -48,6 +49,26 @@ func NewStdLoggerWithDefaults(level string) *StdLogger {
 	options.StackDepth++
 
 	return NewStdLogger(level, options)
+}
+
+func getStdLoggerByIndex(i int) *StdLogger {
+	return stdLoggers[i]
+}
+
+func addStdLevelLoggerToLoggers(loggers map[int]*log.Logger, i int, level zapcore.Level) {
+	loggers[int(level)] = log.New(writer, encodeDataForStdLogger(i, level), 0)
+}
+
+func encodeDataForStdLogger(i int, level zapcore.Level) string {
+	return strconv.Itoa(i) + ";" + strconv.Itoa(int(level)) + ";"
+}
+
+func normalizeMessage(msg string) string {
+	msg = strings.TrimSuffix(msg, "\n")
+
+	msg = strings.ToUpper(msg[:1]) + msg[1:]
+
+	return msg
 }
 
 var writer = &ioutils.InterceptWriter{
@@ -69,7 +90,7 @@ var writer = &ioutils.InterceptWriter{
 
 		i, _ := strconv.Atoi(index)
 		level, _ := strconv.Atoi(lvl)
-		msg = parts[1]
+		msg = parts[2]
 
 		msg = normalizeMessage(msg)
 
@@ -81,6 +102,9 @@ var writer = &ioutils.InterceptWriter{
 		case int(zapcore.WarnLevel):
 			getStdLoggerByIndex(i).logger.Warn(msg)
 		case int(zapcore.InfoLevel):
+			fmt.Println(i)
+			fmt.Println(getStdLoggerByIndex(i))
+			fmt.Println(getStdLoggerByIndex(i).logger)
 			getStdLoggerByIndex(i).logger.Info(msg)
 		case int(zapcore.DebugLevel):
 			getStdLoggerByIndex(i).logger.Debug(msg)
@@ -90,26 +114,6 @@ var writer = &ioutils.InterceptWriter{
 			getStdLoggerByIndex(i).logger.Info(msg)
 		}
 	},
-}
-
-func getStdLoggerByIndex(i int) *StdLogger {
-	return stdLoggers[i]
-}
-
-func addStdLevelLoggerToLoggers(loggers map[int]*log.Logger, i int, level zapcore.Level) {
-	loggers[int(level)] = log.New(writer, encodeDataForStdLogger(i, level), 0)
-}
-
-func encodeDataForStdLogger(i int, level zapcore.Level) string {
-	return strconv.Itoa(i) + ";" + strconv.Itoa(int(level)) + ";"
-}
-
-func normalizeMessage(msg string) string {
-	msg = strings.TrimSuffix(msg, "\n")
-
-	msg = strings.ToUpper(msg[:1]) + msg[1:]
-
-	return msg
 }
 
 func createStdLoggers(i int) map[int]*log.Logger {
