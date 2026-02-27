@@ -103,6 +103,32 @@ func (body *Body) UpdateRes(res *http.Response) error {
 	return nil
 }
 
+// Ensure `body.Data` is never nil and instead just empty `map[string]any{}`
+func (body *Body) EnsureNotNil() {
+	if body.Data == nil {
+		body.Data = map[string]any{}
+	}
+}
+
+// Reevaluates body
+// sets `body.Empty` according to value of `body.Data`
+func (body *Body) Reevaluate() {
+	if len(body.Data) == 0 {
+		body.Empty = true
+	}
+}
+
+// Reevaluates `body.Raw` by serializing `body.Data` as json string and then using the byte value
+func (body *Body) ReevaluateRawBytes() {
+	if len(body.Data) != 0 {
+		bodyBytes, err := json.Marshal(body.Data)
+
+		if err == nil {
+			body.Raw = bodyBytes
+		}
+	}
+}
+
 // Create new body with data
 func CreateBody(data map[string]any) (Body, error) {
 	if len(data) <= 0 {
@@ -118,7 +144,7 @@ func CreateBody(data map[string]any) (Body, error) {
 		return Body{Empty: true}, err
 	}
 
-	isEmpty := len(data) <= 0
+	isEmpty := len(data) == 0
 
 	return Body{
 		Data:  data,
@@ -247,13 +273,11 @@ func ParseReqURL(req *http.Request) (*url.URL, error) {
 func GetReqBody(req *http.Request) (Body, error) {
 	bytes, err := ReadReqBody(req)
 
-	var isEmpty bool
-
 	if err != nil {
 		return Body{Empty: true}, err
 	}
 
-	if len(bytes) <= 0 {
+	if len(bytes) == 0 {
 		return Body{Empty: true}, nil
 	}
 
@@ -276,7 +300,7 @@ func GetReqBody(req *http.Request) (Body, error) {
 		}
 	}
 
-	isEmpty = len(data) <= 0
+	isEmpty := len(data) == 0
 
 	return Body{
 		Raw:   bytes,
@@ -289,13 +313,11 @@ func GetReqBody(req *http.Request) (Body, error) {
 func GetResBody(res *http.Response) (Body, error) {
 	bytes, err := ReadResBody(res)
 
-	var isEmpty bool
-
 	if err != nil {
 		return Body{Empty: true}, err
 	}
 
-	if len(bytes) <= 0 {
+	if len(bytes) == 0 {
 		return Body{Empty: true}, nil
 	}
 
@@ -318,7 +340,7 @@ func GetResBody(res *http.Response) (Body, error) {
 		}
 	}
 
-	isEmpty = len(data) <= 0
+	isEmpty := len(data) == 0
 
 	return Body{
 		Raw:   bytes,
