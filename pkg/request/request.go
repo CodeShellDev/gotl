@@ -222,6 +222,15 @@ func ParseHeaders(headers map[string][]string) map[string]any {
 
 // Copies source headers into destination (deep copy)
 func CopyHeaders(dest map[string][]string, source map[string][]string) {
+	if len(source) == 0 {
+		dest = map[string][]string{}
+		return
+	}
+
+	if dest == nil {
+		dest = map[string][]string{}
+	}
+
 	for k, vs := range source {
 		copied := make([]string, len(vs))
 
@@ -233,6 +242,15 @@ func CopyHeaders(dest map[string][]string, source map[string][]string) {
 
 // Copies source map into destination (deep copy)
 func CopyMap(dest map[string]any, source map[string]any) {
+	if len(source) == 0 {
+		dest = map[string]any{}
+		return
+	}
+
+	if dest == nil {
+		dest = map[string]any{}
+	}
+
 	for k, v := range source {
 		dest[k] = deepCopyAny(v)
 	}
