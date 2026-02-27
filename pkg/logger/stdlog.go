@@ -86,6 +86,10 @@ func addStdLevelLogger(loggers map[int]*log.Logger, logger *Logger, level zapcor
 	loggers[int(level)] = log.New(w, "", 0)
 }
 
+func (std *StdLogger) SetTransform(transform func(content string) string) {
+	std.logger.SetTransform(transform)
+}
+
 func (std *StdLogger) getStdLevelLogger(level zapcore.Level) *log.Logger {
 	return std.levelLoggers[int(level)]
 }
