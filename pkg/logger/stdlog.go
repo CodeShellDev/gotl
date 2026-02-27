@@ -153,3 +153,28 @@ func (std *StdLogger) GetDebug() *log.Logger {
 func (std *StdLogger) GetDev() *log.Logger {
 	return std.getStdLevelLogger(DeveloperLevel)
 }
+
+
+func GetFatal() *log.Logger {
+	return defaultSdtLogger.getStdLevelLogger(zapcore.PanicLevel)
+}
+
+func GetError() *log.Logger {
+	return defaultSdtLogger.getStdLevelLogger(zapcore.ErrorLevel)
+}
+
+func GetWarn() *log.Logger {
+	return defaultSdtLogger.getStdLevelLogger(zapcore.WarnLevel)
+}
+
+func GetInfo() *log.Logger {
+	return defaultSdtLogger.getStdLevelLogger(zapcore.InfoLevel)
+}
+
+func GetDebug() *log.Logger {
+	return defaultSdtLogger.getStdLevelLogger(zapcore.DebugLevel)
+}
+
+func GetDev() *log.Logger {
+	return defaultSdtLogger.getStdLevelLogger(DeveloperLevel)
+}
