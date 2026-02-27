@@ -29,6 +29,15 @@ func parseLevel(s string) zapcore.Level {
 	}
 }
 
+func levelString(l zapcore.Level) string {
+	switch l {
+	case DeveloperLevel:
+		return "dev"
+	default:
+		return l.String()
+	}
+}
+
 func colorCode(str string, color color.RGBA) string {
 	return startColor(color) + str + resetColor()
 }
@@ -57,15 +66,6 @@ func startColor(color color.RGBA) string {
 
 func resetColor() string {
 	return "\033[0m"
-}
-
-func levelString(l zapcore.Level) string {
-	switch l {
-	case DeveloperLevel:
-		return "dev"
-	default:
-		return l.String()
-	}
 }
 
 func capitalLevel(l zapcore.Level) string {

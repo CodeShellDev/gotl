@@ -7,4 +7,7 @@ require (
 	go.uber.org/zap v1.27.1
 )
 
-require go.uber.org/multierr v1.11.0 // indirect
+require (
+	github.com/codeshelldev/gotl/pkg/ioutils v0.0.2
+	go.uber.org/multierr v1.11.0 // indirect
+)

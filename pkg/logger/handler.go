@@ -125,12 +125,12 @@ func format(data ...any) string {
 		default:
 			lines := strings.Split(jsonutils.Pretty(value), "\n")
 
-			lineStr := ""
+			var lineStr strings.Builder
 
 			for _, line := range lines {
-				lineStr += "\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + resetColor()
+				lineStr.WriteString("\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + resetColor())
 			}
-			res += lineStr
+			res += lineStr.String()
 		}
 	}
 
