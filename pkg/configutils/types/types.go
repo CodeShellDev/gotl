@@ -72,3 +72,40 @@ func (optional *Opt[T]) UnmarshalMapstructure(raw any) error {
 
     return nil
 }
+
+type Compilable[CompiledT any] interface {
+	Compile() CompiledT
+}
+
+type Comp[RawT Compilable[CompiledT], CompiledT any] struct {
+	Raw        *RawT
+	compiled   *CompiledT
+	done bool
+}
+
+func (c *Comp[RawT, CompiledT]) Compile() CompiledT {
+	if c.done {
+		return *c.compiled
+	}
+
+	compiled := (*c.Raw).Compile()
+
+	c.compiled = &compiled
+	c.done = true
+
+	return compiled
+}
+
+func (c *Comp[RawT, CompiledT]) UnmarshalMapstructure(raw any) error {
+	var rawT RawT
+
+    err := mapstructure.Decode(raw, &rawT)
+    
+	if err != nil {
+		return err
+	}
+
+	c.Raw = &rawT
+
+	return nil
+}
