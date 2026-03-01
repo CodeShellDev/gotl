@@ -97,11 +97,11 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 
 	strKey := fmt.Sprintf("%v", key)
 
-	switch typedValue := value.(type) {
+	switch asserted := value.(type) {
 	case map[string]any:
 		data := map[string]any{}
 
-		for mapKey, mapValue := range typedValue {
+		for mapKey, mapValue := range asserted {
 			var templatedValue any
 
 			templatedValue, err = RenderDataTemplateRecursively(mapKey, mapValue, variables)
@@ -118,7 +118,7 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 	case []any:
 		data := []any{}
 
-		for arrayIndex, arrayValue := range typedValue {
+		for arrayIndex, arrayValue := range asserted {
 			var templatedValue any
 
 			templatedValue, err = RenderDataTemplateRecursively(arrayIndex, arrayValue, variables)
@@ -137,12 +137,14 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 			"normalize": normalize,
 		})
 
-		tmplStr, _ := AddTemplateFunc(typedValue, "normalize")
+		tmplStr, _ := AddTemplateFunc(asserted, "normalize")
 
 		templatedValue, err := ParseTemplate(templt, tmplStr, variables)
 
+		fmt.Println(asserted, templatedValue, variables)
+
 		if err != nil {
-			return typedValue, err
+			return asserted, err
 		}
 
 		templateRe, err := regexp.Compile(`{{[^{}]+}}`)
@@ -162,7 +164,7 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 		return templatedValue, err
 
 	default:
-		return typedValue, err
+		return asserted, err
 	}
 }
 
