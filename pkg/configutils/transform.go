@@ -302,18 +302,23 @@ func isContainer(v any) bool {
 		return false
 	}
 
-	t := reflect.TypeOf(v)
-	for t.Kind() == reflect.Pointer {
-		t = t.Elem()
+	rv := reflect.ValueOf(v)
+	for rv.Kind() == reflect.Pointer || rv.Kind() == reflect.Interface {
+		if rv.IsNil() {
+			return false
+		}
+		rv = rv.Elem()
 	}
 
-	switch t.Kind() {
-	case reflect.Map, reflect.Slice, reflect.Array:
+	// treat structs, maps, slices, arrays as containers
+	switch rv.Kind() {
+	case reflect.Struct, reflect.Map, reflect.Slice, reflect.Array:
 		return true
 	default:
 		return false
 	}
 }
+
 
 func findTransform(lower string, targets map[string]TransformTarget) TransformTarget {
     actualParts := splitPath(lower)

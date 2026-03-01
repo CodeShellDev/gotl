@@ -156,7 +156,6 @@ func handleMap(id string, field reflect.StructField, parent string, out map[stri
 	}
 }
 
-
 func getValueSafe(v reflect.Value) any {
 	if !v.IsValid() {
 		return nil
