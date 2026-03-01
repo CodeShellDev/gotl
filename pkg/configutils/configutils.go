@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 
@@ -157,6 +158,26 @@ func (config *Config) GetTemplated(variables map[string]any) any {
 	data := config.Layer.All()
 
 	return templateAny("", data, variables)
+}
+
+// Get tag from scheme field by using a pointer of said field
+func GetSchemeTagByFieldPointer(config any, tag string, fieldPointer any) string {
+	v := reflect.ValueOf(config)
+	if v.Kind() == reflect.Pointer {
+		v = v.Elem()
+	}
+
+	fieldValue := reflect.ValueOf(fieldPointer).Elem()
+
+	for i := 0; i < v.NumField(); i++ {
+		if v.Field(i).Addr().Interface() == fieldValue.Addr().Interface() {
+			field := v.Type().Field(i)
+
+			return field.Tag.Get(tag)
+		}
+	}
+
+	return ""
 }
 
 func templateAny(key any, value any, variables map[string]any) any {
