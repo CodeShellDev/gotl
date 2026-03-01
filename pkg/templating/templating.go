@@ -140,9 +140,7 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 		tmplStr, _ := AddTemplateFunc(asserted, "normalize")
 
 		templatedValue, err := ParseTemplate(templt, tmplStr, variables)
-
-		fmt.Println(asserted, templatedValue, variables)
-
+		
 		if err != nil {
 			return asserted, err
 		}
