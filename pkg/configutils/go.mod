@@ -3,7 +3,7 @@ module github.com/codeshelldev/gotl/pkg/configutils
 go 1.25.6
 
 require (
-	github.com/codeshelldev/gotl/pkg/templating v0.0.5
+	github.com/codeshelldev/gotl/pkg/templating v0.0.6-1
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/knadh/koanf/providers/confmap v1.0.0
 	github.com/knadh/koanf/providers/env/v2 v2.0.0
