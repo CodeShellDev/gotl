@@ -27,7 +27,7 @@ func AddTemplateFunc(tmplStr string, funcName string) (string, error) {
 	})
 }
 
-// transform template variables with func
+// Transform template variables with func
 func TransformTemplateKeys(tmplStr string, prefix string, transform func(varRegex *regexp.Regexp, m string) string) (string, error) {
 	re, err := regexp.Compile(`{{([^{}]+)}}`)
 
@@ -88,10 +88,14 @@ func RenderJSON(data map[string]any, variables map[string]any) (map[string]any, 
 	return data, nil
 }
 
-func renderDataKeyTemplateRecursive(key any, value any, variables map[string]any) (any, error) {
+// Helper function for RenderJSON()
+// recursively walks `value` and templates string values into typed values via stringutils.ToType()
+// 
+// `key` currently has no purpose besides errors including the key name
+func RenderDataTemplateRecursively(key any, value any, variables map[string]any) (any, error) {
 	var err error
 
-	strKey, _ := key.(string)
+	strKey := fmt.Sprintf("%v", key)
 
 	switch typedValue := value.(type) {
 	case map[string]any:
@@ -100,7 +104,7 @@ func renderDataKeyTemplateRecursive(key any, value any, variables map[string]any
 		for mapKey, mapValue := range typedValue {
 			var templatedValue any
 
-			templatedValue, err = renderDataKeyTemplateRecursive(mapKey, mapValue, variables)
+			templatedValue, err = RenderDataTemplateRecursively(mapKey, mapValue, variables)
 
 			if err != nil {
 				return mapValue, err
@@ -117,7 +121,7 @@ func renderDataKeyTemplateRecursive(key any, value any, variables map[string]any
 		for arrayIndex, arrayValue := range typedValue {
 			var templatedValue any
 
-			templatedValue, err = renderDataKeyTemplateRecursive(arrayIndex, arrayValue, variables)
+			templatedValue, err = RenderDataTemplateRecursively(arrayIndex, arrayValue, variables)
 
 			if err != nil {
 				return arrayValue, err
@@ -163,7 +167,7 @@ func renderDataKeyTemplateRecursive(key any, value any, variables map[string]any
 }
 
 func renderJSONTemplate(data map[string]any, variables map[string]any) (map[string]any, error) {
-	res, err := renderDataKeyTemplateRecursive("", data, variables)
+	res, err := RenderDataTemplateRecursively("", data, variables)
 
 	mapRes, ok := res.(map[string]any)
 
