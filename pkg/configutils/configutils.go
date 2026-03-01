@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -201,12 +202,34 @@ func templateAny(key any, value any, variables map[string]any) any {
 	case string:
 		expanded := os.ExpandEnv(asserted)
 
+		if validateDollarTemplate(expanded) != nil {
+			return expanded
+		}
+
 		templated, _ := templating.RenderDataTemplateRecursively(key, expanded, variables)
 
 		return templated
 	default:
 		return asserted
 	}
+}
+
+func validateDollarTemplate(input string) error {
+	re := regexp.MustCompile(`{{[^{}]+}}`)
+
+	reDollar := regexp.MustCompile(`\${{[^{}]+}}`)
+
+	matches := re.FindAllString(input, -1)
+	for _, m := range matches {
+		if !reDollar.MatchString("$" + m) {
+
+			if len(m) > 0 && len(input) >= len(m) && (string(input) == m || len(input) > len(m) && string(input) == m) {
+				return errors.New("template variable " + m + " must be prefixed with $")
+			}
+		}
+	}
+
+	return nil
 }
 
 // Merge layers into Config
