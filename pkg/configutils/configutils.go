@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	configutils "github.com/codeshelldev/gotl/pkg/configutils/types"
+	"github.com/codeshelldev/gotl/pkg/templating"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/providers/env/v2"
@@ -147,22 +148,41 @@ func (config *Config) LoadEnv(transformFunc func(key string, value string) (stri
 }
 
 // Template Config with environment variables
-func (config *Config) TemplateConfig() error {
+func (config *Config) TemplateConfig(variables map[string]any) error {
 	data := config.Layer.All()
 
-	for key, value := range data {
-		str, isStr := value.(string)
-
-		if isStr {
-			templated := os.ExpandEnv(str)
-
-			if templated != "" {
-				data[key] = templated
-			}
-		}
-	}
+	templateAny("", data, variables)
 
 	return config.Load(data, "")
+}
+
+func templateAny(key any, value any, variables map[string]any) any {
+	switch asserted := value.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(asserted))
+
+		for k, v := range asserted {
+			out[k] = templateAny(k, v, variables)
+		}
+
+		return out
+	case []any:
+		out := make([]any, len(asserted))
+		
+		for i, v := range asserted {
+			out[i] = templateAny(i, v, variables)
+		}
+
+		return out
+	case string:
+		expanded := os.ExpandEnv(asserted)
+
+		templated, _ := templating.RenderDataTemplateRecursively(key, expanded, variables)
+
+		return templated
+	default:
+		return asserted
+	}
 }
 
 // Merge layers into Config
