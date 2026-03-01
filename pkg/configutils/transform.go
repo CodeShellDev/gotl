@@ -24,7 +24,6 @@ type TransformOptions struct {
 // Flatten `data: { key: value }` into `data.key: value``
 func Flatten(prefix string, v any, out map[string]any) {
 	switch asserted := v.(type) {
-
 	case map[string]any:
 		for k, value := range asserted {
 			var key string

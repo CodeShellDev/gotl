@@ -91,11 +91,7 @@ func RenderJSON(data map[string]any, variables map[string]any) (map[string]any, 
 func renderDataKeyTemplateRecursive(key any, value any, variables map[string]any) (any, error) {
 	var err error
 
-	strKey, isStr := key.(string)
-
-	if !isStr {
-		strKey = "!string"
-	}
+	strKey, _ := key.(string)
 
 	switch typedValue := value.(type) {
 	case map[string]any:
@@ -133,7 +129,7 @@ func renderDataKeyTemplateRecursive(key any, value any, variables map[string]any
 		return data, err
 
 	case string:
-		templt := CreateTemplateWithFunc("json:"+strKey, template.FuncMap{
+		templt := CreateTemplateWithFunc("json:" + strKey, template.FuncMap{
 			"normalize": normalize,
 		})
 
@@ -194,13 +190,13 @@ func RenderNormalizedTemplate(name string, tmplStr string, variables any) (strin
 }
 
 func normalize(value any) string {
-	switch str := value.(type) {
+	switch asserted := value.(type) {
 	case []string:
-		return "[" + strings.Join(str, ",") + "]"
+		return "[" + strings.Join(asserted, ",") + "]"
 	case []any:
-		items := make([]string, len(str))
+		items := make([]string, len(asserted))
 
-		for i, item := range str {
+		for i, item := range asserted {
 			items[i] = fmt.Sprintf("%v", item)
 		}
 
