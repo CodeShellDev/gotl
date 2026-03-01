@@ -2,6 +2,7 @@ package configutils
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -200,6 +201,8 @@ func templateAny(key any, value any, variables map[string]any) any {
 		return out
 	case string:
 		expanded := os.ExpandEnv(asserted)
+
+		fmt.Println(asserted, expanded)
 
 		templated, _ := templating.RenderDataTemplateRecursively(key, expanded, variables)
 
