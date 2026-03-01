@@ -149,11 +149,14 @@ func (config *Config) LoadEnv(transformFunc func(key string, value string) (stri
 
 // Template Config with environment variables
 func (config *Config) TemplateConfig(variables map[string]any) error {
+	return config.Load(config.GetTemplated(variables), "")
+}
+
+// Alternative to TemplateConfig(), doesn't modify the config
+func (config *Config) GetTemplated(variables map[string]any) any {
 	data := config.Layer.All()
 
-	templateAny("", data, variables)
-
-	return config.Load(data, "")
+	return templateAny("", data, variables)
 }
 
 func templateAny(key any, value any, variables map[string]any) any {
