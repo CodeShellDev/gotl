@@ -215,7 +215,7 @@ func templateAny(key any, value any, variables map[string]any) any {
 }
 
 func validateDollarTemplate(input string) error {
-	re := regexp.MustCompile(`{{\.[^}]+}}`)
+	re := regexp.MustCompile(`{{[^{}]+}}`)
 
 	matches := re.FindAllString(input, -1)
 
