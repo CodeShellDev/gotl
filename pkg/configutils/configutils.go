@@ -215,18 +215,22 @@ func templateAny(key any, value any, variables map[string]any) any {
 }
 
 func validateDollarTemplate(input string) error {
-	re := regexp.MustCompile(`{{[^{}]+}}`)
-
-	reDollar := regexp.MustCompile(`\${{[^{}]+}}`)
+	re := regexp.MustCompile(`{{\.[^}]+}}`)
 
 	matches := re.FindAllString(input, -1)
-	for _, m := range matches {
-		if !reDollar.MatchString("$" + m) {
 
-			if len(m) > 0 && len(input) >= len(m) && (string(input) == m || len(input) > len(m) && string(input) == m) {
-				return errors.New("template variable " + m + " must be prefixed with $")
-			}
+	var unprefixed []string
+	for _, m := range matches {
+		// check if already prefixed with $
+		i := strings.Index(input, m)
+
+		if i == 0 || input[i - 1] != '$' {
+			unprefixed = append(unprefixed, m)
 		}
+	}
+
+	if len(unprefixed) > 0 {
+		return errors.New("template variables must be prefixed with $")
 	}
 
 	return nil
