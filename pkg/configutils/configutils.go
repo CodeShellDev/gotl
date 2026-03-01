@@ -202,7 +202,7 @@ func templateAny(key any, value any, variables map[string]any) any {
 	case string:
 		expanded := os.ExpandEnv(asserted)
 
-		fmt.Println(asserted, expanded)
+		fmt.Println(asserted, expanded, os.Environ())
 
 		templated, _ := templating.RenderDataTemplateRecursively(key, expanded, variables)
 
