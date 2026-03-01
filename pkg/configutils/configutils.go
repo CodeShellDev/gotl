@@ -202,11 +202,13 @@ func templateAny(key any, value any, variables map[string]any) any {
 	case string:
 		expanded := os.ExpandEnv(asserted)
 
-		if validateDollarTemplate(expanded) != nil {
-			return expanded
+		cleaned, err := enforceDollarTemplates(expanded)
+
+		if err != nil {
+			return asserted
 		}
 
-		templated, _ := templating.RenderDataTemplateRecursively(key, expanded, variables)
+		templated, _ := templating.RenderDataTemplateRecursively(key, cleaned, variables)
 
 		return templated
 	default:
@@ -214,26 +216,30 @@ func templateAny(key any, value any, variables map[string]any) any {
 	}
 }
 
-func validateDollarTemplate(input string) error {
+func enforceDollarTemplates(input string) (string, error) {
 	re := regexp.MustCompile(`{{[^{}]+}}`)
 
 	matches := re.FindAllString(input, -1)
-
-	var unprefixed []string
 	for _, m := range matches {
-		// check if already prefixed with $
+
 		i := strings.Index(input, m)
 
 		if i == 0 || input[i - 1] != '$' {
-			unprefixed = append(unprefixed, m)
+			return "", errors.New("template variable " + m + " must be prefixed with $")
 		}
 	}
 
-	if len(unprefixed) > 0 {
-		return errors.New("template variables must be prefixed with $")
-	}
+	temp := re.ReplaceAllStringFunc(input, func(m string) string {
+		if strings.HasPrefix(m, "$") {
+			return m
+		}
+		return "$" + m
+	})
 
-	return nil
+
+	final := strings.ReplaceAll(temp, "${{", "{{")
+
+	return final, nil
 }
 
 // Merge layers into Config
