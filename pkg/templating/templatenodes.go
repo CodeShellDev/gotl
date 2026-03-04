@@ -108,7 +108,7 @@ func WalkTemplate(tmpl *template.Template, fn func(node parse.Node) bool) {
 
 		visited[ptr] = struct{}{}
 
-		fmt.Println(item.node)
+		fmt.Println(item.node, reflect.TypeOf(item.node))
 
 		if fn(item.node) {
 			continue
