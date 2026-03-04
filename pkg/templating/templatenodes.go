@@ -10,10 +10,10 @@ import (
 
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
 func ApplyTemplateFunc(templt *template.Template, funcName string) {
-	WalkTemplate(templt, func(node parse.Node) {
+	WalkTemplate(templt, func(node parse.Node) bool {
 		cmd, ok := node.(*parse.CommandNode)
 		if !ok {
-			return
+			return false
 		}
 
 		for i, arg := range cmd.Args {
@@ -38,20 +38,22 @@ func ApplyTemplateFunc(templt *template.Template, funcName string) {
 				},
 			}
 		}
+
+		return true
 	})
 }
 
 // Transform template fields with transform function (example: `{{ .VAR.IABLE }}` => `{{ .var.iable }}`)
 func TransformTemplateFields(templt *template.Template, transform func(fieldName string) string) {
-	WalkTemplate(templt, func(node parse.Node) {
+	WalkTemplate(templt, func(node parse.Node) bool {
 		field, ok := node.(*parse.FieldNode)
 
 		if !ok {
-			return
+			return false
 		}
 
 		if len(field.Ident) == 0 {
-			return
+			return false
 		}
 
 		name := strings.Join(field.Ident, ".")
@@ -63,11 +65,13 @@ func TransformTemplateFields(templt *template.Template, transform func(fieldName
 		parts := strings.Split(newName, ".")
 
 		field.Ident = parts
+
+		return true
 	})
 }
 
 // Walk template nodes and apply fn on them
-func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) {
+func WalkTemplate(tmpl *template.Template, fn func(node parse.Node) bool) {
 	type queueItem struct {
 		node parse.Node
 	}
@@ -101,12 +105,14 @@ func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) {
 		if exists {
 			continue
 		}
-		visited[ptr] = struct{}{}
 
+		visited[ptr] = struct{}{}
 
 		fmt.Println(item.node)
 
-		fn(item.node)
+		if fn(item.node) {
+			continue
+		}
 
 		switch n := item.node.(type) {
 		case *parse.ListNode:
