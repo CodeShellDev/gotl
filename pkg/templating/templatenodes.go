@@ -21,6 +21,7 @@ func ApplyTemplateFunc(templt *template.Template, funcName string) error {
 				continue
 			}
 
+			// wrap the FieldNode in a PipeNode calling funcName
 			cmd.Args[i] = &parse.PipeNode{
 				NodeType: parse.NodePipe,
 				Cmds: []*parse.CommandNode{
@@ -66,18 +67,38 @@ func TransformTemplateFields(templt *template.Template, transform func(fieldName
 
 // Recursively walk template nodes and apply fn on them
 func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) error {
-	items := append([]*template.Template(nil), tmpl.Templates()...)
+	visitedTemplates := make(map[string]struct{})
 
-	for _, t := range items {
-		if t.Tree != nil && t.Tree.Root != nil {
-			walkNode(t.Tree.Root, fn)
+	return walkTemplateSafe(tmpl, fn, visitedTemplates)
+}
+
+func walkTemplateSafe(tmpl *template.Template, fn func(node parse.Node), visited map[string]struct{}) error {
+	if tmpl == nil {
+		return nil
+	}
+
+	_, ok := visited[tmpl.Name()]
+	
+	if ok {
+		return nil
+	}
+
+	visited[tmpl.Name()] = struct{}{}
+
+	if tmpl.Tree != nil && tmpl.Tree.Root != nil {
+		walkNodeSafe(tmpl.Tree.Root, fn)
+	}
+
+	for _, t := range tmpl.Templates() {
+		if t != tmpl {
+			walkTemplateSafe(t, fn, visited)
 		}
 	}
 
 	return nil
 }
 
-func walkNode(node parse.Node, fn func(node parse.Node)) {
+func walkNodeSafe(node parse.Node, fn func(node parse.Node)) {
 	if node == nil {
 		return
 	}
@@ -86,72 +107,64 @@ func walkNode(node parse.Node, fn func(node parse.Node)) {
 
 	switch n := node.(type) {
 	case *parse.ListNode:
-		for _, child := range n.Nodes {
-			walkNode(child, fn)
+		// snapshot to prevent walking into newly created ones
+		children := append([]parse.Node(nil), n.Nodes...)
+
+		for _, child := range children {
+			walkNodeSafe(child, fn)
 		}
 
 	case *parse.ActionNode:
-		walkNode(n.Pipe, fn)
-
-	case *parse.CommentNode:
-		// no children
-
-	case *parse.TextNode:
-		// no children
+		walkNodeSafe(n.Pipe, fn)
 
 	case *parse.TemplateNode:
-		walkNode(n.Pipe, fn)
+		walkNodeSafe(n.Pipe, fn)
 
 	case *parse.IfNode:
-		walkNode(n.Pipe, fn)
-		walkNode(n.List, fn)
-		walkNode(n.ElseList, fn)
+		walkNodeSafe(n.Pipe, fn)
+		walkNodeSafe(n.List, fn)
+		walkNodeSafe(n.ElseList, fn)
 
 	case *parse.RangeNode:
-		walkNode(n.Pipe, fn)
-		walkNode(n.List, fn)
-		walkNode(n.ElseList, fn)
+		walkNodeSafe(n.Pipe, fn)
+		walkNodeSafe(n.List, fn)
+		walkNodeSafe(n.ElseList, fn)
 
 	case *parse.WithNode:
-		walkNode(n.Pipe, fn)
-		walkNode(n.List, fn)
-		walkNode(n.ElseList, fn)
+		walkNodeSafe(n.Pipe, fn)
+		walkNodeSafe(n.List, fn)
+		walkNodeSafe(n.ElseList, fn)
 
 	case *parse.PipeNode:
-		for _, decl := range n.Decl {
-			walkNode(decl, fn)
+		decls := append([]*parse.VariableNode(nil), n.Decl...)
+		cmds := append([]*parse.CommandNode(nil), n.Cmds...)
+
+		for _, decl := range decls {
+			walkNodeSafe(decl, fn)
 		}
-		for _, cmd := range n.Cmds {
-			walkNode(cmd, fn)
+		
+		for _, cmd := range cmds {
+			walkNodeSafe(cmd, fn)
 		}
 
 	case *parse.CommandNode:
-		for _, arg := range n.Args {
-			walkNode(arg, fn)
+		args := append([]parse.Node(nil), n.Args...)
+		for _, arg := range args {
+			walkNodeSafe(arg, fn)
 		}
 
-	case *parse.IdentifierNode:
-		// no children
-
-	case *parse.VariableNode:
-		// no children
-
-	case *parse.FieldNode:
-		// no children
-
-	case *parse.DotNode:
-		// no children
-
-	case *parse.StringNode:
-		// no children
-
-	case *parse.NumberNode:
-		// no children
-
-	case *parse.BoolNode:
-		// no children
-
-	case *parse.NilNode:
-		// no children
+	// no children
+	case 
+		*parse.CommentNode, 
+		*parse.TextNode,
+		*parse.IdentifierNode, 
+		*parse.VariableNode,
+		*parse.FieldNode, 
+		*parse.DotNode,
+		*parse.StringNode, 
+		*parse.NumberNode,
+		*parse.BoolNode, 
+		*parse.NilNode:
+		return
 	}
 }
