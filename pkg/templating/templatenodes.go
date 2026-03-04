@@ -23,15 +23,19 @@ func ApplyTemplateFunc(templt *template.Template, funcName string) error {
 				continue
 			}
 
-			cmd.Args[i] = &parse.CommandNode{
-				NodeType: parse.NodeCommand,
-				Args: []parse.Node{
-					// add function call as node
-					&parse.IdentifierNode{
-						NodeType: parse.NodeIdentifier,
-						Ident: funcName,
+			cmd.Args[i] = &parse.PipeNode{
+				NodeType: parse.NodePipe,
+				Cmds: []*parse.CommandNode{
+					{
+						Args: []parse.Node{
+							// add function call as node
+							&parse.IdentifierNode{
+								NodeType: parse.NodeIdentifier,
+								Ident: funcName,
+							},
+							field,
+						},
 					},
-					field,
 				},
 			}
 		}

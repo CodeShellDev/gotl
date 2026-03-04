@@ -10,7 +10,7 @@ import (
 )
 
 // Parse template
-func ParseTemplate(name string, tmplStr string, variables any) (*template.Template, error) {
+func ParseTemplate(name string, tmplStr string) (*template.Template, error) {
 	templt, err := template.New(name).Parse(tmplStr)
 
 	if err != nil {
@@ -22,7 +22,7 @@ func ParseTemplate(name string, tmplStr string, variables any) (*template.Templa
 
 // Create new template and parse it
 func RenderTemplate(name string, tmplStr string, variables any) (string, error) {
-	templt, err := ParseTemplate(name, tmplStr, variables)
+	templt, err := ParseTemplate(name, tmplStr)
 
 	if err != nil {
 		return "", err
