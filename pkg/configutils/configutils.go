@@ -202,7 +202,7 @@ func templateAny(key any, value any, variables map[string]any) any {
 	case string:
 		expanded := os.ExpandEnv(asserted)
 
-		templt := templating.CreateNormalizedTemplate("", variables)
+		templt := templating.CreateNormalizedTemplate("")
 		templt.Delims("${{", "}}")
 
 		err := templating.ParseTemplate(templt, expanded)
