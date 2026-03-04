@@ -9,8 +9,8 @@ import (
 	"github.com/codeshelldev/gotl/pkg/stringutils"
 )
 
-// Parse template
-func ParseTemplate(name string, tmplStr string) (*template.Template, error) {
+// Create template from string template
+func CreateTemplateFromString(name string, tmplStr string) (*template.Template, error) {
 	templt, err := template.New(name).Parse(tmplStr)
 
 	if err != nil {
@@ -20,9 +20,20 @@ func ParseTemplate(name string, tmplStr string) (*template.Template, error) {
 	return templt, err
 }
 
+// Parse template
+func ParseTemplate(templt *template.Template, tmplStr string) error {
+	_, err := templt.Parse(tmplStr)
+
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 // Create new template and parse it
 func RenderTemplate(name string, tmplStr string, variables any) (string, error) {
-	templt, err := ParseTemplate(name, tmplStr)
+	templt, err := CreateTemplateFromString(name, tmplStr)
 
 	if err != nil {
 		return "", err
