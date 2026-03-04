@@ -1,7 +1,6 @@
 package templating
 
 import (
-	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -56,8 +55,6 @@ func TransformTemplateFields(templt *template.Template, transform func(fieldName
 		}
 
 		name := strings.Join(field.Ident, ".")
-
-		fmt.Println(name)
 
 		newName := transform(name)
 
