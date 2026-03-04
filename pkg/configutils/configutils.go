@@ -2,6 +2,7 @@ package configutils
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -203,6 +204,8 @@ func templateAny(key any, value any, variables map[string]any) any {
 		expanded := os.ExpandEnv(asserted)
 
 		templt := templating.CreateNormalizedTemplate("").Delims("${{", "}}")
+
+		fmt.Println(templt.Root.String())
 
 		err := templating.ParseTemplate(templt, expanded)
 
