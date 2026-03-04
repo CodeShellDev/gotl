@@ -108,11 +108,7 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 			"normalize": normalize,
 		})
 
-		err := ApplyTemplateFunc(templt, "normalize")
-
-		if err != nil {
-			return asserted, err
-		}
+		ApplyTemplateFunc(templt, "normalize")
 
 		templatedValue, err := ExecuteTemplate(templt, variables)
 		
@@ -144,11 +140,7 @@ func RenderNormalizedTemplate(name string, tmplStr string, variables any) (strin
 		"normalize": normalize,
 	})
 
-	err := ApplyTemplateFunc(templt, "normalize")
-
-	if err != nil {
-		return tmplStr, err
-	}
+	ApplyTemplateFunc(templt, "normalize")
 
 	return ExecuteTemplate(templt, variables)
 }
