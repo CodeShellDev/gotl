@@ -2,7 +2,6 @@ package configutils
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -150,7 +149,7 @@ func (config *Config) LoadEnv(transformFunc func(key string, value string) (stri
 	return e, err
 }
 
-// Template Config with environment variables
+// Template Config with environment + variables
 func (config *Config) TemplateConfig(variables map[string]any) error {
 	return config.Load(config.GetTemplated(variables), "")
 }
@@ -159,7 +158,14 @@ func (config *Config) TemplateConfig(variables map[string]any) error {
 func (config *Config) GetTemplated(variables map[string]any) any {
 	data := config.Layer.All()
 
-	return templateAny("", data, variables)
+	envMap := environMap()
+
+	vars := map[string]any{
+		"env": envMap,
+		"var": variables,
+	}
+
+	return templateAny("", data, vars)
 }
 
 // Get tag from scheme field by using a pointer of said field
@@ -201,13 +207,9 @@ func templateAny(key any, value any, variables map[string]any) any {
 
 		return out
 	case string:
-		expanded := os.ExpandEnv(asserted)
-
 		templt := templating.CreateNormalizedTemplate("").Delims("${{", "}}")
 
-		err := templating.ParseTemplate(templt, expanded)
-		fmt.Println(templt.Root.String())
-
+		err := templating.ParseTemplate(templt, asserted)
 
 		if err != nil {
 			return err
@@ -223,6 +225,28 @@ func templateAny(key any, value any, variables map[string]any) any {
 	default:
 		return asserted
 	}
+}
+
+func environMap() map[string]any {
+	env := os.Environ()
+
+	m := make(map[string]any, len(env))
+
+	for _, kv := range env {
+		parts := strings.SplitN(kv, "=", 2)
+
+		key := parts[0]
+
+		value := ""
+
+		if len(parts) > 1 {
+			value = parts[1]
+		}
+		
+		m[key] = value
+	}
+
+	return m
 }
 
 // Merge layers into Config
