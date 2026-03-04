@@ -135,14 +135,14 @@ func renderJSONTemplate(data map[string]any, variables map[string]any) (map[stri
 }
 
 // Create template with funcMap and apply func to all variables
-func RenderNormalizedTemplate(name string, tmplStr string, variables any) (string, error) {
+func CreateNormalizedTemplate(name string, tmplStr string, variables any) *template.Template {
 	templt := CreateTemplateWithFunc(name, template.FuncMap{
 		"normalize": normalize,
 	})
 
 	ApplyTemplateFunc(templt, "normalize")
 
-	return ExecuteTemplate(templt, variables)
+	return templt
 }
 
 func normalize(value any) string {
