@@ -16,17 +16,14 @@ func ApplyTemplateFunc(templt *template.Template, funcName string) error {
 			return
 		}
 
-		argsCopy := make([]parse.Node, len(cmd.Args))
-		copy(argsCopy, cmd.Args)
-
-		for i, arg := range argsCopy {
+		for i, arg := range cmd.Args {
 			field, ok := arg.(*parse.FieldNode)
 
 			if !ok {
 				continue
 			}
 
-			cmd.Args[i] = &parse.PipeNode{
+			wrapper := &parse.PipeNode{
 				NodeType: parse.NodePipe,
 				Cmds: []*parse.CommandNode{
 					{
@@ -41,6 +38,8 @@ func ApplyTemplateFunc(templt *template.Template, funcName string) error {
 					},
 				},
 			}
+
+			cmd.Args[i] = wrapper
 		}
 	})
 }
