@@ -16,7 +16,10 @@ func ApplyTemplateFunc(templt *template.Template, funcName string) error {
 			return
 		}
 
-		for i, arg := range cmd.Args {
+		argsCopy := make([]parse.Node, len(cmd.Args))
+		copy(argsCopy, cmd.Args)
+
+		for i, arg := range argsCopy {
 			field, ok := arg.(*parse.FieldNode)
 
 			if !ok {
