@@ -2,6 +2,7 @@ package templating
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -73,6 +74,8 @@ func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) {
 
 	queue := []queueItem{}
 
+	visited := make(map[uintptr]struct{})
+
 	for _, t := range tmpl.Templates() {
 		if t.Tree != nil && t.Tree.Root != nil {
 			queue = append(queue, queueItem{node: t.Tree.Root})
@@ -91,6 +94,15 @@ func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) {
 		if item.node == nil {
 			continue
 		}
+
+		ptr := reflect.ValueOf(item.node).Pointer()
+
+		_, exists := visited[ptr]
+		if exists {
+			continue
+		}
+		visited[ptr] = struct{}{}
+
 
 		fmt.Println(item.node)
 
