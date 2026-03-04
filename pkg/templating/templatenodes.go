@@ -2,7 +2,6 @@ package templating
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -70,125 +69,76 @@ func TransformTemplateFields(templt *template.Template, transform func(fieldName
 	})
 }
 
-// Walk template nodes and apply fn on them
+// Recursively walk template nodes and apply fn on them
 func WalkTemplate(tmpl *template.Template, fn func(node parse.Node) bool) {
-	type queueItem struct {
-		node parse.Node
-	}
-
-	queue := []queueItem{}
-
-	visited := make(map[uintptr]struct{})
-
 	for _, t := range tmpl.Templates() {
 		if t.Tree != nil && t.Tree.Root != nil {
-			queue = append(queue, queueItem{node: t.Tree.Root})
+			walkNode(t.Tree.Root, fn)
 		}
 	}
+}
 
-	i := 0
+func walkNode(node parse.Node, fn func(node parse.Node) bool) {
+	if node == nil {
+		return
+	}
 
-	for len(queue) > 0 && i <= 100 {
-		i++
+	if fn(node) {
+		return
+	}
 
-		// get next
-		item := queue[0]
-		queue = queue[1:]
-
-		if item.node == nil {
-			continue
+	switch n := node.(type) {
+	case *parse.ListNode:
+		for _, child := range n.Nodes {
+			walkNode(child, fn)
 		}
 
-		ptr := reflect.ValueOf(item.node).Pointer()
+	case *parse.ActionNode:
+		walkNode(n.Pipe, fn)
+		
+	case *parse.TemplateNode:
+		walkNode(n.Pipe, fn)
 
-		_, exists := visited[ptr]
-		if exists {
-			continue
+	case *parse.IfNode:
+		walkNode(n.Pipe, fn)
+		walkNode(n.List, fn)
+		walkNode(n.ElseList, fn)
+
+	case *parse.RangeNode:
+		walkNode(n.Pipe, fn)
+		walkNode(n.List, fn)
+		walkNode(n.ElseList, fn)
+
+	case *parse.WithNode:
+		walkNode(n.Pipe, fn)
+		walkNode(n.List, fn)
+		walkNode(n.ElseList, fn)
+
+	case *parse.PipeNode:
+		for _, decl := range n.Decl {
+			walkNode(decl, fn)
+		}
+		for _, cmd := range n.Cmds {
+			walkNode(cmd, fn)
 		}
 
-		visited[ptr] = struct{}{}
-
-		fmt.Println(item.node, reflect.TypeOf(item.node))
-
-		if fn(item.node) {
-			continue
+	case *parse.CommandNode:
+		for _, arg := range n.Args {
+			walkNode(arg, fn)
 		}
 
-		switch n := item.node.(type) {
-		case *parse.ListNode:
-			for _, child := range n.Nodes {
-				queue = append(queue, queueItem{node: child})
-			}
-
-		case *parse.ActionNode:
-			if n.Pipe != nil {
-				queue = append(queue, queueItem{node: n.Pipe})
-			}
-
-		case *parse.TemplateNode:
-			if n.Pipe != nil {
-				queue = append(queue, queueItem{node: n.Pipe})
-			}
-
-		case *parse.IfNode:
-			if n.Pipe != nil {
-				queue = append(queue, queueItem{node: n.Pipe})
-			}
-			if n.List != nil {
-				queue = append(queue, queueItem{node: n.List})
-			}
-			if n.ElseList != nil {
-				queue = append(queue, queueItem{node: n.ElseList})
-			}
-
-		case *parse.RangeNode:
-			if n.Pipe != nil {
-				queue = append(queue, queueItem{node: n.Pipe})
-			}
-			if n.List != nil {
-				queue = append(queue, queueItem{node: n.List})
-			}
-			if n.ElseList != nil {
-				queue = append(queue, queueItem{node: n.ElseList})
-			}
-
-		case *parse.WithNode:
-			if n.Pipe != nil {
-				queue = append(queue, queueItem{node: n.Pipe})
-			}
-			if n.List != nil {
-				queue = append(queue, queueItem{node: n.List})
-			}
-			if n.ElseList != nil {
-				queue = append(queue, queueItem{node: n.ElseList})
-			}
-
-		case *parse.PipeNode:
-			for _, decl := range n.Decl {
-				queue = append(queue, queueItem{node: decl})
-			}
-			for _, cmd := range n.Cmds {
-				queue = append(queue, queueItem{node: cmd})
-			}
-
-		case *parse.CommandNode:
-			for _, arg := range n.Args {
-				queue = append(queue, queueItem{node: arg})
-			}
-
-		// no children
-		case
-			*parse.CommentNode,
-			*parse.TextNode,
-			*parse.IdentifierNode,
-			*parse.VariableNode,
-			*parse.FieldNode,
-			*parse.DotNode,
-			*parse.StringNode,
-			*parse.NumberNode,
-			*parse.BoolNode,
-			*parse.NilNode:
-			continue
-		}
+	// no children
+	case
+		*parse.CommentNode,
+		*parse.TextNode,
+		*parse.IdentifierNode,
+		*parse.VariableNode,
+		*parse.FieldNode,
+		*parse.DotNode,
+		*parse.StringNode,
+		*parse.NumberNode,
+		*parse.BoolNode,
+		*parse.NilNode:
+		return
 	}
 }
