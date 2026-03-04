@@ -2,15 +2,14 @@ package templating
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"text/template"
 	"text/template/parse"
 )
 
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
-func ApplyTemplateFunc(templt *template.Template, funcName string) error {
-	return WalkTemplate(templt, func(node parse.Node) {
+func ApplyTemplateFunc(templt *template.Template, funcName string) {
+	WalkTemplate(templt, func(node parse.Node) {
 		cmd, ok := node.(*parse.CommandNode)
 		if !ok {
 			return
@@ -66,88 +65,106 @@ func TransformTemplateFields(templt *template.Template, transform func(fieldName
 	})
 }
 
-// Recursively walk template nodes and apply fn on them
-func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) error {
-	visited := map[uintptr]struct{}{}
+// Walk template nodes and apply fn on them
+func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) {
+	type queueItem struct {
+		node parse.Node
+	}
+
+	queue := []queueItem{}
 
 	for _, t := range tmpl.Templates() {
 		if t.Tree != nil && t.Tree.Root != nil {
-			walkNode(t.Tree.Root, fn, visited)
+			queue = append(queue, queueItem{node: t.Tree.Root})
 		}
 	}
 
-	return nil
-}
+	for len(queue) > 0 {
+		// get next
+		item := queue[0]
+		queue = queue[1:]
 
-func walkNode(node parse.Node, fn func(node parse.Node), visited map[uintptr]struct{}) {
-	if node == nil {
-		return
-	}
-
-	ptr := reflect.ValueOf(node).Pointer()
-
-	_, exists := visited[ptr]
-	if exists {
-		return
-	}
-
-	// mark as visited
-	visited[ptr] = struct{}{}
-
-	fn(node)
-
-	switch n := node.(type) {
-	case *parse.ListNode:
-		for _, child := range n.Nodes {
-			walkNode(child, fn, visited)
+		if item.node == nil {
+			continue
 		}
 
-	case *parse.ActionNode:
-		walkNode(n.Pipe, fn, visited)
+		fn(item.node)
 
-	case *parse.TemplateNode:
-		walkNode(n.Pipe, fn, visited)
+		switch n := item.node.(type) {
+		case *parse.ListNode:
+			for _, child := range n.Nodes {
+				queue = append(queue, queueItem{node: child})
+			}
 
-	case *parse.IfNode:
-		walkNode(n.Pipe, fn, visited)
-		walkNode(n.List, fn, visited)
-		walkNode(n.ElseList, fn, visited)
+		case *parse.ActionNode:
+			if n.Pipe != nil {
+				queue = append(queue, queueItem{node: n.Pipe})
+			}
 
-	case *parse.RangeNode:
-		walkNode(n.Pipe, fn, visited)
-		walkNode(n.List, fn, visited)
-		walkNode(n.ElseList, fn, visited)
+		case *parse.TemplateNode:
+			if n.Pipe != nil {
+				queue = append(queue, queueItem{node: n.Pipe})
+			}
 
-	case *parse.WithNode:
-		walkNode(n.Pipe, fn, visited)
-		walkNode(n.List, fn, visited)
-		walkNode(n.ElseList, fn, visited)
+		case *parse.IfNode:
+			if n.Pipe != nil {
+				queue = append(queue, queueItem{node: n.Pipe})
+			}
+			if n.List != nil {
+				queue = append(queue, queueItem{node: n.List})
+			}
+			if n.ElseList != nil {
+				queue = append(queue, queueItem{node: n.ElseList})
+			}
 
-	case *parse.PipeNode:
-		for _, decl := range n.Decl {
-			walkNode(decl, fn, visited)
+		case *parse.RangeNode:
+			if n.Pipe != nil {
+				queue = append(queue, queueItem{node: n.Pipe})
+			}
+			if n.List != nil {
+				queue = append(queue, queueItem{node: n.List})
+			}
+			if n.ElseList != nil {
+				queue = append(queue, queueItem{node: n.ElseList})
+			}
+
+		case *parse.WithNode:
+			if n.Pipe != nil {
+				queue = append(queue, queueItem{node: n.Pipe})
+			}
+			if n.List != nil {
+				queue = append(queue, queueItem{node: n.List})
+			}
+			if n.ElseList != nil {
+				queue = append(queue, queueItem{node: n.ElseList})
+			}
+
+		case *parse.PipeNode:
+			for _, decl := range n.Decl {
+				queue = append(queue, queueItem{node: decl})
+			}
+			for _, cmd := range n.Cmds {
+				queue = append(queue, queueItem{node: cmd})
+			}
+
+		case *parse.CommandNode:
+			for _, arg := range n.Args {
+				queue = append(queue, queueItem{node: arg})
+			}
+
+		// no children
+		case
+			*parse.CommentNode,
+			*parse.TextNode,
+			*parse.IdentifierNode,
+			*parse.VariableNode,
+			*parse.FieldNode,
+			*parse.DotNode,
+			*parse.StringNode,
+			*parse.NumberNode,
+			*parse.BoolNode,
+			*parse.NilNode:
+			continue
 		}
-		for _, cmd := range n.Cmds {
-			walkNode(cmd, fn, visited)
-		}
-
-	case *parse.CommandNode:
-		for _, arg := range n.Args {
-			walkNode(arg, fn, visited)
-		}
-
-	// no children
-	case
-		*parse.CommentNode, 
-		*parse.TextNode,
-		*parse.IdentifierNode, 
-		*parse.VariableNode,
-		*parse.FieldNode, 
-		*parse.DotNode,
-		*parse.StringNode, 
-		*parse.NumberNode,
-		*parse.BoolNode, 
-		*parse.NilNode:
-		return
 	}
 }
