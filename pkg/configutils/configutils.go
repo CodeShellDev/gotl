@@ -205,9 +205,9 @@ func templateAny(key any, value any, variables map[string]any) any {
 
 		templt := templating.CreateNormalizedTemplate("").Delims("${{", "}}")
 
+		err := templating.ParseTemplate(templt, expanded)
 		fmt.Println(templt.Root.String())
 
-		err := templating.ParseTemplate(templt, expanded)
 
 		if err != nil {
 			return err
