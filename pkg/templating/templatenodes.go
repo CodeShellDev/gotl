@@ -2,6 +2,7 @@ package templating
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -67,7 +68,7 @@ func TransformTemplateFields(templt *template.Template, transform func(fieldName
 
 // Recursively walk template nodes and apply fn on them
 func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) error {
-	visited := map[parse.Node]struct{}{}
+	visited := map[uintptr]struct{}{}
 
 	for _, t := range tmpl.Templates() {
 		if t.Tree != nil && t.Tree.Root != nil {
@@ -78,18 +79,20 @@ func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) error {
 	return nil
 }
 
-func walkNode(node parse.Node, fn func(node parse.Node), visited map[parse.Node]struct{}) {
+func walkNode(node parse.Node, fn func(node parse.Node), visited map[uintptr]struct{}) {
 	if node == nil {
 		return
 	}
 
-	_, exists := visited[node]
+	ptr := reflect.ValueOf(node).Pointer()
+
+	_, exists := visited[ptr]
 	if exists {
 		return
 	}
 
 	// mark as visited
-	visited[node] = struct{}{}
+	visited[ptr] = struct{}{}
 
 	fn(node)
 
