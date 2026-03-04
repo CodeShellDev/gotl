@@ -5,11 +5,11 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"strings"
 	"sync"
 
 	configutils "github.com/codeshelldev/gotl/pkg/configutils/types"
+	"github.com/codeshelldev/gotl/pkg/stringutils"
 	"github.com/codeshelldev/gotl/pkg/templating"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/knadh/koanf/providers/confmap"
@@ -202,44 +202,25 @@ func templateAny(key any, value any, variables map[string]any) any {
 	case string:
 		expanded := os.ExpandEnv(asserted)
 
-		cleaned, err := enforceDollarTemplates(expanded)
+		templt := templating.CreateNormalizedTemplate("", variables)
+		templt.Delims("${{", "}}")
+
+		err := templating.ParseTemplate(templt, expanded)
 
 		if err != nil {
-			return asserted
+			return err
 		}
 
-		templated, _ := templating.RenderDataTemplateRecursively(key, cleaned, variables)
+		templatedString, err := templating.ExecuteTemplate(templt, variables)
 
-		return templated
+		if err != nil {
+			return err
+		}
+
+		return stringutils.ToType(templatedString)
 	default:
 		return asserted
 	}
-}
-
-func enforceDollarTemplates(input string) (string, error) {
-	re := regexp.MustCompile(`{{[^{}]+}}`)
-
-	matches := re.FindAllString(input, -1)
-	for _, m := range matches {
-
-		i := strings.Index(input, m)
-
-		if i == 0 || input[i - 1] != '$' {
-			return "", errors.New("template variable " + m + " must be prefixed with $")
-		}
-	}
-
-	temp := re.ReplaceAllStringFunc(input, func(m string) string {
-		if strings.HasPrefix(m, "$") {
-			return m
-		}
-		return "$" + m
-	})
-
-
-	final := strings.ReplaceAll(temp, "${{", "{{")
-
-	return final, nil
 }
 
 // Merge layers into Config
