@@ -3,73 +3,44 @@ package templating
 import (
 	"bytes"
 	"fmt"
-	"regexp"
 	"strings"
 	"text/template"
 
 	"github.com/codeshelldev/gotl/pkg/stringutils"
 )
 
-// Add template func to each variable
-func AddTemplateFunc(tmplStr string, funcName string) (string, error) {
-	return TransformTemplateKeys(tmplStr, `\.`, func(re *regexp.Regexp, match string) string {
-		reSimple, _ := regexp.Compile(`{{\s*\.[a-zA-Z0-9_.]+\s*}}`)
-
-		if !reSimple.MatchString(match) {
-			return match
-		}
-
-		return re.ReplaceAllStringFunc(match, func(varMatch string) string {
-			varName := re.ReplaceAllString(varMatch, ".$1")
-
-			return strings.ReplaceAll(varMatch, varName, "("+funcName+" "+varName+")")
-		})
-	})
-}
-
-// Transform template variables with func
-func TransformTemplateKeys(tmplStr string, prefix string, transform func(varRegex *regexp.Regexp, m string) string) (string, error) {
-	re, err := regexp.Compile(`{{([^{}]+)}}`)
-
-	if err != nil {
-		return tmplStr, err
-	}
-
-	varRe, err := regexp.Compile(string(prefix) + `("?[a-zA-Z0-9_.]+"?)`)
-
-	if err != nil {
-		return tmplStr, err
-	}
-
-	tmplStr = re.ReplaceAllStringFunc(tmplStr, func(match string) string {
-		return transform(varRe, match)
-	})
-
-	return tmplStr, nil
-}
-
 // Parse template
-func ParseTemplate(templt *template.Template, tmplStr string, variables any) (string, error) {
-	tmpl, err := templt.Parse(tmplStr)
+func ParseTemplate(name string, tmplStr string, variables any) (*template.Template, error) {
+	templt, err := template.New(name).Parse(tmplStr)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return templt, err
+}
+
+// Create new template and parse it
+func RenderTemplate(name string, tmplStr string, variables any) (string, error) {
+	templt, err := ParseTemplate(name, tmplStr, variables)
 
 	if err != nil {
 		return "", err
 	}
+
+	return ExecuteTemplate(templt, variables)
+}
+
+// Execute template
+func ExecuteTemplate(templt *template.Template, variables any) (string, error) {
 	var buf bytes.Buffer
 
-	err = tmpl.Execute(&buf, variables)
+	err := templt.Execute(&buf, variables)
 
 	if err != nil {
 		return "", err
 	}
 	return buf.String(), nil
-}
-
-// Create new template and parse it
-func RenderTemplate(name string, tmplStr string, variables any) (string, error) {
-	templt := template.New(name)
-
-	return ParseTemplate(templt, tmplStr, variables)
 }
 
 // Create new template with funcMap
@@ -137,30 +108,19 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 			"normalize": normalize,
 		})
 
-		tmplStr, _ := AddTemplateFunc(asserted, "normalize")
+		err := ApplyTemplateFunc(templt, "normalize")
 
-		templatedValue, err := ParseTemplate(templt, tmplStr, variables)
+		if err != nil {
+			return asserted, err
+		}
+
+		templatedValue, err := ExecuteTemplate(templt, variables)
 		
 		if err != nil {
 			return asserted, err
 		}
 
-		templateRe, err := regexp.Compile(`{{[^{}]+}}`)
-
-		if err == nil {
-			nonWhitespaceRe, err := regexp.Compile(`(\S+)`)
-
-			if err == nil {
-				filtered := templateRe.ReplaceAllString(tmplStr, "")
-
-				if !nonWhitespaceRe.MatchString(filtered) {
-					return stringutils.ToType(templatedValue), err
-				}
-			}
-		}
-
-		return templatedValue, err
-
+		return stringutils.ToType(templatedValue), nil
 	default:
 		return asserted, err
 	}
@@ -180,17 +140,17 @@ func renderJSONTemplate(data map[string]any, variables map[string]any) (map[stri
 
 // Create template with funcMap and apply func to all variables
 func RenderNormalizedTemplate(name string, tmplStr string, variables any) (string, error) {
-	tmplStr, err := AddTemplateFunc(tmplStr, "normalize")
+	templt := CreateTemplateWithFunc(name, template.FuncMap{
+		"normalize": normalize,
+	})
+
+	err := ApplyTemplateFunc(templt, "normalize")
 
 	if err != nil {
 		return tmplStr, err
 	}
 
-	templt := CreateTemplateWithFunc(name, template.FuncMap{
-		"normalize": normalize,
-	})
-
-	return ParseTemplate(templt, tmplStr, variables)
+	return ExecuteTemplate(templt, variables)
 }
 
 func normalize(value any) string {
