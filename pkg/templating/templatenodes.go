@@ -79,7 +79,11 @@ func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) {
 		}
 	}
 
-	for len(queue) > 0 {
+	i := 0
+
+	for len(queue) > 0 && i <= 100 {
+		i++
+
 		// get next
 		item := queue[0]
 		queue = queue[1:]
@@ -87,6 +91,8 @@ func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) {
 		if item.node == nil {
 			continue
 		}
+
+		fmt.Println(item.node)
 
 		fn(item.node)
 
