@@ -11,35 +11,30 @@ import (
 func ApplyTemplateFunc(templt *template.Template, funcName string) error {
 	return WalkTemplate(templt, func(node parse.Node) {
 		cmd, ok := node.(*parse.CommandNode)
-
 		if !ok {
 			return
 		}
 
 		for i, arg := range cmd.Args {
 			field, ok := arg.(*parse.FieldNode)
-
 			if !ok {
 				continue
 			}
 
-			wrapper := &parse.PipeNode{
+			cmd.Args[i] = &parse.PipeNode{
 				NodeType: parse.NodePipe,
 				Cmds: []*parse.CommandNode{
 					{
 						Args: []parse.Node{
-							// add function call as node
 							&parse.IdentifierNode{
 								NodeType: parse.NodeIdentifier,
-								Ident: funcName,
+								Ident:    funcName,
 							},
 							field,
 						},
 					},
 				},
 			}
-
-			cmd.Args[i] = wrapper
 		}
 	})
 }
@@ -71,7 +66,9 @@ func TransformTemplateFields(templt *template.Template, transform func(fieldName
 
 // Recursively walk template nodes and apply fn on them
 func WalkTemplate(tmpl *template.Template, fn func(node parse.Node)) error {
-	for _, t := range tmpl.Templates() {
+	items := append([]*template.Template(nil), tmpl.Templates()...)
+
+	for _, t := range items {
 		if t.Tree != nil && t.Tree.Root != nil {
 			walkNode(t.Tree.Root, fn)
 		}
