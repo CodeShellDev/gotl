@@ -83,6 +83,8 @@ func SetupNormalization(templt *template.Template) {
 func CreateNormalizedTemplateFromString(name string, tmplStr string) (*template.Template, error) {
 	templt := template.New(name)
 
+	SetupNormalization(templt)
+
 	err := ApplyNormalization(templt, tmplStr)
 
 	if err != nil {
