@@ -3,12 +3,12 @@ module github.com/codeshelldev/gotl/pkg/configutils
 go 1.26.0
 
 require (
-	github.com/codeshelldev/gotl/pkg/templating v0.0.14-5
+	github.com/codeshelldev/gotl/pkg/templating v0.0.15
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/knadh/koanf/providers/confmap v1.0.0
 	github.com/knadh/koanf/providers/env/v2 v2.0.0
 	github.com/knadh/koanf/providers/file v1.2.1
-	github.com/knadh/koanf/v2 v2.3.2
+	github.com/knadh/koanf/v2 v2.3.3
 )
 
 require (
