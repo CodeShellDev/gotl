@@ -2,8 +2,8 @@ github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2 h1:ERsjkaWVrsyUZoEunCEeNYDXhua
 github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2/go.mod h1:oxgKaAoMu6iYVHfgR7AhkK22xbYx4K0KCkyVEfYVoWs=
 github.com/codeshelldev/gotl/pkg/stringutils v0.0.8 h1:VKIuEYLJARDmHyhAbcMy1TsdxPdzsKlbQvgr1G4QE7s=
 github.com/codeshelldev/gotl/pkg/stringutils v0.0.8/go.mod h1:892bcYDpOf0sTpXtABQ3m+9MACpWHCVpN3f/mcPr7qo=
-github.com/codeshelldev/gotl/pkg/templating v0.0.15 h1:9lRfdwJrMT204TWVaDr6uSwoj7ZSqdmjGbaZ79gM2Hk=
-github.com/codeshelldev/gotl/pkg/templating v0.0.15/go.mod h1:MHM4ouEsLNKXRYO+fS9qqpS1SFlL4Z6Q/0kxtS+auLk=
+github.com/codeshelldev/gotl/pkg/templating v0.0.16 h1:0dl/NEApCtlm4kyEscQPknx4DwUtl1bsgl3Iyv6jPkM=
+github.com/codeshelldev/gotl/pkg/templating v0.0.16/go.mod h1:MHM4ouEsLNKXRYO+fS9qqpS1SFlL4Z6Q/0kxtS+auLk=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=

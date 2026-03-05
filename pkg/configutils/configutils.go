@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"text/template"
 
 	configutils "github.com/codeshelldev/gotl/pkg/configutils/types"
 	"github.com/codeshelldev/gotl/pkg/templating"
@@ -164,7 +165,7 @@ func (config *Config) GetTemplated(variables map[string]any) any {
 		"var": variables,
 	}
 
-	templated, err := templating.TemplateData(data, vars)
+	templated, err := templating.TemplateDataRecursively("", data, vars, template.New("").Delims("${{", "}}"))
 
 	if err != nil {
 		return nil
