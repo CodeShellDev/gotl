@@ -3,10 +3,15 @@ package templating
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/codeshelldev/gotl/pkg/stringutils"
+)
+
+const (
+	FORMAT_FUNC = "format"
 )
 
 // Create template from string template
@@ -54,30 +59,53 @@ func ExecuteTemplate(templt *template.Template, variables any) (string, error) {
 	return buf.String(), nil
 }
 
-// Create new template with funcMap
-func CreateTemplateWithFunc(name string, funcMap template.FuncMap) *template.Template {
-	return template.New(name).Funcs(funcMap)
+// Apply normalization on template, depends on SetupNormalization()
+func ApplyNormalization(templt *template.Template, tmplStr string) error {
+	err := ParseTemplate(templt, tmplStr)
+
+	if err != nil {
+		return err
+	}
+
+	ApplyTemplateFunc(templt, FORMAT_FUNC)
+
+	return nil
 }
 
-// Render json template
-func RenderJSON(data map[string]any, variables map[string]any) (map[string]any, error) {
-	data, err := renderJSONTemplate(data, variables)
+// Sets up normalization before ApplyNormalization() can be called
+func SetupNormalization(templt *template.Template) {
+	templt.Funcs(template.FuncMap{
+		FORMAT_FUNC: format,
+	})
+}
+
+// Create template with normalize applied
+func CreateNormalizedTemplateFromString(name string, tmplStr string) (*template.Template, error) {
+	templt := template.New(name)
+
+	err := ApplyNormalization(templt, tmplStr)
+
+	if err != nil {
+		return templt, err
+	}
+
+	return templt, nil
+}
+
+// Template data by using go templates for string values and performing type conversion
+func TemplateData(data any, variables map[string]any) (any, error) {
+	templated, err := TemplateDataRecursively("", data, variables)
 
 	if err != nil {
 		return data, err
 	}
 
-	return data, nil
+	return templated, nil
 }
 
-// Helper function for RenderJSON()
-// recursively walks `value` and templates string values into typed values via stringutils.ToType()
-// 
-// `key` currently has no purpose besides errors including the key name
-func RenderDataTemplateRecursively(key any, value any, variables map[string]any) (any, error) {
+// Recursively walks `value` and templates string values into typed values via stringutils.ToType()
+func TemplateDataRecursively(key string, value any, variables map[string]any) (any, error) {
 	var err error
-
-	strKey := fmt.Sprintf("%v", key)
 
 	switch asserted := value.(type) {
 	case map[string]any:
@@ -86,7 +114,7 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 		for mapKey, mapValue := range asserted {
 			var templatedValue any
 
-			templatedValue, err = RenderDataTemplateRecursively(mapKey, mapValue, variables)
+			templatedValue, err = TemplateDataRecursively(key + "." + mapKey, mapValue, variables)
 
 			if err != nil {
 				return mapValue, err
@@ -103,7 +131,7 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 		for arrayIndex, arrayValue := range asserted {
 			var templatedValue any
 
-			templatedValue, err = RenderDataTemplateRecursively(arrayIndex, arrayValue, variables)
+			templatedValue, err = TemplateDataRecursively(key + "." + strconv.Itoa(arrayIndex), arrayValue, variables)
 
 			if err != nil {
 				return arrayValue, err
@@ -115,9 +143,7 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 		return data, err
 
 	case string:
-		templt := CreateNormalizedTemplate("json:" + strKey)
-
-		err := ParseTemplate(templt, asserted)
+		templt, err := CreateNormalizedTemplateFromString(key, asserted)
 
 		if err != nil {
 			return asserted, err
@@ -135,30 +161,7 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 	}
 }
 
-func renderJSONTemplate(data map[string]any, variables map[string]any) (map[string]any, error) {
-	res, err := RenderDataTemplateRecursively("", data, variables)
-
-	mapRes, ok := res.(map[string]any)
-
-	if !ok {
-		return data, err
-	}
-
-	return mapRes, err
-}
-
-// Create template with funcMap and apply func to all variables
-func CreateNormalizedTemplate(name string) *template.Template {
-	templt := CreateTemplateWithFunc(name, template.FuncMap{
-		"normalize": normalize,
-	})
-
-	ApplyTemplateFunc(templt, "normalize")
-
-	return templt
-}
-
-func normalize(value any) string {
+func format(value any) string {
 	switch asserted := value.(type) {
 	case []string:
 		return "[" + strings.Join(asserted, ",") + "]"
