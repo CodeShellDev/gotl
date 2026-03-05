@@ -96,7 +96,7 @@ func CreateNormalizedTemplateFromString(name string, tmplStr string) (*template.
 
 // Template data by using go templates for string values and performing type conversion
 func TemplateData(data any, variables map[string]any) (any, error) {
-	templated, err := TemplateDataRecursively("", data, variables)
+	templated, err := TemplateDataRecursively("", data, variables, nil)
 
 	if err != nil {
 		return data, err
@@ -106,7 +106,7 @@ func TemplateData(data any, variables map[string]any) (any, error) {
 }
 
 // Recursively walks `value` and templates string values into typed values via stringutils.ToType()
-func TemplateDataRecursively(key string, value any, variables map[string]any) (any, error) {
+func TemplateDataRecursively(key string, value any, variables map[string]any, baseTemplate *template.Template) (any, error) {
 	var err error
 
 	switch asserted := value.(type) {
@@ -116,7 +116,7 @@ func TemplateDataRecursively(key string, value any, variables map[string]any) (a
 		for mapKey, mapValue := range asserted {
 			var templatedValue any
 
-			templatedValue, err = TemplateDataRecursively(key + "." + mapKey, mapValue, variables)
+			templatedValue, err = TemplateDataRecursively(key + "." + mapKey, mapValue, variables, baseTemplate)
 
 			if err != nil {
 				return mapValue, err
@@ -133,7 +133,7 @@ func TemplateDataRecursively(key string, value any, variables map[string]any) (a
 		for arrayIndex, arrayValue := range asserted {
 			var templatedValue any
 
-			templatedValue, err = TemplateDataRecursively(key + "." + strconv.Itoa(arrayIndex), arrayValue, variables)
+			templatedValue, err = TemplateDataRecursively(key + "." + strconv.Itoa(arrayIndex), arrayValue, variables, baseTemplate)
 
 			if err != nil {
 				return arrayValue, err
@@ -145,7 +145,24 @@ func TemplateDataRecursively(key string, value any, variables map[string]any) (a
 		return data, err
 
 	case string:
-		templt, err := CreateNormalizedTemplateFromString(key, asserted)
+		var templt *template.Template
+		if baseTemplate != nil {
+			var err error
+
+			templt, err = baseTemplate.Clone()
+
+			if err != nil {
+				return asserted, err
+			}
+
+			templt.New(key)
+		} else {
+			templt = template.New(key)
+		}
+
+		SetupNormalization(templt)
+
+		err = ApplyNormalization(templt, asserted)
 
 		if err != nil {
 			return asserted, err
