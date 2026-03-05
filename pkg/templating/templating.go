@@ -115,11 +115,15 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 		return data, err
 
 	case string:
-		templt := CreateTemplateWithFunc("json:" + strKey, template.FuncMap{
-			"normalize": normalize,
-		})
+		templt := CreateNormalizedTemplate("json:" + strKey)
 
-		ApplyTemplateFunc(templt, "normalize")
+		err := ParseTemplate(templt, asserted)
+
+		if err != nil {
+			return asserted, err
+		}
+
+		fmt.Println(templt.Root.String())
 
 		templatedValue, err := ExecuteTemplate(templt, variables)
 		
