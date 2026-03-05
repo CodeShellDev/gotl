@@ -1,7 +1,6 @@
 package templating
 
 import (
-	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -11,8 +10,6 @@ import (
 func ApplyTemplateFunc(templt *template.Template, funcName string) {
 	WalkTemplate(templt, func(node parse.Node) bool {
 		cmd, ok := node.(*parse.CommandNode)
-
-		fmt.Println(node)
 
 		if !ok {
 			return false
@@ -39,8 +36,6 @@ func ApplyTemplateFunc(templt *template.Template, funcName string) {
 					},
 				},
 			}
-
-			fmt.Println(cmd.Args[i])
 		}
 
 		return true
