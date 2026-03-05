@@ -123,8 +123,6 @@ func RenderDataTemplateRecursively(key any, value any, variables map[string]any)
 			return asserted, err
 		}
 
-		fmt.Println(templt.Root.String())
-
 		templatedValue, err := ExecuteTemplate(templt, variables)
 		
 		if err != nil {
