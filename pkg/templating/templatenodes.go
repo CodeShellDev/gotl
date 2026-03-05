@@ -1,6 +1,7 @@
 package templating
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -35,6 +36,8 @@ func ApplyTemplateFunc(templt *template.Template, funcName string) {
 					},
 				},
 			}
+
+			fmt.Println(cmd.Args[i])
 		}
 
 		return true
