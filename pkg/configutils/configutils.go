@@ -162,7 +162,7 @@ func (config *Config) GetTemplated(variables map[string]any) any {
 
 	vars := map[string]any{
 		"env": envMap,
-		"var": variables,
+		"vars": variables,
 	}
 
 	templated, err := templating.TemplateDataRecursively("", data, vars, template.New("").Delims("${{", "}}"))
