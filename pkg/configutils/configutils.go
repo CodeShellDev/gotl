@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	configutils "github.com/codeshelldev/gotl/pkg/configutils/types"
-	"github.com/codeshelldev/gotl/pkg/stringutils"
 	"github.com/codeshelldev/gotl/pkg/templating"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/knadh/koanf/providers/confmap"
@@ -165,7 +164,13 @@ func (config *Config) GetTemplated(variables map[string]any) any {
 		"var": variables,
 	}
 
-	return templateAny("", data, vars)
+	templated, err := templating.TemplateData(data, vars)
+
+	if err != nil {
+		return nil
+	}
+
+	return templated
 }
 
 // Get tag from scheme field by using a pointer of said field
@@ -186,45 +191,6 @@ func GetSchemeTagByFieldPointer(config any, tag string, fieldPointer any) string
 	}
 
 	return ""
-}
-
-func templateAny(key any, value any, variables map[string]any) any {
-	switch asserted := value.(type) {
-	case map[string]any:
-		out := make(map[string]any, len(asserted))
-
-		for k, v := range asserted {
-			out[k] = templateAny(k, v, variables)
-		}
-
-		return out
-	case []any:
-		out := make([]any, len(asserted))
-		
-		for i, v := range asserted {
-			out[i] = templateAny(i, v, variables)
-		}
-
-		return out
-	case string:
-		templt := templating.CreateNormalizedTemplate("").Delims("${{", "}}")
-
-		err := templating.ParseTemplate(templt, asserted)
-
-		if err != nil {
-			return err
-		}
-
-		templatedString, err := templating.ExecuteTemplate(templt, variables)
-
-		if err != nil {
-			return err
-		}
-
-		return stringutils.ToType(templatedString)
-	default:
-		return asserted
-	}
 }
 
 func environMap() map[string]any {
