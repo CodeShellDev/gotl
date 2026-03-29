@@ -19,7 +19,13 @@ func TestQueryTemplating(t *testing.T) {
 
 	queryStr := "key={{.value}}&array={{.array}}"
 
-	got, err := templating.RenderNormalizedTemplate("query", queryStr, variables)
+	templt, err := templating.CreateNormalizedTemplateFromString("query", queryStr)
+
+	if err != nil {
+		t.Error("Error Templating Query: ", err.Error())
+	}
+
+	got, err := templating.ExecuteTemplate(templt, variables)
 
 	if err != nil {
 		t.Error("Error Templating Query: ", err.Error())

@@ -13,7 +13,7 @@ import (
 func TestTemplateFieldTransform(t *testing.T) {
 	tmplStr := `Hello {{ .NAME.FIRST }} {{ .NAME.LAST }}!`
 
-	templt, err := templating.ParseTemplate("transform-field", tmplStr)
+	templt, err := templating.CreateTemplateFromString("transform-field", tmplStr)
 
 	if err != nil {
 		t.Error("Error Templating:\n", err.Error())
@@ -44,7 +44,7 @@ func TestTemplateFieldTransform(t *testing.T) {
 func TestTemplateApplyFunc(t *testing.T) {
 	tmplStr := `Your email is {{ .base64_email }}!`
 
-	templt, err := templating.ParseTemplate("apply-func", tmplStr)
+	templt, err := templating.CreateTemplateFromString("apply-func", tmplStr)
 
 	templt.Funcs(template.FuncMap{
 		"decode_base64": func (v any) string  {

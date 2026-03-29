@@ -1,6 +1,7 @@
 package configutils
 
 import (
+	"errors"
 	"reflect"
 
 	"github.com/go-viper/mapstructure/v2"
@@ -23,7 +24,12 @@ type Opt[T any] struct {
 // Returns optional.Value (if set) or fallback
 func (optional Opt[T]) ValueOrFallback(fallback T) T {
     if optional.Set {
-        return *optional.Value
+        if optional.Value != nil {
+            return *optional.Value
+        }
+
+        var zero T
+        return zero
     }
 
     return fallback
@@ -32,20 +38,45 @@ func (optional Opt[T]) ValueOrFallback(fallback T) T {
 // Returns optional.Value (if set) or fallback.Value
 func (optional Opt[T]) OptOrFallback(fallback Opt[T]) T {
     if optional.Set {
-        return *optional.Value
+        if optional.Value != nil {
+            return *optional.Value
+        }
+
+        var zero T
+        return zero
     }
 
-    return *fallback.Value
+    if fallback.Value != nil {
+        if fallback.Value != nil {
+            return *fallback.Value
+        }
+
+        var zero T
+        return zero
+    }
+
+    var zero T
+    return zero
 }
 
 // Returns optional.Value (if set) or fallback.Value (if set), else T empty is returned
 func (optional Opt[T]) OptOrEmpty(fallback Opt[T]) T {
     if optional.Set {
-        return *optional.Value
+        if optional.Value != nil {
+            return *optional.Value
+        }
+
+        var zero T
+        return zero
     }
 
     if fallback.Set {
-        return *fallback.Value
+        if fallback.Value != nil {
+            return *fallback.Value
+        }
+
+        var zero T
+        return zero
     }
 
     var zero T
@@ -84,6 +115,11 @@ type Comp[RawT Compilable[CompiledT], CompiledT any] struct {
 }
 
 func (c *Comp[RawT, CompiledT]) Compile() CompiledT {
+    if c == nil {
+        var zero CompiledT
+        return zero
+    }
+
 	if c.done {
 		return *c.compiled
 	}
@@ -97,6 +133,10 @@ func (c *Comp[RawT, CompiledT]) Compile() CompiledT {
 }
 
 func (c *Comp[RawT, CompiledT]) UnmarshalMapstructure(raw any) error {
+    if c == nil {
+        return errors.New("compiled struct cannot be nil")
+    }
+
 	var rawT RawT
 
     err := mapstructure.Decode(raw, &rawT)

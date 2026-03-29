@@ -44,7 +44,7 @@ func TestJsonTemplating(t *testing.T) {
 		"key2": 4,
 	}
 
-	got, err := templating.RenderJSON(data, variables)
+	got, err := templating.TemplateData(data, variables)
 
 	if err != nil {
 		t.Error("Error Templating JSON:\n", err.Error())
