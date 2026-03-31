@@ -9,7 +9,7 @@ import (
 	"sync"
 	"text/template"
 
-	configutils "github.com/codeshelldev/gotl/pkg/configutils/types"
+	t "github.com/codeshelldev/gotl/pkg/configutils/types"
 	"github.com/codeshelldev/gotl/pkg/templating"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/knadh/koanf/providers/confmap"
@@ -21,6 +21,8 @@ import (
 var configLock sync.Mutex
 
 var DELIM string = "."
+
+var DEFAULT_HOOKS = []mapstructure.DecodeHookFunc{t.NilSentinelHook}
 
 type Config struct {
 	Layer *koanf.Koanf
@@ -230,7 +232,7 @@ func (config *Config) MergeLayers(layers ...*koanf.Koanf) error {
 }
 
 func (config *Config) Unmarshal(path string, schema any) error {
-	return config.UnmarshalWithHooks(path, schema, configutils.NilSentinelHook)
+	return config.UnmarshalWithHooks(path, schema, t.NilSentinelHook)
 }
 
 func (config *Config) UnmarshalWithHooks(path string, schema any, hooks ...mapstructure.DecodeHookFunc) error {
