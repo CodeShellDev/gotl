@@ -4,6 +4,25 @@ import (
 	"reflect"
 )
 
+func SafeInterface(value reflect.Value) (any, bool) {
+    if !value.IsValid() {
+        return nil, false
+    }
+
+    if value.Kind() == reflect.Pointer || value.Kind() == reflect.Interface {
+        if value.IsNil() {
+            return nil, false
+        }
+        value = value.Elem()
+    }
+
+    if !value.CanInterface() {
+        return nil, false
+    }
+
+    return value.Interface(), true
+}
+
 func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type, fn func(iface T, t reflect.Type) bool) bool {
 	if current == nil {
 		return true
