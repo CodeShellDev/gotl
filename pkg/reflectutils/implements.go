@@ -88,7 +88,7 @@ func OnValueImplements[T any](current reflect.Value, targetInterface reflect.Typ
 	}
 
 	// unwrap interface | pointer
-	for current.Kind() == reflect.Interface || current.Kind() == reflect.Ptr {
+	for current.Kind() == reflect.Interface || current.Kind() == reflect.Pointer {
 		if current.IsNil() {
 			return true
 		}
