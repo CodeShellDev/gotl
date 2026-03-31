@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func OnImplements[T any](current reflect.Type, targetInterface reflect.Type, fn func(iface T) bool) bool {
+func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type, fn func(iface T) bool) bool {
 	if current == nil {
 		return true
 	}
@@ -40,27 +40,85 @@ func OnImplements[T any](current reflect.Type, targetInterface reflect.Type, fn 
 
 	case reflect.Struct:
 		for field := range current.Fields() {
-			proceed := OnImplements(field.Type, targetInterface, fn)
-
-			if !proceed {
+			if !OnTypeImplements(field.Type, targetInterface, fn) {
 				return false
 			}
 		}
 
 	case reflect.Slice, reflect.Array:
-		return OnImplements(current.Elem(), targetInterface, fn)
-
-	case reflect.Map:
-		proceed := OnImplements(current.Key(), targetInterface, fn)
-
-		if !proceed {
+		if !OnTypeImplements(current.Elem(), targetInterface, fn) {
 			return false
 		}
 
-		proceed = OnImplements(current.Elem(), targetInterface, fn)
-
-		if !proceed {
+	case reflect.Map:
+		if !OnTypeImplements(current.Key(), targetInterface, fn) {
 			return false
+		}
+
+		if !OnTypeImplements(current.Elem(), targetInterface, fn) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func OnValueImplements[T any](current reflect.Value, targetInterface reflect.Type, fn func(iface T) bool) bool {
+	if !current.IsValid() {
+		return true
+	}
+
+	// unwrap interface | pointer
+	for current.Kind() == reflect.Interface || current.Kind() == reflect.Ptr {
+		if current.IsNil() {
+			return true
+		}
+		current = current.Elem()
+	}
+
+	t := current.Type()
+
+	// check value implements interface
+	if t.Implements(targetInterface) {
+		iface := current.Interface().(T)
+
+		if !fn(iface) {
+			return false
+		}
+	}
+
+	// check pointer receiver case
+	if reflect.PointerTo(t).Implements(targetInterface) {
+		if current.CanAddr() {
+			iface := current.Addr().Interface().(T)
+			
+			if !fn(iface) {
+				return false
+			}
+		}
+	}
+
+	switch current.Kind() {
+
+	case reflect.Struct:
+		for _, field := range current.Fields() {
+			if !OnValueImplements(field, targetInterface, fn) {
+				return false
+			}
+		}
+
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < current.Len(); i++ {
+			if !OnValueImplements(current.Index(i), targetInterface, fn) {
+				return false
+			}
+		}
+
+	case reflect.Map:
+		for _, k := range current.MapKeys() {
+			if !OnValueImplements(current.MapIndex(k), targetInterface, fn) {
+				return false
+			}
 		}
 	}
 
