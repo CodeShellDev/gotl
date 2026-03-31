@@ -264,3 +264,65 @@ func watchFile(f *file.File, path string, loadFunc func(string)) {
 		loadFunc(path)
 	})
 }
+
+// Walks schema and calls fn for every field with its path, schema field and raw + typed value
+func WalkSchema(schema reflect.Type, value reflect.Value, raw any, path []string, fn func(path string, field reflect.StructField, raw any, value reflect.Value)) {
+	if schema == nil {
+		return
+	}
+
+	// unwrap interfaces and pointers
+	for value.IsValid() && (value.Kind() == reflect.Interface || value.Kind() == reflect.Pointer) {
+
+		if value.IsNil() {
+			return
+		}
+
+		value = value.Elem()
+	}
+
+	rawMap, _ := raw.(map[string]any)
+
+	switch schema.Kind() {
+	case reflect.Struct:
+
+		for i := 0; i < schema.NumField(); i++ {
+			field := schema.Field(i)
+
+			key := field.Tag.Get("koanf")
+			if key == "" {
+				key = field.Name
+			}
+
+			nextPath := append(path, key)
+
+			var rawChild any
+			if rawMap != nil {
+				rawChild = rawMap[key]
+			}
+
+			var child reflect.Value
+			if value.IsValid() && value.NumField() > i {
+				child = value.Field(i)
+			}
+
+			WalkSchema(
+				field.Type,
+				child,
+				rawChild,
+				nextPath,
+				fn,
+			)
+		}
+
+	default:
+		fn(
+			joinPaths(path...),
+			reflect.StructField{
+				Type: schema,
+			},
+			raw,
+			value,
+		)
+	}
+}
