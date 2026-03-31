@@ -2,6 +2,7 @@ package configutils
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/go-viper/mapstructure/v2"
@@ -119,6 +120,8 @@ func (c *Comp[RawT, CompiledT]) Compile() CompiledT {
         var zero CompiledT
         return zero
     }
+
+    fmt.Println(c.Raw, ": compiled:", c.done)
 
 	if c.done {
 		return *c.compiled
