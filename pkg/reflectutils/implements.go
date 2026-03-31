@@ -56,7 +56,6 @@ func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type,
 	}
 
 	switch current.Kind() {
-
 	case reflect.Struct:
 		for field := range current.Fields() {
 			if !OnTypeImplements(field.Type, targetInterface, fn) {
@@ -84,62 +83,72 @@ func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type,
 
 func OnValueImplements[T any](current reflect.Value, targetInterface reflect.Type, fn func(iface T, value reflect.Value) bool) bool {
 	if !current.IsValid() {
-		return true
-	}
+        return true
+    }
 
-	// unwrap interface | pointer
-	for current.Kind() == reflect.Interface || current.Kind() == reflect.Pointer {
-		if current.IsNil() {
-			return true
-		}
-		current = current.Elem()
-	}
+    t := current.Type()
 
-	t := current.Type()
+    // direct value implements interface
+    if t.Implements(targetInterface) {
+        if current.CanInterface() {
+            iface := current.Interface().(T)
+            if !fn(iface, current) {
+                return false
+            }
+        }
+    }
 
-	// check value implements interface
-	if t.Implements(targetInterface) {
-		iface := current.Interface().(T)
+    // pointer receiver implements interface
+    if current.CanAddr() {
+        ptrType := reflect.PointerTo(t)
 
-		if !fn(iface, current) {
-			return false
-		}
-	}
+        if ptrType.Implements(targetInterface) {
+            iface := current.Addr().Interface().(T)
 
-	// check pointer receiver case
-	if reflect.PointerTo(t).Implements(targetInterface) {
-		if current.CanAddr() {
-			iface := current.Addr().Interface().(T)
-			
-			if !fn(iface, current) {
-				return false
-			}
-		}
-	}
+            if !fn(iface, current) {
+                return false
+            }
+        }
+    }
 
-	switch current.Kind() {
+    for current.Kind() == reflect.Interface {
+        if current.IsNil() {
+            return true
+        }
 
-	case reflect.Struct:
-		for _, field := range current.Fields() {
-			if !OnValueImplements(field, targetInterface, fn) {
-				return false
-			}
-		}
+        current = current.Elem()
+    }
 
-	case reflect.Slice, reflect.Array:
-		for i := 0; i < current.Len(); i++ {
-			if !OnValueImplements(current.Index(i), targetInterface, fn) {
-				return false
-			}
-		}
+    for current.Kind() == reflect.Pointer {
+        if current.IsNil() {
+            return true
+        }
+		
+        current = current.Elem()
+    }
 
-	case reflect.Map:
-		for _, k := range current.MapKeys() {
-			if !OnValueImplements(current.MapIndex(k), targetInterface, fn) {
-				return false
-			}
-		}
-	}
+    switch current.Kind() {
+    case reflect.Struct:
+        for _, field := range current.Fields() {
+            if !OnValueImplements(field, targetInterface, fn) {
+                return false
+            }
+        }
 
-	return true
+    case reflect.Slice, reflect.Array:
+        for i := 0; i < current.Len(); i++ {
+            if !OnValueImplements(current.Index(i), targetInterface, fn) {
+                return false
+            }
+        }
+
+    case reflect.Map:
+        for _, k := range current.MapKeys() {
+            if !OnValueImplements(current.MapIndex(k), targetInterface, fn) {
+                return false
+            }
+        }
+    }
+
+    return true
 }
