@@ -112,7 +112,7 @@ type Compilable[CompiledT any] interface {
 type Comp[RawT Compilable[CompiledT], CompiledT any] struct {
 	Raw        *RawT
 	compiled   *CompiledT
-	done bool
+	done        bool
 }
 
 func (c *Comp[RawT, CompiledT]) Compile() CompiledT {
@@ -121,8 +121,6 @@ func (c *Comp[RawT, CompiledT]) Compile() CompiledT {
         return zero
     }
 
-    fmt.Println(c.Raw, ": compiled:", c.done)
-
 	if c.done {
 		return *c.compiled
 	}
@@ -130,6 +128,7 @@ func (c *Comp[RawT, CompiledT]) Compile() CompiledT {
 	compiled := (*c.Raw).Compile()
 
 	c.compiled = &compiled
+    fmt.Println(c.Raw, ": compiled:", c.done)
 	c.done = true
 
 	return compiled
