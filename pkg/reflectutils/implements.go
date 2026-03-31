@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type, fn func(iface T) bool) bool {
+func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type, fn func(iface T, t reflect.Type) bool) bool {
 	if current == nil {
 		return true
 	}
@@ -20,7 +20,7 @@ func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type,
 
 		iface := value.Interface().(T)
 
-		if !fn(iface) {
+		if !fn(iface, current) {
 			return false
 		}
 	}
@@ -31,7 +31,7 @@ func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type,
 
 		iface := value.Interface().(T)
 
-		if !fn(iface) {
+		if !fn(iface, current) {
 			return false
 		}
 	}
@@ -63,7 +63,7 @@ func OnTypeImplements[T any](current reflect.Type, targetInterface reflect.Type,
 	return true
 }
 
-func OnValueImplements[T any](current reflect.Value, targetInterface reflect.Type, fn func(iface T) bool) bool {
+func OnValueImplements[T any](current reflect.Value, targetInterface reflect.Type, fn func(iface T, value reflect.Value) bool) bool {
 	if !current.IsValid() {
 		return true
 	}
@@ -82,7 +82,7 @@ func OnValueImplements[T any](current reflect.Value, targetInterface reflect.Typ
 	if t.Implements(targetInterface) {
 		iface := current.Interface().(T)
 
-		if !fn(iface) {
+		if !fn(iface, current) {
 			return false
 		}
 	}
@@ -92,7 +92,7 @@ func OnValueImplements[T any](current reflect.Value, targetInterface reflect.Typ
 		if current.CanAddr() {
 			iface := current.Addr().Interface().(T)
 			
-			if !fn(iface) {
+			if !fn(iface, current) {
 				return false
 			}
 		}
