@@ -275,35 +275,46 @@ func WalkSchema(schema reflect.Type, value reflect.Value, raw any, path []string
 	for value.IsValid() && (value.Kind() == reflect.Interface || value.Kind() == reflect.Pointer) {
 
 		if value.IsNil() {
-			return
+			value = reflect.Value{}
+			break
 		}
 
 		value = value.Elem()
 	}
 
-	rawMap, _ := raw.(map[string]any)
-
 	switch schema.Kind() {
 	case reflect.Struct:
+		rawMap, _ := raw.(map[string]any)
 
-		for i := 0; i < schema.NumField(); i++ {
-			field := schema.Field(i)
-
-			key := field.Tag.Get("koanf")
-			if key == "" {
-				key = field.Name
-			}
-
-			nextPath := append(path, key)
-
-			var rawChild any
-			if rawMap != nil {
-				rawChild = rawMap[key]
-			}
-
+		for field := range schema.Fields() {
 			var child reflect.Value
-			if value.IsValid() && value.NumField() > i {
-				child = value.Field(i)
+			if value.IsValid() && value.Kind() == reflect.Struct {
+				child = value.FieldByName(field.Name)
+			}
+
+			// source of truth, no koanf tag, no actual path
+			key := field.Tag.Get("koanf")
+
+			rawChild := raw
+			nextPath := path
+
+			if key != "" {
+				nextPath = append(path, key)
+
+				if rawMap != nil {
+					rawChild = rawMap[key]
+				}
+			} else {
+				// no koanf tag
+				t := field.Type
+				for t.Kind() == reflect.Pointer {
+					t = t.Elem()
+				}
+
+				// if field is struct => leaf field, try other
+				if t.Kind() != reflect.Struct {
+					continue
+				}
 			}
 
 			WalkSchema(
