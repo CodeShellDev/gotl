@@ -96,44 +96,91 @@ func Pretty[T any](obj T) string {
 }
 
 // Marshals an object into json bytes, while ignoring unmarshable fields according to json.Marshal()
-func MarshalSkipIncompatible(v any) ([]byte, error) {
-	val := reflect.ValueOf(v)
-	typ := reflect.TypeOf(v)
+func MarshalSkipIncompatible(obj any) ([]byte, error) {
+	clean := sanitize(reflect.ValueOf(obj))
+	return json.Marshal(clean)
+}
 
-	// handle pointer
-	if val.Kind() == reflect.Pointer {
-		if val.IsNil() {
-			return []byte("null"), nil
-		}
-		val = val.Elem()
-		typ = typ.Elem()
+func sanitize(value reflect.Value) any {
+	if !value.IsValid() {
+		return nil
 	}
 
-	if val.Kind() != reflect.Struct {
-		return json.Marshal(v)
-	}
-
-	out := make(map[string]any)
-
-	for i := 0; i < val.NumField(); i++ {
-		field := typ.Field(i)
-
-		// skip unexported fields
-		if field.PkgPath != "" {
-			continue
+	// unwrap pointers and interfaces
+	for value.Kind() == reflect.Pointer || value.Kind() == reflect.Interface {
+		if value.IsNil() {
+			return nil
 		}
 
-		name := field.Name
+		value = value.Elem()
+	}
 
-		fv := val.Field(i).Interface()
+	switch value.Kind() {
+	case reflect.Struct:
+		out := map[string]any{}
 
-		// try marshaling field
+		t := value.Type()
 
-		_, err := json.Marshal(fv)
+		for i := 0; i < value.NumField(); i++ {
+			field := t.Field(i)
+
+			// skip unexported
+			if field.PkgPath != "" {
+				continue
+			}
+
+			name := field.Name
+
+			fieldValue := value.Field(i)
+			cleaned := sanitize(fieldValue)
+
+			if cleaned != nil {
+				out[name] = cleaned
+			}
+		}
+
+		return out
+
+	case reflect.Map:
+		if value.Type().Key().Kind() != reflect.String {
+			return nil // json only supports string keys
+		}
+
+		out := map[string]any{}
+
+		iter := value.MapRange()
+		for iter.Next() {
+			key := iter.Key().String()
+			iterValue := iter.Value()
+
+			cleaned := sanitize(iterValue)
+			if cleaned != nil {
+				out[key] = cleaned
+			}
+		}
+
+		return out
+
+	case reflect.Slice, reflect.Array:
+		out := make([]any, 0, value.Len())
+
+		for i := 0; i < value.Len(); i++ {
+			cleaned := sanitize(value.Index(i))
+			if cleaned != nil {
+				out = append(out, cleaned)
+			}
+		}
+
+		return out
+
+	default:
+		val := value.Interface()
+
+		_, err := json.Marshal(val)
 		if err == nil {
-			out[name] = fv
+			return val
 		}
+		
+		return nil
 	}
-
-	return json.Marshal(out)
 }
