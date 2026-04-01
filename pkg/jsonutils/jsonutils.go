@@ -2,6 +2,7 @@ package jsonutils
 
 import (
 	"encoding/json"
+	"reflect"
 	"regexp"
 	"strconv"
 )
@@ -85,4 +86,47 @@ func Pretty[T any](obj T) string {
 	bytes, _ := json.MarshalIndent(obj, "", "  ")
 
 	return string(bytes)
+}
+
+// Marshals an object into json bytes, while ignoring unmarshable fields according to json.Marshal()
+func MarshalSkipIncompatible(v any) ([]byte, error) {
+	val := reflect.ValueOf(v)
+	typ := reflect.TypeOf(v)
+
+	// handle pointer
+	if val.Kind() == reflect.Pointer {
+		if val.IsNil() {
+			return []byte("null"), nil
+		}
+		val = val.Elem()
+		typ = typ.Elem()
+	}
+
+	if val.Kind() != reflect.Struct {
+		return json.Marshal(v)
+	}
+
+	out := make(map[string]any)
+
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+
+		// skip unexported fields
+		if field.PkgPath != "" {
+			continue
+		}
+
+		name := field.Name
+
+		fv := val.Field(i).Interface()
+
+		// try marshaling field
+
+		_, err := json.Marshal(fv)
+		if err == nil {
+			out[name] = fv
+		}
+	}
+
+	return json.Marshal(out)
 }
