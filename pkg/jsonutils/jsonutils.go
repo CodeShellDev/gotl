@@ -81,28 +81,16 @@ func ToJson(obj any) string {
 	return string(bytes)
 }
 
-// Prettify data into json string
-func Pretty[T any](obj T) string {
-	bytes, _ := json.MarshalIndent(obj, "", "  ")
+// Get json string from data (without error and ignoring unmarshable fields)
+func ToJsonSkipIncompatible(obj any) string {
+	bytes, _ := MarshalSkipIncompatible(obj)
 
 	return string(bytes)
 }
 
-// Prettify data into json string (while ignoring unmarshable fields)
-func PrettySkipIncompatible(obj any) string {
-	bytes, err := MarshalSkipIncompatible(obj)
-
-	if err != nil {
-		return ""
-	}
-
-	cleaned := GetJson[any](string(bytes))
-
-	bytes, err = json.MarshalIndent(cleaned, "", "  ")
-
-	if err != nil {
-		return ""
-	}
+// Prettify data into json string
+func Pretty[T any](obj T) string {
+	bytes, _ := json.MarshalIndent(obj, "", "  ")
 
 	return string(bytes)
 }
