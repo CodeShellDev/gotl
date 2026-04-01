@@ -68,14 +68,14 @@ func GetJson[T any](jsonStr string) T {
 }
 
 // Get jsonStr from data (returns error)
-func ToJsonSafe[T any](obj T) (string, error) {
+func ToJsonSafe(obj any) (string, error) {
 	bytes, err := json.Marshal(obj)
 
 	return string(bytes), err
 }
 
 // Get jsonStr from data (without error)
-func ToJson[T any](obj T) string {
+func ToJson(obj any) string {
 	bytes, _ := json.Marshal(obj)
 
 	return string(bytes)
@@ -84,6 +84,24 @@ func ToJson[T any](obj T) string {
 // Prettify data into jsonStr
 func Pretty[T any](obj T) string {
 	bytes, _ := json.MarshalIndent(obj, "", "  ")
+
+	return string(bytes)
+}
+
+func PrettySkipIncompatible(obj any) string {
+	bytes, err := MarshalSkipIncompatible(obj)
+
+	if err != nil {
+		return ""
+	}
+
+	cleaned := GetJson[any](string(bytes))
+
+	bytes, err = json.MarshalIndent(cleaned, "", "  ")
+
+	if err != nil {
+		return ""
+	}
 
 	return string(bytes)
 }
