@@ -49,45 +49,46 @@ func GetByPath(path string, data any) (any, bool) {
 	return current, true
 }
 
-// Get data from jsonStr (returns error)
-func GetJsonSafe[T any](jsonStr string) (T, error) {
+// Get data from json string (returns error)
+func GetJsonSafe[T any](str string) (T, error) {
 	var result T
 
-	err := json.Unmarshal([]byte(jsonStr), &result)
+	err := json.Unmarshal([]byte(str), &result)
 
 	return result, err
 }
 
-// Get data from jsonStr (without error)
-func GetJson[T any](jsonStr string) T {
+// Get data from json string (without error)
+func GetJson[T any](str string) T {
 	var result T
 
-	json.Unmarshal([]byte(jsonStr), &result)
+	json.Unmarshal([]byte(str), &result)
 
 	return result
 }
 
-// Get jsonStr from data (returns error)
+// Get json string from data (returns error)
 func ToJsonSafe(obj any) (string, error) {
 	bytes, err := json.Marshal(obj)
 
 	return string(bytes), err
 }
 
-// Get jsonStr from data (without error)
+// Get json string from data (without error)
 func ToJson(obj any) string {
 	bytes, _ := json.Marshal(obj)
 
 	return string(bytes)
 }
 
-// Prettify data into jsonStr
+// Prettify data into json string
 func Pretty[T any](obj T) string {
 	bytes, _ := json.MarshalIndent(obj, "", "  ")
 
 	return string(bytes)
 }
 
+// Prettify data into json string (while ignoring unmarshable fields)
 func PrettySkipIncompatible(obj any) string {
 	bytes, err := MarshalSkipIncompatible(obj)
 
