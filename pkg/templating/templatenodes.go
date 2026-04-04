@@ -1,6 +1,7 @@
 package templating
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -87,6 +88,7 @@ func walkNode(node parse.Node, fn func(node parse.Node) bool) {
 
 	switch n := node.(type) {
 	case *parse.ListNode:
+		fmt.Println(n)
 		for _, child := range n.Nodes {
 			walkNode(child, fn)
 		}

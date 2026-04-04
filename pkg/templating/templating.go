@@ -67,8 +67,6 @@ func ApplyNormalization(templt *template.Template, tmplStr string) error {
 		return err
 	}
 
-	fmt.Println(tmplStr)
-
 	ApplyTemplateFunc(templt, FORMAT_FUNC)
 
 	return nil
