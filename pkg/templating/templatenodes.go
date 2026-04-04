@@ -27,7 +27,7 @@ func ApplyTemplateFunc(t *template.Template, funcName string) {
 			}
 		}
 
-		return false
+		return true
 	})
 }
 
