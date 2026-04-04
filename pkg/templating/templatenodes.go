@@ -70,6 +70,8 @@ func TransformTemplateFields(templt *template.Template, transform func(fieldName
 
 // Recursively walk template nodes and apply fn on them
 func WalkTemplate(tmpl *template.Template, fn func(node parse.Node) bool) {
+	fmt.Println(tmpl)
+
 	for _, t := range tmpl.Templates() {
 		if t.Tree != nil && t.Tree.Root != nil {
 			walkNode(t.Tree.Root, fn)
@@ -88,7 +90,6 @@ func walkNode(node parse.Node, fn func(node parse.Node) bool) {
 
 	switch n := node.(type) {
 	case *parse.ListNode:
-		fmt.Println(n)
 		for _, child := range n.Nodes {
 			walkNode(child, fn)
 		}
