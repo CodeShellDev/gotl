@@ -7,40 +7,46 @@ import (
 )
 
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
-func ApplyTemplateFunc(templt *template.Template, funcName string) {
-	WalkTemplate(templt, func(node parse.Node) bool {
-		cmd, ok := node.(*parse.CommandNode)
-
-		if !ok {
+func ApplyTemplateFunc(t *template.Template, funcName string) {
+	WalkTemplate(t, func(node parse.Node) bool {
+		action, ok := node.(*parse.ActionNode)
+		if !ok || action.Pipe == nil {
 			return false
 		}
 
-		for i, arg := range cmd.Args {
-			field, ok := arg.(*parse.FieldNode)
-			if !ok {
-				continue
-			}
+		for _, cmd := range action.Pipe.Cmds {
+			for i, arg := range cmd.Args {
 
-			cmd.Args[i] = &parse.PipeNode{
-				NodeType: parse.NodePipe,
-				Cmds: []*parse.CommandNode{
-					{
-						NodeType: parse.NodeCommand,
-						Args: []parse.Node{
-							// add function as node
-							&parse.IdentifierNode{
-								NodeType: parse.NodeIdentifier,
-								Ident: funcName,
-							},
-							field,
-						},
-					},
-				},
+				switch v := arg.(type) {
+				case *parse.FieldNode:
+					cmd.Args[i] = wrapInFunc(funcName, v)
+
+				case *parse.ChainNode:
+					cmd.Args[i] = wrapInFunc(funcName, v)
+				}
 			}
 		}
 
-		return true
+		return false
 	})
+}
+
+func wrapInFunc(funcName string, expr parse.Node) parse.Node {
+	return &parse.PipeNode{
+		NodeType: parse.NodePipe,
+		Cmds: []*parse.CommandNode{
+			{
+				NodeType: parse.NodeCommand,
+				Args: []parse.Node{
+					&parse.IdentifierNode{
+						NodeType: parse.NodeIdentifier,
+						Ident: funcName,
+					},
+					expr,
+				},
+			},
+		},
+	}
 }
 
 // Transform template fields with transform function (example: `{{ .VAR.IABLE }}` => `{{ .var.iable }}`)
