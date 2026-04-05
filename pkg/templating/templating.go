@@ -7,7 +7,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/codeshelldev/gotl/pkg/jsonutils"
 	"github.com/codeshelldev/gotl/pkg/stringutils"
 )
 
@@ -51,6 +50,8 @@ func RenderTemplate(name string, tmplStr string, variables any) (string, error) 
 // Execute template
 func ExecuteTemplate(templt *template.Template, variables any) (string, error) {
 	var buf bytes.Buffer
+
+	fmt.Println("---\n", variables, "\n---")
 
 	err := templt.Execute(&buf, variables)
 
@@ -182,7 +183,7 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 		}
 
 		if key == "message_template" {
-			fmt.Println(jsonutils.Pretty(variables))
+			fmt.Println("===\n", variables, "\n===")
 		}
 
 		templatedValue, err := ExecuteTemplate(templt, variables)
