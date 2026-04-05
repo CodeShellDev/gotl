@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/codeshelldev/gotl/pkg/jsonutils"
 	"github.com/codeshelldev/gotl/pkg/stringutils"
 )
 
@@ -130,7 +131,7 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 	case []any:
 		data := []any{}
 
-		fmt.Println(asserted...)
+		fmt.Println(jsonutils.Pretty(value), jsonutils.Pretty(asserted))
 
 		for arrayIndex, arrayValue := range asserted {
 			var templatedValue any
