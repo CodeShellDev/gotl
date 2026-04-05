@@ -1,6 +1,7 @@
 package templating
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -15,6 +16,7 @@ type Target struct {
 
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
 func ApplyTemplateFunc(t *template.Template, funcName string) {
+	fmt.Println(t.Root.String())
 
 	WalkTemplate(t, func(n parse.Node) bool {
 		return false
