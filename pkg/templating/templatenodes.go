@@ -94,7 +94,7 @@ func walkNode(node parse.Node, fn func(node parse.Node) bool) {
 
 	switch n := node.(type) {
 	case *parse.ListNode:
-		if n.Nodes == nil {
+		if n == nil {
 			return
 		}
 		
@@ -103,27 +103,51 @@ func walkNode(node parse.Node, fn func(node parse.Node) bool) {
 		}
 
 	case *parse.ActionNode:
+		if n == nil {
+        	return
+    	}
+
 		walkNode(n.Pipe, fn)
 		
 	case *parse.TemplateNode:
+			if n == nil {
+        	return
+    	}
+		
 		walkNode(n.Pipe, fn)
 
 	case *parse.IfNode:
+		if n == nil {
+        	return
+    	}
+
 		walkNode(n.Pipe, fn)
 		walkNode(n.List, fn)
 		walkNode(n.ElseList, fn)
 
 	case *parse.RangeNode:
+		if n == nil {
+        	return
+    	}
+
 		walkNode(n.Pipe, fn)
 		walkNode(n.List, fn)
 		walkNode(n.ElseList, fn)
 
 	case *parse.WithNode:
+		if n == nil {
+        	return
+    	}
+
 		walkNode(n.Pipe, fn)
 		walkNode(n.List, fn)
 		walkNode(n.ElseList, fn)
 
 	case *parse.PipeNode:
+		if n == nil {
+        	return
+    	}
+
 		for _, decl := range n.Decl {
 			walkNode(decl, fn)
 		}
@@ -132,6 +156,10 @@ func walkNode(node parse.Node, fn func(node parse.Node) bool) {
 		}
 
 	case *parse.CommandNode:
+		if n == nil {
+        	return
+    	}
+
 		for _, arg := range n.Args {
 			walkNode(arg, fn)
 		}
