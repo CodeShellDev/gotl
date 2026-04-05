@@ -94,11 +94,11 @@ func walkNode(node parse.Node, fn func(node parse.Node) bool) {
 
 	switch n := node.(type) {
 	case *parse.ListNode:
+		if n.Nodes == nil {
+			return
+		}
+		
 		for _, child := range n.Nodes {
-			if child == nil {
-				continue
-			}
-			
 			walkNode(child, fn)
 		}
 
