@@ -131,8 +131,6 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 	case []any:
 		data := []any{}
 
-		fmt.Println(jsonutils.Pretty(value), jsonutils.Pretty(asserted))
-
 		for arrayIndex, arrayValue := range asserted {
 			var templatedValue any
 
@@ -169,6 +167,11 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 
 		if err != nil {
 			return asserted, err
+		}
+
+		if key == "message_template" {
+		fmt.Println(jsonutils.Pretty(variables))
+
 		}
 
 		templatedValue, err := ExecuteTemplate(templt, variables)
