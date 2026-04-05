@@ -130,6 +130,8 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 	case []any:
 		data := []any{}
 
+		fmt.Println(asserted...)
+
 		for arrayIndex, arrayValue := range asserted {
 			var templatedValue any
 
