@@ -15,34 +15,7 @@ type Target struct {
 
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
 func ApplyTemplateFunc(t *template.Template, funcName string) {
-	var targets []Target
 
-	WalkTemplate(t, func(n parse.Node) bool {
-		action, ok := n.(*parse.ActionNode)
-		if !ok || action.Pipe == nil {
-			return false
-		}
-
-		for ci, cmd := range action.Pipe.Cmds {
-			for ai, arg := range cmd.Args {
-
-				if isFieldLike(arg) {
-					targets = append(targets, Target{
-						Parent:   action.Pipe,
-						CmdIndex: ci,
-						ArgIndex: ai,
-						Node:     arg,
-					})
-				}
-			}
-		}
-		return false
-	})
-
-	for _, t := range targets {
-		cmd := t.Parent.Cmds[t.CmdIndex]
-		cmd.Args[t.ArgIndex] = wrapInFunc(funcName, t.Node)
-	}
 }
 
 func isFieldLike(n parse.Node) bool {
