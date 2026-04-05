@@ -170,9 +170,10 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 		}
 
 		if key == "message_template" {
-		fmt.Println(jsonutils.Pretty(variables))
-
+			fmt.Println(jsonutils.Pretty(variables))
 		}
+
+		fmt.Println("KEY:", key)
 
 		templatedValue, err := ExecuteTemplate(templt, variables)
 		
