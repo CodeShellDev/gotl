@@ -1,7 +1,6 @@
 package templating
 
 import (
-	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -16,40 +15,38 @@ type Target struct {
 
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
 func ApplyTemplateFunc(t *template.Template, funcName string) {
-	fmt.Println(t.Root.String())
+	WalkTemplate(t, func(node parse.Node) bool {
+		cmd, ok := node.(*parse.CommandNode)
 
-	WalkTemplate(t, func(n parse.Node) bool {
-		return false
-	})
-}
+		if !ok {
+			return false
+		}
 
-func isFieldLike(n parse.Node) bool {
-	switch n.(type) {
-	case *parse.FieldNode:
-		return true
-	case *parse.ChainNode:
-		return true
-	default:
-		return false
-	}
-}
+		for i, arg := range cmd.Args {
+			field, ok := arg.(*parse.FieldNode)
+			if !ok {
+				continue
+			}
 
-func wrapInFunc(funcName string, expr parse.Node) parse.Node {
-	return &parse.PipeNode{
-		NodeType: parse.NodePipe,
-		Cmds: []*parse.CommandNode{
-			{
-				NodeType: parse.NodeCommand,
-				Args: []parse.Node{
-					&parse.IdentifierNode{
-						NodeType: parse.NodeIdentifier,
-						Ident: funcName,
+			cmd.Args[i] = &parse.PipeNode{
+				NodeType: parse.NodePipe,
+				Cmds: []*parse.CommandNode{
+					{
+						Args: []parse.Node{
+							// add function as node
+							&parse.IdentifierNode{
+								NodeType: parse.NodeIdentifier,
+								Ident:    funcName,
+							},
+							field,
+						},
 					},
-					expr,
 				},
-			},
-		},
-	}
+			}
+		}
+
+		return true
+	})
 }
 
 // Transform template fields with transform function (example: `{{ .VAR.IABLE }}` => `{{ .var.iable }}`)
@@ -98,6 +95,10 @@ func walkNode(node parse.Node, fn func(node parse.Node) bool) {
 	switch n := node.(type) {
 	case *parse.ListNode:
 		for _, child := range n.Nodes {
+			if child == nil {
+				continue
+			}
+			
 			walkNode(child, fn)
 		}
 
