@@ -51,8 +51,6 @@ func RenderTemplate(name string, tmplStr string, variables any) (string, error) 
 func ExecuteTemplate(templt *template.Template, variables any) (string, error) {
 	var buf bytes.Buffer
 
-	fmt.Println("---\n", variables, "\n---")
-
 	err := templt.Execute(&buf, variables)
 
 	if err != nil {
@@ -110,6 +108,8 @@ func TemplateData(data any, variables map[string]any) (any, error) {
 // Recursively walks `value` and templates string values into typed values via stringutils.ToType()
 func TemplateDataRecursively(key string, value any, variables map[string]any, baseTemplate *template.Template) (any, error) {
 	var err error
+
+	fmt.Printf("%T\n", value)
 
 	switch asserted := value.(type) {
 	case map[string]any:
@@ -180,10 +180,6 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 
 		if err != nil {
 			return asserted, err
-		}
-
-		if key == "message_template" {
-			fmt.Println("===\n", variables, "\n===")
 		}
 
 		templatedValue, err := ExecuteTemplate(templt, variables)
