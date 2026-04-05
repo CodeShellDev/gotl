@@ -117,7 +117,13 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 		for mapKey, mapValue := range asserted {
 			var templatedValue any
 
-			templatedValue, err = TemplateDataRecursively(key + "." + mapKey, mapValue, variables, baseTemplate)
+			newKey := mapKey
+
+			if key != "" {
+				newKey = key + "." + newKey
+			}
+
+			templatedValue, err = TemplateDataRecursively(newKey, mapValue, variables, baseTemplate)
 
 			if err != nil {
 				return mapValue, err
@@ -134,7 +140,13 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 		for arrayIndex, arrayValue := range asserted {
 			var templatedValue any
 
-			templatedValue, err = TemplateDataRecursively(key + "." + strconv.Itoa(arrayIndex), arrayValue, variables, baseTemplate)
+			newKey := strconv.Itoa(arrayIndex)
+
+			if key != "" {
+				newKey = key + "." + newKey
+			}
+
+			templatedValue, err = TemplateDataRecursively(newKey, arrayValue, variables, baseTemplate)
 
 			if err != nil {
 				return arrayValue, err
@@ -172,8 +184,6 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 		if key == "message_template" {
 			fmt.Println(jsonutils.Pretty(variables))
 		}
-
-		fmt.Println("KEY:", key)
 
 		templatedValue, err := ExecuteTemplate(templt, variables)
 		
