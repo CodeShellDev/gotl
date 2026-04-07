@@ -1,7 +1,6 @@
 package templating
 
 import (
-	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -17,39 +16,40 @@ type Target struct {
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
 func ApplyTemplateFunc(t *template.Template, funcName string) {
 	WalkTemplate(t, func(node parse.Node) bool {
-		return false
-		cmd, ok := node.(*parse.CommandNode)
+		action, ok := node.(*parse.ActionNode)
+		if !ok || action.Pipe == nil {
+			return false
+		}
 
+		pipe := action.Pipe
+
+		// only handle simple expressions: {{ .VAR }}
+		if len(pipe.Cmds) != 1 {
+			return false
+		}
+
+		cmd := pipe.Cmds[0]
+
+		// must be exactly one argument
+		if len(cmd.Args) != 1 {
+			return false
+		}
+
+		field, ok := cmd.Args[0].(*parse.FieldNode)
 		if !ok {
 			return false
 		}
 
-		for i, arg := range cmd.Args {
-			field, ok := arg.(*parse.FieldNode)
-			if !ok {
-				continue
-			}
-
-			fmt.Println(field)
-
-			cmd.Args[i] = &parse.PipeNode{
-				NodeType: parse.NodePipe,
-				Cmds: []*parse.CommandNode{
-					{
-						Args: []parse.Node{
-							// add function as node
-							&parse.IdentifierNode{
-								NodeType: parse.NodeIdentifier,
-								Ident:    funcName,
-							},
-							field,
-						},
-					},
-				},
-			}
+		cmd.Args = []parse.Node{
+			// add function as node
+			&parse.IdentifierNode{
+				NodeType: parse.NodeIdentifier,
+				Ident:    funcName,
+			},
+			field,
 		}
 
-		return true
+		return false
 	})
 }
 
