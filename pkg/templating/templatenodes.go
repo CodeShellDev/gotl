@@ -15,8 +15,8 @@ type Target struct {
 
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
 func ApplyTemplateFunc(t *template.Template, funcName string) {
-	return
 	WalkTemplate(t, func(node parse.Node) bool {
+		return false
 		cmd, ok := node.(*parse.CommandNode)
 
 		if !ok {
