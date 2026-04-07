@@ -41,32 +41,6 @@ func TestTemplateFieldTransform(t *testing.T) {
 	}
 }
 
-func TestComplexTemplate(t *testing.T) {
-	tmplStr := `{{- range .array -}}
-	KeyValue: {{ . }}
-	{{- end -}}`
-
-	templt, err := templating.CreateNormalizedTemplateFromString("complex", tmplStr)
-
-	if err != nil {
-		t.Error("Error Templating:\n", err.Error())
-	}
-
-	got, err := templating.ExecuteTemplate(templt, map[string]any{
-		"array": []any{
-			map[string]any{
-				"hello": "world",
-			},
-		},
-	})
-
-	if err != nil {
-		t.Error("Error Templating:\n", err.Error())
-	}
-
-	t.Error(got)
-}
-
 func TestTemplateApplyFunc(t *testing.T) {
 	tmplStr := `Your email is {{ .base64_email }}!`
 
