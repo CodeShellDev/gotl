@@ -103,35 +103,40 @@ func format(data ...any) string {
 	for _, item := range data {
 		switch value := item.(type) {
 		case string:
-			res .WriteString(value)
+			res.WriteString(value)
 		case []byte:
-			res .WriteString(string(value))
+			res.WriteString(string(value))
 		case int:
-			res .WriteString(strconv.Itoa(value))
+			res.WriteString(strconv.Itoa(value))
 		case int32:
-			res .WriteString(strconv.Itoa(int(value)))
+			res.WriteString(strconv.Itoa(int(value)))
 		case int64:
-			res .WriteString(strconv.Itoa(int(value)))
+			res.WriteString(strconv.Itoa(int(value)))
 		case float32:
-			res .WriteString(strconv.Itoa(int(value)))
+			res.WriteString(strconv.Itoa(int(value)))
 		case float64:
-			res .WriteString(strconv.Itoa(int(value)))
+			res.WriteString(strconv.Itoa(int(value)))
 		case bool:
 			if value {
-				res .WriteString("true")
+				res.WriteString("true")
 			} else {
-				res .WriteString("false")
+				res.WriteString("false")
 			}
 		default:
-			lines := strings.Split(jsonutils.Pretty(value), "\n")
-
-			var lineStr strings.Builder
-
-			for _, line := range lines {
-				lineStr.WriteString("\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + resetColor())
-			}
-			res .WriteString(lineStr.String())
+			return FormatAsData(value)
 		}
+	}
+
+	return res.String()
+}
+
+func FormatAsData(data any) string {
+	lines := strings.Split(jsonutils.Pretty(data), "\n")
+
+	var res strings.Builder
+
+	for _, line := range lines {
+		res.WriteString("\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + resetColor())
 	}
 
 	return res.String()
