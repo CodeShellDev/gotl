@@ -2,9 +2,7 @@ package templating
 
 import (
 	"bytes"
-	"fmt"
 	"strconv"
-	"strings"
 	"text/template"
 
 	"github.com/codeshelldev/gotl/pkg/jsonutils"
@@ -194,20 +192,5 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 }
 
 func format(value any) string {
-	switch asserted := value.(type) {
-	case map[string]any:
-		return jsonutils.ToJson(asserted)
-	case []string:
-		return "[" + strings.Join(asserted, ",") + "]"
-	case []any:
-		items := make([]string, len(asserted))
-
-		for i, item := range asserted {
-			items[i] = fmt.Sprintf("%v", item)
-		}
-
-		return "[" + strings.Join(items, ",") + "]"
-	default:
-		return fmt.Sprintf("%v", value)
-	}
+	return jsonutils.ToJson(value)
 }
