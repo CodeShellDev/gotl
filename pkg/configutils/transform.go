@@ -1,7 +1,6 @@
 package configutils
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -225,8 +224,6 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			onUseMap := ParseTag(target.OnUse)
 
 			onUse := GetValueWithSource(match, target.Parent, onUseMap)
-
-			fmt.Println("onUseMap:", onUseMap, "; onUse:", onUse, "; source:", match, "; parent:", target.Parent)
 
 			onUseList := strings.SplitSeq(onUse, ",")
 			for fnName := range onUseList {
