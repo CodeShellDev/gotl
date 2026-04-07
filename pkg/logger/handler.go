@@ -123,7 +123,7 @@ func format(data ...any) string {
 				res.WriteString("false")
 			}
 		default:
-			return FormatAsDataWithJSON(value)
+			return "\n" + FormatAsDataWithJSON(value)
 		}
 	}
 
@@ -139,8 +139,12 @@ func FormatAsData(text string) string {
 
 	var res strings.Builder
 
-	for _, line := range lines {
-		res.WriteString("\n" + HighlightAsData(line))
+	for i, line := range lines {
+		res.WriteString(HighlightAsData(line))
+
+		if i != len(lines) - 1 {
+			res.WriteString("\n")
+		}
 	}
 
 	return res.String()
