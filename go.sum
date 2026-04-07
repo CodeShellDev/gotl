@@ -1,13 +1,17 @@
 github.com/codeshelldev/gotl/pkg/configutils v0.0.22 h1:6M10jRjTxF+5mVrt+OlXG75O9NTCjJ2dL0OY6U/RPqk=
 github.com/codeshelldev/gotl/pkg/configutils v0.0.22/go.mod h1:2o+D0+pbb7xaNGeESpL0/eWZLmDk6o8yhbaoTK06gMs=
+github.com/codeshelldev/gotl/pkg/configutils v0.0.26 h1:FkgTatxXFB0LePi/SnieSNZdk7yje1bkXsEds/ib5oY=
+github.com/codeshelldev/gotl/pkg/configutils v0.0.26/go.mod h1:2o+D0+pbb7xaNGeESpL0/eWZLmDk6o8yhbaoTK06gMs=
 github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2 h1:ERsjkaWVrsyUZoEunCEeNYDXhuaIvoSetB8e/zI4Tqo=
 github.com/codeshelldev/gotl/pkg/jsonutils v0.0.2/go.mod h1:oxgKaAoMu6iYVHfgR7AhkK22xbYx4K0KCkyVEfYVoWs=
+github.com/codeshelldev/gotl/pkg/jsonutils v0.0.4 h1:bvO2wBiZZAlHfk0sNtn7bGMSwD138YIEy53mLZY4ksQ=
+github.com/codeshelldev/gotl/pkg/jsonutils v0.0.4/go.mod h1:NJKp0G1fre3QiPqwrfOP01yzZe6VMQy4P/nweNTGsvs=
 github.com/codeshelldev/gotl/pkg/query v0.0.4 h1:o2Oagx/s1wfNMqkh6GfR6wpsIVOFSDPIbxe8ABRIXDw=
 github.com/codeshelldev/gotl/pkg/query v0.0.4/go.mod h1:Bg3tFzFq9xButTw0BSfGQhSmfAnFDrJamOcnX6Io4m4=
 github.com/codeshelldev/gotl/pkg/stringutils v0.0.8 h1:VKIuEYLJARDmHyhAbcMy1TsdxPdzsKlbQvgr1G4QE7s=
 github.com/codeshelldev/gotl/pkg/stringutils v0.0.8/go.mod h1:892bcYDpOf0sTpXtABQ3m+9MACpWHCVpN3f/mcPr7qo=
-github.com/codeshelldev/gotl/pkg/templating v0.0.16 h1:0dl/NEApCtlm4kyEscQPknx4DwUtl1bsgl3Iyv6jPkM=
-github.com/codeshelldev/gotl/pkg/templating v0.0.16/go.mod h1:MHM4ouEsLNKXRYO+fS9qqpS1SFlL4Z6Q/0kxtS+auLk=
+github.com/codeshelldev/gotl/pkg/templating v0.0.17 h1:ghFq0TodOUAP+013W51bqIUmeB8889uo+sMAIJ/wiqs=
+github.com/codeshelldev/gotl/pkg/templating v0.0.17/go.mod h1:MHM4ouEsLNKXRYO+fS9qqpS1SFlL4Z6Q/0kxtS+auLk=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
@@ -24,6 +28,8 @@ github.com/knadh/koanf/providers/file v1.2.1 h1:bEWbtQwYrA+W2DtdBrQWyXqJaJSG3KrP
 github.com/knadh/koanf/providers/file v1.2.1/go.mod h1:bp1PM5f83Q+TOUu10J/0ApLBd9uIzg+n9UgthfY+nRA=
 github.com/knadh/koanf/v2 v2.3.3 h1:jLJC8XCRfLC7n4F+ZKKdBsbq1bfXTpuFhf4L7t94D94=
 github.com/knadh/koanf/v2 v2.3.3/go.mod h1:gRb40VRAbd4iJMYYD5IxZ6hfuopFcXBpc9bbQpZwo28=
+github.com/knadh/koanf/v2 v2.3.4 h1:fnynNSDlujWE+v83hAp8wKr/cdoxHLO0629SN+U8Urc=
+github.com/knadh/koanf/v2 v2.3.4/go.mod h1:gRb40VRAbd4iJMYYD5IxZ6hfuopFcXBpc9bbQpZwo28=
 github.com/mitchellh/copystructure v1.2.0 h1:vpKXTN4ewci03Vljg/q9QvCGUDttBOGBIa15WveJJGw=
 github.com/mitchellh/copystructure v1.2.0/go.mod h1:qLl+cE2AmVv+CoeAwDPye/v+N2HKCj9FbZEVFJRxO9s=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
@@ -34,5 +40,7 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 golang.org/x/sys v0.41.0 h1:Ivj+2Cp/ylzLiEU89QhWblYnOE9zerudt9Ftecq2C6k=
 golang.org/x/sys v0.41.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
+golang.org/x/sys v0.42.0 h1:omrd2nAlyT5ESRdCLYdm3+fMfNFE/+Rf4bDIQImRJeo=
+golang.org/x/sys v0.42.0/go.mod h1:4GL1E5IUh+htKOUEOaiffhrAeqysfVGipDYzABqnCmw=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
