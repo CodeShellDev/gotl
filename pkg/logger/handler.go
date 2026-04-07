@@ -140,7 +140,7 @@ func FormatAsData(text string) string {
 	var res strings.Builder
 
 	for _, line := range lines {
-		res.WriteString(HighlightAsData(line))
+		res.WriteString("\n" + HighlightAsData(line))
 	}
 
 	return res.String()
