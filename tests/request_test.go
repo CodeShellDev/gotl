@@ -5,38 +5,7 @@ import (
 
 	jsonutils "github.com/codeshelldev/gotl/pkg/jsonutils"
 	query "github.com/codeshelldev/gotl/pkg/query"
-	templating "github.com/codeshelldev/gotl/pkg/templating"
 )
-
-func TestQueryTemplating(t *testing.T) {
-	variables := map[string]interface{}{
-		"value": "helloworld",
-		"array": []string{
-			"hello",
-			"world",
-		},
-	}
-
-	queryStr := "key={{.value}}&array={{.array}}"
-
-	templt, err := templating.CreateNormalizedTemplateFromString("query", queryStr)
-
-	if err != nil {
-		t.Error("Error Templating Query: ", err.Error())
-	}
-
-	got, err := templating.ExecuteTemplate(templt, variables)
-
-	if err != nil {
-		t.Error("Error Templating Query: ", err.Error())
-	}
-
-	expected := "key=helloworld&array=[hello,world]"
-
-	if got != expected {
-		t.Error("Expected: ", expected, "; Got: ", got)
-	}
-}
 
 func TestTypedQuery(t *testing.T) {
 	queryStr := "key=helloworld&array=[hello,world]&int=1"

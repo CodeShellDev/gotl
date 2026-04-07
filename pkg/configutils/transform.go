@@ -1,6 +1,7 @@
 package configutils
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -175,7 +176,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 		var target TransformTarget
 
 		for i := range keyParts {
-			parent := joinPaths(keyParts[:i+1]...)
+			parent := joinPaths(keyParts[:i + 1]...)
 			lower := strings.ToLower(parent)
 
 			var match string
@@ -194,7 +195,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 			}
 
 			outputKeyParts := splitPath(target.OutputKey)
-			outputBase := outputKeyParts[len(outputKeyParts)-1]
+			outputBase := outputKeyParts[len(outputKeyParts) - 1]
 
 			transformList := strings.SplitSeq(target.Transform, ",")
 			for fnName := range transformList {
@@ -221,9 +222,11 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 				target.OnUse = "default"
 			}
 
-			onUseMap := ParseTag(target.OnUse)
+			onUseMap := parseTag(target.OnUse)
 
 			onUse := GetValueWithSource(match, target.Parent, onUseMap)
+
+			fmt.Println("onUseMap:", onUseMap, "; onUse:", onUse)
 
 			onUseList := strings.SplitSeq(onUse, ",")
 			for fnName := range onUseList {
@@ -397,12 +400,13 @@ func GetValueWithSource(source, parent string, valueMap map[string]string) strin
 	return valueMap["*"]
 }
 
+// parses key1,key2>>a into [key1,key2], a
 func parseTagPart(part string) ([]string, string) {
 	s := []string{}
 	
-	str, value, exists := strings.Cut(part, ">>")
+	keyPart, valuePart, exists := strings.Cut(part, ">>")
 
-	searchList := strings.SplitSeq(str, ",")
+	searchList := strings.SplitSeq(keyPart, ",")
 
 	if exists {
 		for search := range searchList {
@@ -411,17 +415,22 @@ func parseTagPart(part string) ([]string, string) {
 			s = append(s, search)
 		}
 
-		return s, value
+		return s, valuePart
 	}
 
 	return []string{}, part
 }
 
-func ParseTag(tag string) map[string]string {
+// parses key1,key2>>a|key3>>b|key4>>c into map[key1:a,key2:a,key3:b,key4:c]
+func parseTag(tag string) map[string]string {
 	out := map[string]string{}
-	parts := strings.SplitSeq(tag, "|")
+	parts := strings.Split(tag, "|")
 
-	for part := range parts {
+	if len(parts) == 0 {
+		parts = append(parts, tag)
+	}
+
+	for _, part := range parts {
 		keys, value := parseTagPart(part)
 
 		if len(keys) == 0 {
