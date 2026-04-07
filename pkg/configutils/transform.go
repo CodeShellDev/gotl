@@ -375,29 +375,31 @@ func joinPaths(p ...string) string {
 }
 
 func GetValueWithSource(source, parent string, valueMap map[string]string) string {
-	if !strings.HasPrefix(source, parent) {
-		parent = ""
-	}
-
-	if parent == "" {
-		value, exists := valueMap["." + source]
-
-		if exists {
-			return value
-		}
-	}
-
-	base, ok := strings.CutPrefix(source, parent + ".")
-
+	// try absolute
+	value, ok := valueMap["." + source]
 	if ok {
-		value, exists := valueMap[base]
+		return value
+	}
 
-		if exists {
-			return value
+	// try scoped relative key
+	if parent != "" && strings.HasPrefix(source, parent + ".") {
+		base, ok := strings.CutPrefix(source, parent + ".")
+
+		if ok {
+			value, ok := valueMap[base]
+
+			if ok {
+				return value
+			}
 		}
 	}
 
-	return valueMap["*"]
+	value, ok = valueMap["*"]
+	if ok {
+		return value
+	}
+
+	return ""
 }
 
 // Parses key1,key2>>a into [key1,key2], a
