@@ -16,6 +16,7 @@ type Target struct {
 
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
 func ApplyTemplateFunc(t *template.Template, funcName string) {
+	return
 	WalkTemplate(t, func(node parse.Node) bool {
 		cmd, ok := node.(*parse.CommandNode)
 
@@ -97,10 +98,6 @@ func walkNode(node parse.Node, fn func(node parse.Node) bool) {
 
 	switch n := node.(type) {
 	case *parse.ListNode:
-		if n == nil {
-			return
-		}
-		
 		for _, child := range n.Nodes {
 			walkNode(child, fn)
 		}
