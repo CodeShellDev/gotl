@@ -58,7 +58,7 @@ func ApplyTemplateFunc(t *template.Template, funcName string) {
 			field,
 		}
 
-		fmt.Println(cmd)
+		fmt.Println(cmd.String())
 
 		return true
 	})
