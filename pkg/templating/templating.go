@@ -109,8 +109,6 @@ func TemplateData(data any, variables map[string]any) (any, error) {
 func TemplateDataRecursively(key string, value any, variables map[string]any, baseTemplate *template.Template) (any, error) {
 	var err error
 
-	fmt.Printf("%T\n", value)
-
 	switch asserted := value.(type) {
 	case map[string]any:
 		data := map[string]any{}
