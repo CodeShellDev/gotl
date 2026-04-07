@@ -123,23 +123,31 @@ func format(data ...any) string {
 				res.WriteString("false")
 			}
 		default:
-			return FormatAsData(value)
+			return FormatAsDataWithJSON(value)
 		}
 	}
 
 	return res.String()
 }
 
-func FormatAsData(data any) string {
-	lines := strings.Split(jsonutils.Pretty(data), "\n")
+func FormatAsDataWithJSON(data any) string {
+	return FormatAsData(jsonutils.Pretty(data))
+}
+
+func FormatAsData(text string) string {
+	lines := strings.Split(text, "\n")
 
 	var res strings.Builder
 
 	for _, line := range lines {
-		res.WriteString("\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + resetColor())
+		res.WriteString(HighlightAsData(line))
 	}
 
 	return res.String()
+}
+
+func HighlightAsData(str string) string {
+	return startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + str + resetColor()
 }
 
 func transform(content string, fn func(content string) string) string {
