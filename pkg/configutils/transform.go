@@ -222,7 +222,7 @@ func ApplyTransforms(flat map[string]any, targets map[string]TransformTarget, op
 				target.OnUse = "default"
 			}
 
-			onUseMap := parseTag(target.OnUse)
+			onUseMap := ParseTag(target.OnUse)
 
 			onUse := GetValueWithSource(match, target.Parent, onUseMap)
 
@@ -400,8 +400,8 @@ func GetValueWithSource(source, parent string, valueMap map[string]string) strin
 	return valueMap["*"]
 }
 
-// parses key1,key2>>a into [key1,key2], a
-func parseTagPart(part string) ([]string, string) {
+// Parses key1,key2>>a into [key1,key2], a
+func ParseTagPart(part string) ([]string, string) {
 	s := []string{}
 	
 	keyPart, valuePart, exists := strings.Cut(part, ">>")
@@ -421,8 +421,8 @@ func parseTagPart(part string) ([]string, string) {
 	return []string{}, part
 }
 
-// parses key1,key2>>a|key3>>b|key4>>c into map[key1:a,key2:a,key3:b,key4:c]
-func parseTag(tag string) map[string]string {
+// Parses key1,key2>>a|key3>>b|key4>>c into map[key1:a,key2:a,key3:b,key4:c]
+func ParseTag(tag string) map[string]string {
 	out := map[string]string{}
 	parts := strings.Split(tag, "|")
 
@@ -431,7 +431,7 @@ func parseTag(tag string) map[string]string {
 	}
 
 	for _, part := range parts {
-		keys, value := parseTagPart(part)
+		keys, value := ParseTagPart(part)
 
 		if len(keys) == 0 {
 			out["*"] = value
