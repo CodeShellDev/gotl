@@ -1,6 +1,7 @@
 package templating
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -16,7 +17,6 @@ type Target struct {
 // Apply a template function to every field `{{ .VAR }}` => `{{ funcName ( .VAR ) }}`
 func ApplyTemplateFunc(t *template.Template, funcName string) {
 	WalkTemplate(t, func(node parse.Node) bool {
-		return false
 		cmd, ok := node.(*parse.CommandNode)
 
 		if !ok {
@@ -28,6 +28,8 @@ func ApplyTemplateFunc(t *template.Template, funcName string) {
 			if !ok {
 				continue
 			}
+
+			fmt.Println(field)
 
 			cmd.Args[i] = &parse.PipeNode{
 				NodeType: parse.NodePipe,
