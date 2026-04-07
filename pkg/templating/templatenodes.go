@@ -1,6 +1,7 @@
 package templating
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 	"text/template/parse"
@@ -17,11 +18,16 @@ type Target struct {
 func ApplyTemplateFunc(t *template.Template, funcName string) {
 	WalkTemplate(t, func(node parse.Node) bool {
 		action, ok := node.(*parse.ActionNode)
+
+		fmt.Println(action)
+
 		if !ok || action.Pipe == nil {
 			return false
 		}
 
 		pipe := action.Pipe
+
+		fmt.Println(pipe)
 
 		// only handle simple expressions: {{ .VAR }}
 		if len(pipe.Cmds) != 1 {
@@ -36,6 +42,9 @@ func ApplyTemplateFunc(t *template.Template, funcName string) {
 		}
 
 		field, ok := cmd.Args[0].(*parse.FieldNode)
+
+		fmt.Println(field)
+
 		if !ok {
 			return false
 		}
@@ -49,7 +58,7 @@ func ApplyTemplateFunc(t *template.Template, funcName string) {
 			field,
 		}
 
-		return false
+		return true
 	})
 }
 
