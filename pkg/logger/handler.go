@@ -98,29 +98,29 @@ func modifyCaller(encoder zapcore.CallerEncoder) zapcore.CallerEncoder {
 }
 
 func format(data ...any) string {
-	res := ""
+	var res strings.Builder
 
 	for _, item := range data {
 		switch value := item.(type) {
 		case string:
-			res += value
+			res .WriteString(value)
 		case []byte:
-			res += string(value)
+			res .WriteString(string(value))
 		case int:
-			res += strconv.Itoa(value)
+			res .WriteString(strconv.Itoa(value))
 		case int32:
-			res += strconv.Itoa(int(value))
+			res .WriteString(strconv.Itoa(int(value)))
 		case int64:
-			res += strconv.Itoa(int(value))
+			res .WriteString(strconv.Itoa(int(value)))
 		case float32:
-			res += strconv.Itoa(int(value))
+			res .WriteString(strconv.Itoa(int(value)))
 		case float64:
-			res += strconv.Itoa(int(value))
+			res .WriteString(strconv.Itoa(int(value)))
 		case bool:
 			if value {
-				res += "true"
+				res .WriteString("true")
 			} else {
-				res += "false"
+				res .WriteString("false")
 			}
 		default:
 			lines := strings.Split(jsonutils.Pretty(value), "\n")
@@ -130,11 +130,11 @@ func format(data ...any) string {
 			for _, line := range lines {
 				lineStr.WriteString("\n" + startColor(color.RGBA{ R: 0, G: 135, B: 95,}) + line + resetColor())
 			}
-			res += lineStr.String()
+			res .WriteString(lineStr.String())
 		}
 	}
 
-	return res
+	return res.String()
 }
 
 func transform(content string, fn func(content string) string) string {
