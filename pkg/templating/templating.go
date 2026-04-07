@@ -192,5 +192,20 @@ func TemplateDataRecursively(key string, value any, variables map[string]any, ba
 }
 
 func format(value any) string {
-	return jsonutils.ToJson(value)
+	switch asserted := value.(type) {
+	case string:
+		return asserted
+	case int:
+		return strconv.Itoa(asserted)
+	case float64:
+		return strconv.Itoa(int(asserted))
+	case bool:
+		if asserted {
+			return "true"
+		} else {
+			return  "false"
+		}
+	default:
+		return jsonutils.ToJson(value)
+	}
 }
