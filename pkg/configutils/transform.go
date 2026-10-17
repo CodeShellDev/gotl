@@ -142,16 +142,28 @@ func Unflatten(flat map[string]any) map[string]any {
 
 // Validate if all required fields are present
 func (config Config) ValidateRequired(id string, schema any, path string) error {
+	fields := config.FindMissingFields(id, schema, path)
+
+	if len(fields) != 0 {
+		return errors.New("required configuration field " + fields[0] + " is missing")
+	}
+
+    return nil
+}
+
+func (config Config) FindMissingFields(id string, schema any, path string) []string {
 	raw := config.Layer.Get(path)
 
 	flat := map[string]any{}
 	Flatten("", raw, flat)
 
 	targets := BuildTransformMap(id, schema)
-    return ValidateRequired(flat, targets)
+    return FindMissingFields(flat, targets)
 }
 
-func ValidateRequired(flat map[string]any, targets map[string]TransformTarget) error {
+func FindMissingFields(flat map[string]any, targets map[string]TransformTarget) []string {
+	fields := []string{}
+
 	for _, target := range targets {
 		if !target.Required {
 			continue
@@ -167,11 +179,11 @@ func ValidateRequired(flat map[string]any, targets map[string]TransformTarget) e
 
 		// path "exists" if it is present as exact key or has flattened descendants
 		if !pathExists(flat, path) {
-			return errors.New("required configuration field " + path + " is missing")
+			fields = append(fields, path)
 		}
 	}
 
-	return nil
+	return fields
 }
 
 func pathExists(flat map[string]any, path string) bool {
