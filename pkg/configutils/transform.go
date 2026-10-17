@@ -148,11 +148,15 @@ func (config Config) ValidateRequired(id string, schema any, path string) error 
 	Flatten("", raw, flat)
 
 	targets := BuildTransformMap(id, schema)
+    return ValidateRequired(flat, targets)
+}
+
+func ValidateRequired(flat map[string]any, targets map[string]TransformTarget) error {
     required := map[string]struct{}{}
 
     for _, target := range targets {
         if target.Required {
-            required[target.OutputKey] = struct{}{}
+            required[strings.ToLower(target.OutputKey)] = struct{}{}
         }
     }
 
