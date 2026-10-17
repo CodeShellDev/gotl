@@ -281,7 +281,6 @@ func ValidateRequired(raw any, schema any) error {
         schemaValue.Elem(),
         raw,
         nil,
-        true,
         func(
             path string,
             field reflect.StructField,
@@ -307,7 +306,6 @@ func WalkSchema(
     value reflect.Value,
     raw any,
     path []string,
-    exists bool,
     fn func(path string, field reflect.StructField, raw any, value reflect.Value, exists bool),
 ) {
     if schema == nil {
@@ -370,7 +368,6 @@ func WalkSchema(
                 childValue,
                 rawChild,
                 childPath,
-                childExists,
                 fn,
             )
             continue
