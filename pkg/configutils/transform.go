@@ -1,6 +1,7 @@
 package configutils
 
 import (
+	"errors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -14,6 +15,7 @@ type TransformTarget struct {
 	Transform     	string
 	ChildTransform	string
 	Value          	any
+	Required       bool
 }
 
 type TransformOptions struct {
@@ -136,6 +138,32 @@ func Unflatten(flat map[string]any) map[string]any {
 	}
 
 	return root
+}
+
+// Validate if all required fields are present
+func (config Config) ValidateRequired(id string, schema any, path string) error {
+	raw := config.Layer.Get(path)
+
+	flat := map[string]any{}
+	Flatten("", raw, flat)
+
+	targets := BuildTransformMap(id, schema)
+    required := map[string]struct{}{}
+
+    for _, target := range targets {
+        if target.Required {
+            required[target.OutputKey] = struct{}{}
+        }
+    }
+
+    for path := range required {
+		_, exists := flat[path]
+        if !exists {
+            return errors.New("required configuration field " + path + " is missing")
+        }
+    }
+
+    return nil
 }
 
 // Apply Transform funcs based on `transform`, `childtransform` and `aliases` in struct schema

@@ -76,6 +76,8 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 				outputKey = base
 			}
 
+			required := getFieldWithID(id, "required", field.Tag) == "true"
+
 			out[fullKey] = TransformTarget{
 				OutputKey:      strings.ToLower(outputKey),
 				Parent: 		parent,
@@ -84,6 +86,7 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 				Transform:      transform,
 				ChildTransform: childTransform,
 				Value:          getValueSafe(fieldValue),
+				Required: required,
 			}
 		}
 

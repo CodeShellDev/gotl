@@ -2,7 +2,6 @@ package configutils
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -248,13 +247,6 @@ func (config *Config) UnmarshalWithHooks(path string, schema any, hooks ...mapst
 }
 
 func (config *Config) UnmarshalWith(path string, schema any, c koanf.UnmarshalConf) error {
-	raw := config.Layer.Get(path)
-	
-	err := ValidateRequired(raw, schema)
-	if err != nil {
-        return err
-    }
-
 	return config.Layer.UnmarshalWithConf(path, schema, c)
 }
 
@@ -273,119 +265,83 @@ func watchFile(f *file.File, path string, loadFunc func(string)) {
 	})
 }
 
-func ValidateRequired(raw any, schema any) error {
-    schemaValue := reflect.ValueOf(schema)
+// Walks schema and calls fn for every field with its path, schema field and raw + typed value
+func WalkSchema(schema reflect.Type, value reflect.Value, raw any, path []string, fn func(path string, field reflect.StructField, raw any, value reflect.Value)) {
+	if schema == nil {
+		return
+	}
 
-    if !schemaValue.IsValid() || schemaValue.Kind() != reflect.Pointer ||
-        schemaValue.IsNil() || schemaValue.Elem().Kind() != reflect.Struct {
-        return fmt.Errorf("schema must be a non-nil pointer to a struct")
-    }
+	// unwrap interfaces and pointers
+	for value.IsValid() && (value.Kind() == reflect.Interface || value.Kind() == reflect.Pointer) {
 
-    var err error
+		if value.IsNil() {
+			value = reflect.Value{}
+			break
+		}
 
-    WalkSchema(
-        schemaValue.Elem().Type(),
-        schemaValue.Elem(),
-        raw,
-        nil,
-        func(
-            path string,
-            field reflect.StructField,
-            raw any,
-            value reflect.Value,
-            exists bool,
-        ) {
-            if err != nil {
-                return
-            }
+		value = value.Elem()
+	}
 
-            if field.Tag.Get("required") == "true" && !exists {
-                err = errors.New("required configuration field " + path + " is missing")
-            }
-        },
-    )
+	switch schema.Kind() {
+	case reflect.Struct:
+		rawMap, _ := raw.(map[string]any)
 
-    return err
-}
+		for field := range schema.Fields() {
+			if field.PkgPath != "" {
+				continue // unexported field
+			}
 
-func WalkSchema(
-    schema reflect.Type,
-    value reflect.Value,
-    raw any,
-    path []string,
-    fn func(path string, field reflect.StructField, raw any, value reflect.Value, exists bool),
-) {
-    if schema == nil {
-        return
-    }
+			// source of truth, no koanf tag, no actual path (ignore as "-" tagged fields and do not traverse into them)
+			key := field.Tag.Get("koanf")
+			if key == "-" {
+				continue
+			}
 
-    for schema.Kind() == reflect.Pointer {
-        schema = schema.Elem()
-    }
+			var child reflect.Value
+			if value.IsValid() && value.Kind() == reflect.Struct {
+				child = value.FieldByName(field.Name)
+			}
 
-    for value.IsValid() && (value.Kind() == reflect.Interface || value.Kind() == reflect.Pointer) {
-        if value.IsNil() {
-            value = reflect.Value{}
-            break
-        }
 
-        value = value.Elem()
-    }
+			rawChild := raw
+			nextPath := path
 
-    if schema.Kind() != reflect.Struct {
-        return
-    }
+			if key != "" {
+				nextPath = append(path, key)
 
-    rawMap, _ := raw.(map[string]any)
+				if rawMap != nil {
+					rawChild = rawMap[key]
+				}
+			} else {
+				// no koanf tag
+				t := field.Type
+				for t.Kind() == reflect.Pointer {
+					t = t.Elem()
+				}
 
-    for field := range schema.Fields() {
-        if field.PkgPath != "" {
-            continue // unexported field
-        }
+				// if field is struct => leaf field, try other
+				if t.Kind() != reflect.Struct {
+					continue
+				}
+			}
 
-        key := field.Tag.Get("koanf")
-        if key == "-" {
-            continue
-        }
-        if key == "" {
-            key = field.Name
-        }
+			WalkSchema(
+				field.Type,
+				child,
+				rawChild,
+				nextPath,
+				fn,
+			)
+		}
 
-        childPath := append(append([]string{}, path...), key)
-
-        var childValue reflect.Value
-        if value.IsValid() && value.Kind() == reflect.Struct {
-            childValue = value.FieldByName(field.Name)
-        }
-
-		rawChild := any(nil)
-		childExists := false
-        if rawMap != nil {
-            rawChild, childExists = rawMap[key]
-        }
-
-        childType := field.Type
-        for childType.Kind() == reflect.Pointer {
-            childType = childType.Elem()
-        }
-
-        if childType.Kind() == reflect.Struct {
-            WalkSchema(
-                field.Type,
-                childValue,
-                rawChild,
-                childPath,
-                fn,
-            )
-            continue
-        }
-
-        fn(
-            joinPaths(childPath...),
-            field,
-            rawChild,
-            childValue,
-            childExists,
-        )
-    }
+	default:
+		fn(
+			joinPaths(path...),
+			reflect.StructField{
+				Type: schema,
+			},
+			raw,
+			value,
+		)
+	}
 }
