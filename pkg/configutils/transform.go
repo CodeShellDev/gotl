@@ -152,21 +152,40 @@ func (config Config) ValidateRequired(id string, schema any, path string) error 
 }
 
 func ValidateRequired(flat map[string]any, targets map[string]TransformTarget) error {
-    required := map[string]struct{}{}
+	for _, target := range targets {
+		if !target.Required {
+			continue
+		}
 
-    for _, target := range targets {
-        if target.Required {
-            required[strings.ToLower(target.OutputKey)] = struct{}{}
-        }
-    }
+		path := target.OutputKey
+		parent := target.Parent
 
-    for path := range required {
+		// if parent scope is absent, required children are ignored
+		if parent != "" {
+			_, exists := flat[parent]
+			if !exists {
+				prefix := parent + "."
+				scopeExists := false
+
+				for key := range flat {
+					if strings.HasPrefix(key, prefix) {
+						scopeExists = true
+						break
+					}
+				}
+
+				if !scopeExists {
+					continue
+				}
+			}
+		}
+
 		_, exists := flat[path]
-        if !exists {
-            return errors.New("required configuration field " + path + " is missing")
-        }
-    }
-
+		if !exists {
+			return errors.New("required configuration field " + path + " is missing")
+		}
+	}
+	
     return nil
 }
 
