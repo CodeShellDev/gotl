@@ -161,32 +161,32 @@ func ValidateRequired(flat map[string]any, targets map[string]TransformTarget) e
 		parent := target.Parent
 
 		// if parent scope is absent, required children are ignored
-		if parent != "" {
-			_, exists := flat[parent]
-			if !exists {
-				prefix := parent + "."
-				scopeExists := false
-
-				for key := range flat {
-					if strings.HasPrefix(key, prefix) {
-						scopeExists = true
-						break
-					}
-				}
-
-				if !scopeExists {
-					continue
-				}
-			}
+		if parent != "" && !pathExists(flat, parent) {
+			continue
 		}
 
-		_, exists := flat[path]
-		if !exists {
+		// path "exists" if it is present as exact key or has flattened descendants
+		if !pathExists(flat, path) {
 			return errors.New("required configuration field " + path + " is missing")
 		}
 	}
-	
-    return nil
+
+	return nil
+}
+
+func pathExists(flat map[string]any, path string) bool {
+	if _, exists := flat[path]; exists {
+		return true
+	}
+
+	prefix := path + "."
+	for key := range flat {
+		if strings.HasPrefix(key, prefix) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Apply Transform funcs based on `transform`, `childtransform` and `aliases` in struct schema
