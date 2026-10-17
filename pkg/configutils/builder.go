@@ -39,7 +39,7 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 		fieldValue := v.Field(i)
 
 		base := field.Tag.Get("koanf")
-		if base == "" {
+		if base == "" || base == "-" {
 			continue
 		}
 

@@ -2,6 +2,7 @@ package configutils
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -265,75 +266,122 @@ func watchFile(f *file.File, path string, loadFunc func(string)) {
 	})
 }
 
-// Walks schema and calls fn for every field with its path, schema field and raw + typed value
-func WalkSchema(schema reflect.Type, value reflect.Value, raw any, path []string, fn func(path string, field reflect.StructField, raw any, value reflect.Value)) {
-	if schema == nil {
-		return
-	}
+func ValidateRequired(raw any, schema any) error {
+    schemaValue := reflect.ValueOf(schema)
 
-	// unwrap interfaces and pointers
-	for value.IsValid() && (value.Kind() == reflect.Interface || value.Kind() == reflect.Pointer) {
+    if !schemaValue.IsValid() || schemaValue.Kind() != reflect.Pointer ||
+        schemaValue.IsNil() || schemaValue.Elem().Kind() != reflect.Struct {
+        return fmt.Errorf("schema must be a non-nil pointer to a struct")
+    }
 
-		if value.IsNil() {
-			value = reflect.Value{}
-			break
-		}
+    var err error
 
-		value = value.Elem()
-	}
+    WalkSchema(
+        schemaValue.Elem().Type(),
+        schemaValue.Elem(),
+        raw,
+        nil,
+        true,
+        func(
+            path string,
+            field reflect.StructField,
+            raw any,
+            value reflect.Value,
+            exists bool,
+        ) {
+            if err != nil {
+                return
+            }
 
-	switch schema.Kind() {
-	case reflect.Struct:
-		rawMap, _ := raw.(map[string]any)
+            if field.Tag.Get("required") == "true" && !exists {
+                err = errors.New("required configuration field " + path + " is missing")
+            }
+        },
+    )
 
-		for field := range schema.Fields() {
-			var child reflect.Value
-			if value.IsValid() && value.Kind() == reflect.Struct {
-				child = value.FieldByName(field.Name)
-			}
+    return err
+}
 
-			// source of truth, no koanf tag, no actual path
-			key := field.Tag.Get("koanf")
+func WalkSchema(
+    schema reflect.Type,
+    value reflect.Value,
+    raw any,
+    path []string,
+    exists bool,
+    fn func(path string, field reflect.StructField, raw any, value reflect.Value, exists bool),
+) {
+    if schema == nil {
+        return
+    }
 
-			rawChild := raw
-			nextPath := path
+    for schema.Kind() == reflect.Pointer {
+        schema = schema.Elem()
+    }
 
-			if key != "" {
-				nextPath = append(path, key)
+    for value.IsValid() && (value.Kind() == reflect.Interface || value.Kind() == reflect.Pointer) {
+        if value.IsNil() {
+            value = reflect.Value{}
+            break
+        }
 
-				if rawMap != nil {
-					rawChild = rawMap[key]
-				}
-			} else {
-				// no koanf tag
-				t := field.Type
-				for t.Kind() == reflect.Pointer {
-					t = t.Elem()
-				}
+        value = value.Elem()
+    }
 
-				// if field is struct => leaf field, try other
-				if t.Kind() != reflect.Struct {
-					continue
-				}
-			}
+    if schema.Kind() != reflect.Struct {
+        return
+    }
 
-			WalkSchema(
-				field.Type,
-				child,
-				rawChild,
-				nextPath,
-				fn,
-			)
-		}
+    rawMap, _ := raw.(map[string]any)
 
-	default:
-		fn(
-			joinPaths(path...),
-			reflect.StructField{
-				Type: schema,
-			},
-			raw,
-			value,
-		)
-	}
+    for field := range schema.Fields() {
+        if field.PkgPath != "" {
+            continue // unexported field
+        }
+
+        key := field.Tag.Get("koanf")
+        if key == "-" {
+            continue
+        }
+        if key == "" {
+            key = field.Name
+        }
+
+        childPath := append(append([]string{}, path...), key)
+
+        var childValue reflect.Value
+        if value.IsValid() && value.Kind() == reflect.Struct {
+            childValue = value.FieldByName(field.Name)
+        }
+
+		rawChild := any(nil)
+		childExists := false
+        if rawMap != nil {
+            rawChild, childExists = rawMap[key]
+        }
+
+        childType := field.Type
+        for childType.Kind() == reflect.Pointer {
+            childType = childType.Elem()
+        }
+
+        if childType.Kind() == reflect.Struct {
+            WalkSchema(
+                field.Type,
+                childValue,
+                rawChild,
+                childPath,
+                childExists,
+                fn,
+            )
+            continue
+        }
+
+        fn(
+            joinPaths(childPath...),
+            field,
+            rawChild,
+            childValue,
+            childExists,
+        )
+    }
 }
