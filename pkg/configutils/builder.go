@@ -22,11 +22,12 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 	v := reflect.ValueOf(schema)
 	t := reflect.TypeOf(schema)
 
-	if t.Kind() == reflect.Pointer {
+	for t.Kind() == reflect.Pointer {
 		if v.IsNil() {
-			return
+			v = reflect.Zero(t.Elem())
+		} else {
+			v = v.Elem()
 		}
-		v = v.Elem()
 		t = t.Elem()
 	}
 
@@ -36,10 +37,40 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		fieldValue := v.Field(i)
 
+		if field.PkgPath != "" {
+			continue
+		}
+
+		fieldValue := v.Field(i)
 		base := field.Tag.Get("koanf")
-		if base == "" || base == "-" {
+
+		if base == "-" {
+			continue
+		}
+
+		if base == "" {
+			switch fieldValue.Kind() {
+			case reflect.Struct:
+				getTransformMap(id, fieldValue.Interface(), parent, out)
+
+			case reflect.Pointer:
+				if field.Type.Elem().Kind() == reflect.Struct {
+					childValue := fieldValue
+					if childValue.IsNil() {
+						childValue = reflect.New(field.Type.Elem()).Elem()
+					} else {
+						childValue = childValue.Elem()
+					}
+					getTransformMap(id, childValue.Interface(), parent, out)
+				}
+
+			case reflect.Slice, reflect.Array:
+				handleArray(id, field, joinPaths(parent, "*"), out)
+
+			case reflect.Map:
+				handleMap(id, field, joinPaths(parent, "*"), out)
+			}
 			continue
 		}
 
@@ -52,7 +83,6 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 
 		transform := getFieldWithID(id, "transform", field.Tag)
 		childTransform := getFieldWithID(id, "childtransform", field.Tag)
-
 		onUse := getFieldWithID(id, "onuse", field.Tag)
 
 		allKeys := append([]string{base}, aliases...)
@@ -76,17 +106,17 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 				outputKey = base
 			}
 
-			required := getFieldWithID(id, "required", field.Tag) == "true"
+			_, required := field.Tag.Lookup("required")
 
 			out[fullKey] = TransformTarget{
 				OutputKey:      strings.ToLower(outputKey),
-				Parent: 		parent,
-				Source: 		field,
-				OnUse: 			onUse,
+				Parent:         parent,
+				Source:         field,
+				OnUse:          onUse,
 				Transform:      transform,
 				ChildTransform: childTransform,
 				Value:          getValueSafe(fieldValue),
-				Required: required,
+				Required:       required,
 			}
 		}
 
@@ -95,12 +125,22 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 			nextParent = joinPaths(parent, base)
 		}
 
-		switch fieldValue.Kind() {
-		case reflect.Struct:
-			getTransformMap(id, fieldValue.Interface(), nextParent, out)
+		// unwrap pointers and traverse declared type, even if nil
+		childValue := fieldValue
+		childType := field.Type
 
-		case reflect.Pointer:
-			handlePointer(id, fieldValue, nextParent, out)
+		for childType.Kind() == reflect.Pointer {
+			if childValue.IsValid() && !childValue.IsNil() {
+				childValue = childValue.Elem()
+			} else {
+				childValue = reflect.Zero(childType.Elem())
+			}
+			childType = childType.Elem()
+		}
+
+		switch childType.Kind() {
+		case reflect.Struct:
+			getTransformMap(id, childValue.Interface(), nextParent, out)
 
 		case reflect.Slice, reflect.Array:
 			arrayParent := joinPaths(nextParent, "*")
@@ -109,16 +149,6 @@ func getTransformMap(id string, schema any, parent string, out map[string]Transf
 		case reflect.Map:
 			mapParent := joinPaths(nextParent, "*")
 			handleMap(id, field, mapParent, out)
-		}
-	}
-}
-
-func handlePointer(id string, fieldValue reflect.Value, parent string, out map[string]TransformTarget) {
-	if !fieldValue.IsNil() {
-		elem := fieldValue.Elem()
-
-		if elem.Kind() == reflect.Struct {
-			getTransformMap(id, elem.Interface(), parent, out)
 		}
 	}
 }
