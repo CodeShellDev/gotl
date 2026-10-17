@@ -248,6 +248,13 @@ func (config *Config) UnmarshalWithHooks(path string, schema any, hooks ...mapst
 }
 
 func (config *Config) UnmarshalWith(path string, schema any, c koanf.UnmarshalConf) error {
+	raw := config.Layer.Get(path)
+	
+	err := ValidateRequired(raw, schema)
+	if err != nil {
+        return err
+    }
+
 	return config.Layer.UnmarshalWithConf(path, schema, c)
 }
 
