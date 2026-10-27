@@ -1,5 +1,5 @@
 module github.com/codeshelldev/gotl/pkg/configutils/types/generics
 
-go 1.26.5
+go 1.27.3
 
 require github.com/codeshelldev/gotl/pkg/netutils v0.0.2

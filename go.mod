@@ -1,6 +1,6 @@
 module github.com/codeshelldev/gotl
 
-go 1.26.0
+go 1.27.3
 
 require (
 	github.com/codeshelldev/gotl/pkg/configutils v0.0.26

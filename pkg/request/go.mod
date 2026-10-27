@@ -1,6 +1,6 @@
 module github.com/codeshelldev/gotl/pkg/request
 
-go 1.26.0
+go 1.27.3
 
 require github.com/codeshelldev/gotl/pkg/query v0.0.3
 
